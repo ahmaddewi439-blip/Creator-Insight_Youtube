@@ -997,7 +997,10 @@ async function generateAiReport(mainAnalysis, competitorResults) {
     };
   } catch (error) {
     console.error("AI report fallback:", error.message);
-    return null;
+    return {
+      __failed: true,
+      error: error.message || "Gemini AI gagal tanpa pesan error.",
+    };
   }
 }
 
