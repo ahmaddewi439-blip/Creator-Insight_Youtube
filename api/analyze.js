@@ -896,6 +896,59 @@ FORMAT JSON WAJIB:
 
 async function callGeminiAi(prompt) {
   const provider = String(process.env.AI_PROVIDER || "").toLowerCase();
+
+  // Untuk API key awalan sk- dari LiteLLM / KoboLLM / OpenAI-compatible gateway
+  if (provider === "openai_compatible") {
+    const apiKey = process.env.AI_API_KEY;
+    const baseUrl = (process.env.AI_BASE_URL || "").replace(/\/$/, "");
+    const model = process.env.AI_MODEL || "gemini/gemini-2.5-flash-lite";
+
+    if (!apiKey || !baseUrl) {
+      return null;
+    }
+
+    const response = await fetch(`${baseUrl}/chat/completions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          {
+            role: "system",
+            content:
+              "Kamu adalah AI strategist YouTube. Balas hanya JSON valid, tanpa markdown.",
+          },
+          {
+            role: "user",
+            content: prompt,
+          },
+        ],
+        temperature: 0.7,
+        max_tokens: 3000,
+        response_format: {
+          type: "json_object",
+        },
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data.error?.message ||
+        data.message ||
+        "OpenAI-compatible AI gagal membuat report."
+      );
+    }
+
+    const text = data.choices?.[0]?.message?.content || "";
+    return extractJsonFromText(text);
+  }
+
+  // Fallback lama: Gemini langsung / Cloudflare AI Gateway
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
   const gatewayId = process.env.CLOUDFLARE_GATEWAY_ID || "default";
   const geminiKey = process.env.GEMINI_API_KEY;
@@ -913,14 +966,14 @@ async function callGeminiAi(prompt) {
     url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
   }
 
- const headers = {
-  "Content-Type": "application/json",
-  "x-goog-api-key": geminiKey,
-};
+  const headers = {
+    "Content-Type": "application/json",
+    "x-goog-api-key": geminiKey,
+  };
 
-if (provider === "cloudflare" && process.env.CLOUDFLARE_API_TOKEN) {
-  headers["cf-aig-authorization"] = `Bearer ${process.env.CLOUDFLARE_API_TOKEN}`;
-}
+  if (provider === "cloudflare" && process.env.CLOUDFLARE_API_TOKEN) {
+    headers["cf-aig-authorization"] = `Bearer ${process.env.CLOUDFLARE_API_TOKEN}`;
+  }
 
   const response = await fetch(url, {
     method: "POST",
