@@ -25,11 +25,12 @@
       </div>
 
       <nav class="side-nav">
-        <a href="#inputSection">Analyze</a>
-        <a href="#resultSection">Dashboard</a>
-        <a href="#seoPanel">SEO</a>
-        <a href="#competitorPanel">Competitor</a>
-      </nav>
+  <a href="#inputSection">Channel Analyzer</a>
+  <a href="#videoBoosterSection">Video Booster</a>
+  <a href="#resultSection">Dashboard</a>
+  <a href="#seoPanel">SEO</a>
+  <a href="#competitorPanel">Competitor</a>
+</nav>
 
       <div class="side-card">
         <span>Mode</span>
@@ -138,7 +139,105 @@
           </div>
         </div>
       </section>
+<section class="video-booster-card" id="videoBoosterSection">
+  <div class="section-head booster-head">
+    <div>
+      <p class="eyebrow">Video Launch Booster</p>
+      <h2>Optimasi Video Baru Sebelum Sepi</h2>
+      <p>
+        Masukkan link video YouTube public. Tool akan membaca metadata video,
+        performa awal, deskripsi, hashtag, dan menyiapkan data dasar untuk
+        optimasi AI di tahap berikutnya.
+      </p>
+    </div>
+  </div>
 
+  <form id="videoBoosterForm" class="booster-form">
+    <div class="form-group">
+      <label for="videoUrlInput">Link Video YouTube</label>
+      <input
+        type="text"
+        id="videoUrlInput"
+        placeholder="Contoh: https://www.youtube.com/watch?v=VIDEO_ID atau https://youtube.com/shorts/VIDEO_ID"
+        required
+      />
+    </div>
+
+    <button type="submit" class="primary-btn" id="videoBoosterBtn">
+      Analisa Video Baru
+    </button>
+  </form>
+
+  <div class="video-booster-loading hidden" id="videoBoosterLoading">
+    <div class="loader small-loader"></div>
+    <p>Membaca data video public...</p>
+  </div>
+
+  <div class="error-card hidden" id="videoBoosterError">
+    <h3>Video gagal dibaca</h3>
+    <p id="videoBoosterErrorMessage">Terjadi kesalahan.</p>
+  </div>
+
+  <div class="video-booster-result hidden" id="videoBoosterResult">
+    <div class="booster-video-header">
+      <img id="boosterThumb" src="" alt="Video thumbnail" />
+
+      <div>
+        <span class="booster-label">Public Video Data</span>
+        <h3 id="boosterTitle">Judul Video</h3>
+        <p id="boosterChannel">Channel</p>
+        <small id="boosterPublished">Tanggal upload</small>
+      </div>
+    </div>
+
+    <div class="booster-stat-grid">
+      <div class="stat-card">
+        <span>Views</span>
+        <strong id="boosterViews">-</strong>
+      </div>
+
+      <div class="stat-card">
+        <span>Likes</span>
+        <strong id="boosterLikes">-</strong>
+      </div>
+
+      <div class="stat-card">
+        <span>Komentar</span>
+        <strong id="boosterComments">-</strong>
+      </div>
+
+      <div class="stat-card gold">
+        <span>Launch Score</span>
+        <strong id="boosterScore">-</strong>
+      </div>
+    </div>
+
+    <div class="booster-grid">
+      <div class="panel-card">
+        <h3>Hashtag Terdeteksi</h3>
+        <div id="boosterHashtags" class="keyword-list"></div>
+      </div>
+
+      <div class="panel-card">
+        <h3>Keyword Awal</h3>
+        <div id="boosterKeywords" class="keyword-list"></div>
+      </div>
+
+      <div class="panel-card full">
+        <h3>Deskripsi Video Saat Ini</h3>
+        <textarea id="boosterDescription" readonly></textarea>
+        <button type="button" class="secondary-btn" id="copyVideoDescriptionBtn">
+          Copy Deskripsi
+        </button>
+      </div>
+
+      <div class="panel-card full">
+        <h3>Catatan Booster</h3>
+        <div id="boosterNotes" class="list-box"></div>
+      </div>
+    </div>
+  </div>
+</section>
       <section class="loading-card hidden" id="loadingSection">
         <div class="loader"></div>
         <h3>Menganalisa channel...</h3>
