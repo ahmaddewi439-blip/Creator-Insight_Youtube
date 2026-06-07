@@ -226,7 +226,7 @@ function renderVideoAudit(videos) {
   });
 }
 
-function renderCompetitors(competitors) {
+function renderCompetitors(competitors, mainData) {
   const box = document.getElementById("competitorPanel");
   box.innerHTML = "";
 
@@ -234,37 +234,100 @@ function renderCompetitors(competitors) {
     box.innerHTML = `
       <div class="panel-card full">
         <h3>Belum ada kompetitor</h3>
-        <p>Masukkan 1-3 channel kompetitor di form awal untuk menampilkan perbandingan.</p>
+        <p>Masukkan 1-3 channel kompetitor di form awal untuk menampilkan perbandingan channel utama dengan kompetitor.</p>
       </div>
     `;
     return;
   }
 
+  const mainAvgViews = Number(mainData?.summary?.averageViews || 0);
+  const mainHealth = Number(mainData?.summary?.healthScore || 0);
+
   competitors.forEach((comp) => {
+    const compAvgViews = Number(comp.summary?.averageViews || 0);
+    const compHealth = Number(comp.summary?.healthScore || 0);
+
+    let statusClass = "equal";
+    let statusText = "Seimbang";
+
+    if (compAvgViews > mainAvgViews * 1.25) {
+      statusClass = "lose";
+      statusText = "Kompetitor Lebih Kuat";
+    } else if (mainAvgViews > compAvgViews * 1.25) {
+      statusClass = "win";
+      statusText = "Channel Kamu Unggul";
+    }
+
+    const viewGap =
+      mainAvgViews > 0
+        ? (((compAvgViews - mainAvgViews) / mainAvgViews) * 100).toFixed(1)
+        : "0.0";
+
+    const topVideoTitle = comp.topVideo?.title || "-";
+    const topVideoViews = comp.topVideo?.viewCount
+      ? formatNumber(comp.topVideo.viewCount)
+      : "-";
+
+    const topVideoVph = comp.topVideo?.viewsPerDay
+      ? `${formatNumber(comp.topVideo.viewsPerDay)}/hari`
+      : "-";
+
     const card = document.createElement("div");
-    card.className = "competitor-card";
+    card.className = "competitor-card pro";
 
     card.innerHTML = `
-      <h4>${escapeHtml(comp.channel.title)}</h4>
-      <p>${escapeHtml(comp.channel.handle || comp.channel.id || "")}</p>
+      <div class="competitor-head">
+        <div class="competitor-profile">
+          <img src="${comp.channel.avatar || ""}" alt="">
+          <div>
+            <h4>${escapeHtml(comp.channel.title)}</h4>
+            <p>${escapeHtml(comp.channel.handle || comp.channel.id || "")}</p>
+          </div>
+        </div>
 
-      <div class="comp-stats">
-        <div>
+        <span class="competitor-status ${statusClass}">
+          ${statusText}
+        </span>
+      </div>
+
+      <div class="competitor-metrics">
+        <div class="competitor-metric">
           <span>Subscriber</span>
           <strong>${comp.channel.hiddenSubscriberCount ? "Hidden" : formatNumber(comp.channel.subscriberCount)}</strong>
         </div>
-        <div>
+
+        <div class="competitor-metric">
           <span>Avg Views</span>
-          <strong>${formatNumber(comp.summary.averageViews)}</strong>
+          <strong>${formatNumber(compAvgViews)}</strong>
+          <small>${viewGap}% vs channel utama</small>
         </div>
-        <div>
-          <span>Health</span>
-          <strong>${comp.summary.healthScore}/100</strong>
+
+        <div class="competitor-metric">
+          <span>Health Score</span>
+          <strong>${compHealth}/100</strong>
+          <small>Main: ${mainHealth}/100</small>
         </div>
       </div>
 
-      <p><strong>Top Video:</strong> ${escapeHtml(comp.topVideo?.title || "-")}</p>
-      <p>${escapeHtml(comp.gapInsight || "-")}</p>
+      <div class="top-video-box">
+        <span>Top Video Kompetitor</span>
+        <strong>${escapeHtml(topVideoTitle)}</strong>
+        <p>${topVideoViews} views • ${topVideoVph}</p>
+      </div>
+
+      <div class="gap-box">
+        <span>AI Gap Insight</span>
+        <p>${escapeHtml(comp.gapInsight || "-")}</p>
+      </div>
+
+      <div class="action-mini-list">
+        <span>Action Cepat</span>
+        <ul>
+          <li>Bandingkan judul top video kompetitor dengan video terbaik channel utama.</li>
+          <li>Ambil angle topik yang mirip, tapi buat hook dan value yang berbeda.</li>
+          <li>Gunakan format kompetitor yang menang sebagai inspirasi, bukan copy mentah.</li>
+        </ul>
+      </div>
     `;
 
     box.appendChild(card);
@@ -581,7 +644,7 @@ function renderResult(data) {
   renderList("actionPlan", data.actionPlan);
   renderList("contentIdeas", data.ideas);
 
-  renderCompetitors(data.competitors);
+  renderCompetitors(data.competitors, data);
 
   lastAnalysisData = data;
   lastResultText = buildReport(data);
