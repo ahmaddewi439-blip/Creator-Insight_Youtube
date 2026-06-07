@@ -11,7 +11,13 @@ const backFromError = document.getElementById("backFromError");
 const copyResultBtn = document.getElementById("copyResultBtn");
 const copyArea = document.getElementById("copyArea");
 const downloadPdfBtn = document.getElementById("downloadPdfBtn");
-
+const videoBoosterForm = document.getElementById("videoBoosterForm");
+const videoUrlInput = document.getElementById("videoUrlInput");
+const videoBoosterLoading = document.getElementById("videoBoosterLoading");
+const videoBoosterResult = document.getElementById("videoBoosterResult");
+const videoBoosterError = document.getElementById("videoBoosterError");
+const videoBoosterErrorMessage = document.getElementById("videoBoosterErrorMessage");
+const copyVideoDescriptionBtn = document.getElementById("copyVideoDescriptionBtn");
 let lastAnalysisData = null;
 let lastResultText = "";
 
@@ -802,5 +808,153 @@ downloadPdfBtn?.addEventListener("click", () => {
   pdfWindow.document.write(buildPdfHtml(lastAnalysisData));
   pdfWindow.document.close();
 });
+function showVideoBoosterState(state) {
+  videoBoosterLoading?.classList.add("hidden");
+  videoBoosterResult?.classList.add("hidden");
+  videoBoosterError?.classList.add("hidden");
 
+  if (state === "loading") {
+    videoBoosterLoading?.classList.remove("hidden");
+  }
+
+  if (state === "result") {
+    videoBoosterResult?.classList.remove("hidden");
+  }
+
+  if (state === "error") {
+    videoBoosterError?.classList.remove("hidden");
+  }
+}
+
+function renderBoosterKeywords(containerId, items) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  if (!items || items.length === 0) {
+    const span = document.createElement("span");
+    span.className = "keyword";
+    span.textContent = "Belum ada data";
+    container.appendChild(span);
+    return;
+  }
+
+  items.forEach((item) => {
+    const span = document.createElement("span");
+    span.className = "keyword";
+    span.textContent = item;
+    container.appendChild(span);
+  });
+}
+
+function renderBoosterNotes(notes) {
+  const box = document.getElementById("boosterNotes");
+  if (!box) return;
+
+  box.innerHTML = "";
+
+  if (!notes || notes.length === 0) {
+    const div = document.createElement("div");
+    div.className = "list-item";
+    div.textContent = "Belum ada catatan.";
+    box.appendChild(div);
+    return;
+  }
+
+  notes.forEach((note, index) => {
+    const div = document.createElement("div");
+    div.className = "list-item";
+    div.textContent = `${index + 1}. ${note}`;
+    box.appendChild(div);
+  });
+}
+
+function renderVideoBoosterResult(data) {
+  const video = data.video;
+
+  setImage("boosterThumb", video.thumbnail || "");
+  setText("boosterTitle", video.title || "-");
+  setText("boosterChannel", video.channelTitle || "-");
+  setText("boosterPublished", `Upload: ${formatDate(video.publishedAt)}`);
+
+  setText("boosterViews", formatNumber(video.viewCount));
+  setText("boosterLikes", formatNumber(video.likeCount));
+  setText("boosterComments", formatNumber(video.commentCount));
+  setText("boosterScore", `${data.launchScore}/100`);
+
+  renderBoosterKeywords("boosterHashtags", data.hashtags);
+  renderBoosterKeywords("boosterKeywords", data.keywords);
+  renderBoosterNotes(data.notes);
+
+  const descBox = document.getElementById("boosterDescription");
+  if (descBox) {
+    descBox.value = video.description || "";
+  }
+
+  showVideoBoosterState("result");
+}
+
+videoBoosterForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  const videoUrl = videoUrlInput?.value.trim();
+
+  if (!videoUrl) {
+    if (videoBoosterErrorMessage) {
+      videoBoosterErrorMessage.textContent = "Masukkan link video YouTube terlebih dahulu.";
+    }
+
+    showVideoBoosterState("error");
+    return;
+  }
+
+  showVideoBoosterState("loading");
+
+  try {
+    const response = await fetch("/api/video-booster", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ videoUrl }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Gagal membaca video.");
+    }
+
+    renderVideoBoosterResult(data);
+  } catch (error) {
+    if (videoBoosterErrorMessage) {
+      videoBoosterErrorMessage.textContent =
+        error.message || "Terjadi kesalahan saat membaca video.";
+    }
+
+    showVideoBoosterState("error");
+  }
+});
+
+copyVideoDescriptionBtn?.addEventListener("click", async () => {
+  const descBox = document.getElementById("boosterDescription");
+
+  if (!descBox || !descBox.value.trim()) {
+    alert("Deskripsi video masih kosong.");
+    return;
+  }
+
+  try {
+    await navigator.clipboard.writeText(descBox.value);
+    copyVideoDescriptionBtn.textContent = "Deskripsi Dicopy";
+
+    setTimeout(() => {
+      copyVideoDescriptionBtn.textContent = "Copy Deskripsi";
+    }, 1500);
+  } catch {
+    descBox.select();
+    document.execCommand("copy");
+  }
+});
 setupTabs();
