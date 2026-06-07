@@ -329,7 +329,19 @@ function renderResult(data) {
   setText("viewCount", formatNumber(data.channel.viewCount));
   setText("videoCount", formatNumber(data.channel.videoCount));
   setText("healthScore", `${data.summary.healthScore}/100`);
+const aiStatusBadge = document.getElementById("aiStatusBadge");
 
+if (aiStatusBadge) {
+  aiStatusBadge.classList.remove("gemini", "manual");
+
+  if (data.aiStatus === "gemini") {
+    aiStatusBadge.textContent = "AI Gemini Active";
+    aiStatusBadge.classList.add("gemini");
+  } else {
+    aiStatusBadge.textContent = "Manual Fallback";
+    aiStatusBadge.classList.add("manual");
+  }
+}
   setText("growthScore", `${data.scores.growth}/100`);
   setText("engagementScore", `${data.scores.engagement}/100`);
   setText("consistencyScore", `${data.scores.consistency}/100`);
