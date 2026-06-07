@@ -1132,17 +1132,27 @@ module.exports = async function handler(req, res) {
           topVideo: comp.videos.best,
           gapInsight: buildCompetitorInsight(mainAnalysis, comp),
         });
-      } catch (error) {
+          } catch (error) {
         competitorResults.push({
+          failed: true,
+          errorMessage: error.message || "Gagal membaca data kompetitor.",
           channel: {
             title: compInput,
             handle: "",
+            avatar: "",
             subscriberCount: 0,
             hiddenSubscriberCount: true,
           },
           summary: {
             averageViews: 0,
             healthScore: 0,
+          },
+          scores: {
+            growth: 0,
+            engagement: 0,
+            consistency: 0,
+            seo: 0,
+            viral: 0,
           },
           topVideo: null,
           gapInsight: `Gagal membaca kompetitor ini: ${error.message}`,
