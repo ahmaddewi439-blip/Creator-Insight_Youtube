@@ -640,7 +640,22 @@ function renderResult(data) {
       aiStatusBadge.classList.add("manual");
     }
   }
+const modeStatusBadge = document.getElementById("modeStatusBadge");
 
+if (modeStatusBadge) {
+  const modeName = data.mode?.name || "Lite";
+
+  modeStatusBadge.classList.remove("lite", "pro", "max");
+  modeStatusBadge.textContent = `Mode Active: ${modeName}`;
+
+  if (modeName.toLowerCase() === "lite") {
+    modeStatusBadge.classList.add("lite");
+  } else if (modeName.toLowerCase() === "pro") {
+    modeStatusBadge.classList.add("pro");
+  } else {
+    modeStatusBadge.classList.add("max");
+  }
+}
   setText("growthScore", `${data.scores.growth}/100`);
   setText("engagementScore", `${data.scores.engagement}/100`);
   setText("consistencyScore", `${data.scores.consistency}/100`);
