@@ -145,10 +145,51 @@
       <p class="eyebrow">Video Launch Booster</p>
       <h2>Optimasi Video Baru Sebelum Sepi</h2>
       <p>
-        Masukkan link video YouTube public. Tool akan membaca metadata video,
-        performa awal, deskripsi, hashtag, dan menyiapkan data dasar untuk
-        optimasi AI di tahap berikutnya.
+        Masukkan link video YouTube public atau login ke akun YouTube untuk
+        membaca channel milik sendiri. Tahap ini menyiapkan akses awal agar
+        nanti tool bisa membaca video public, private, unlisted, dan scheduled.
       </p>
+    </div>
+  </div>
+
+  <div class="youtube-login-card" id="youtubeLoginCard">
+    <div class="youtube-login-info">
+      <div class="youtube-icon">▶</div>
+
+      <div>
+        <h3 id="youtubeLoginTitle">Login YouTube Owner Mode</h3>
+        <p id="youtubeLoginText">
+          Login diperlukan untuk membaca video milik channel sendiri, termasuk video yang belum public.
+        </p>
+      </div>
+    </div>
+
+    <div class="youtube-login-actions">
+      <a class="primary-btn login-link" href="/api/youtube/oauth/start" id="youtubeLoginBtn">
+        Login YouTube
+      </a>
+
+      <button type="button" class="secondary-btn" id="checkYoutubeLoginBtn">
+        Cek Status
+      </button>
+    </div>
+  </div>
+
+  <div class="owner-channel-card hidden" id="ownerChannelCard">
+    <div class="channel-profile">
+      <img id="ownerChannelAvatar" src="" alt="Owner channel avatar" />
+
+      <div>
+        <h3 id="ownerChannelTitle">Channel YouTube</h3>
+        <p id="ownerChannelHandle">@channel</p>
+        <span id="ownerChannelStats">-</span>
+      </div>
+    </div>
+
+    <div class="owner-channel-actions">
+      <button type="button" class="primary-btn small" id="loadOwnerVideosBtn">
+        Baca Video Channel Saya
+      </button>
     </div>
   </div>
 
