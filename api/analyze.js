@@ -1005,6 +1005,14 @@ async function generateAiReport(mainAnalysis, competitorResults) {
 }
 
 function applyAiReport(mainAnalysis, aiReport, competitorResults) {
+    if (aiReport?.__failed) {
+    return {
+      ...mainAnalysis,
+      competitors: competitorResults,
+      aiStatus: "manual",
+      aiError: aiReport.error,
+    };
+  }
   if (!aiReport) {
     return {
       ...mainAnalysis,
