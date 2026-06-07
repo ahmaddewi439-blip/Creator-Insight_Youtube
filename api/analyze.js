@@ -1091,6 +1091,28 @@ function applyAiReport(mainAnalysis, aiReport, competitorResults) {
     aiStatus: "gemini",
   };
 }
+function buildCompetitorInsight(main, competitor) {
+  const mainAvg = Number(main?.summary?.averageViews || 0);
+  const compAvg = Number(competitor?.summary?.averageViews || 0);
+
+  if (compAvg <= 0) {
+    return "Data kompetitor belum cukup terbaca untuk dibandingkan secara detail.";
+  }
+
+  if (mainAvg <= 0) {
+    return "Channel utama belum memiliki rata-rata view yang cukup untuk dibandingkan.";
+  }
+
+  if (compAvg > mainAvg * 1.5) {
+    return "Kompetitor memiliki rata-rata views lebih tinggi. Pelajari pola judul, topik, thumbnail, dan frekuensi upload mereka untuk mencari format yang bisa diadaptasi.";
+  }
+
+  if (mainAvg > compAvg * 1.5) {
+    return "Channel utama unggul dari kompetitor ini dalam rata-rata views video terbaru. Fokusnya adalah mempertahankan format pemenang dan memperbesar variasi topik.";
+  }
+
+  return "Performa channel utama dan kompetitor cukup seimbang. Cari celah dari top video kompetitor, lalu buat angle yang lebih kuat dan berbeda.";
+}
 module.exports = async function handler(req, res) {
   try {
     if (req.method !== "POST") {
