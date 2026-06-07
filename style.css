@@ -1215,3 +1215,40 @@ footer {
   background: rgba(255, 100, 100, 0.12);
   border: 1px solid rgba(255, 100, 100, 0.3);
 }
+.mode-status-pill {
+  padding: 13px 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(0, 255, 153, 0.22);
+  background: rgba(0, 230, 138, 0.08);
+  color: var(--green);
+  font-weight: 1000;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+}
+
+.mode-status-pill.lite {
+  color: var(--green);
+  background: rgba(0, 230, 138, 0.09);
+  border-color: rgba(0, 230, 138, 0.28);
+}
+
+.mode-status-pill.pro {
+  color: var(--gold);
+  background: rgba(216, 184, 111, 0.1);
+  border-color: rgba(216, 184, 111, 0.32);
+}
+
+.mode-status-pill.max {
+  color: #58a6ff;
+  background: rgba(88, 166, 255, 0.1);
+  border-color: rgba(88, 166, 255, 0.32);
+}
+
+@media (max-width: 760px) {
+  .mode-status-pill {
+    width: 100%;
+  }
+}
