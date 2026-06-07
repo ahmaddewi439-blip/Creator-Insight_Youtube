@@ -1,11 +1,36 @@
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
 
 const STOPWORDS = new Set([
-  "the", "and", "for", "you", "your", "with", "from", "this", "that", "are",
-  "was", "were", "will", "how", "why", "what", "when", "where", "into",
-  "video", "shorts", "short", "youtube", "official", "full", "new",
-  "yang", "dan", "untuk", "dengan", "ini", "itu", "dari", "cara", "bisa",
-  "akan", "atau", "pada", "dalam", "jadi", "lebih", "kamu", "saya"
+  // English common words
+  "the", "and", "for", "you", "your", "with", "from", "this", "that",
+  "are", "was", "were", "will", "would", "could", "should", "can",
+  "how", "why", "what", "when", "where", "who", "into", "than",
+  "then", "there", "their", "they", "them", "his", "her", "she",
+  "him", "our", "out", "all", "any", "one", "two", "new", "old",
+  "now", "more", "most", "very", "just", "only", "over", "under",
+
+  // Indonesian common words
+  "yang", "dan", "untuk", "dengan", "ini", "itu", "dari", "cara",
+  "bisa", "akan", "atau", "pada", "dalam", "jadi", "lebih", "kamu",
+  "saya", "kami", "mereka", "dia", "agar", "karena", "sebagai",
+  "adalah", "tidak", "sudah", "belum", "juga", "saat", "oleh",
+
+  // YouTube/platform noise
+  "youtube", "video", "videos", "short", "shorts", "official",
+  "full", "watch", "channel", "creator", "content", "like",
+  "comment", "comments", "share", "follow", "sub", "subscribe",
+  "subscribed", "subscriber", "subscribers", "views", "view",
+  "viral", "trending",
+
+  // URL/social noise
+  "http", "https", "www", "com", "net", "org", "html", "utm",
+  "ref", "link", "bio", "instagram", "tiktok", "facebook",
+  "twitter", "xcom", "discord", "reddit", "snapchat",
+
+  // Generic weak words
+  "part", "episode", "ep", "update", "latest", "today", "live",
+  "stream", "playlist", "music", "song", "sound", "audio",
+  "free", "click", "download"
 ]);
 
 function n(value) {
@@ -239,33 +264,106 @@ function calculateUploadGap(videos) {
   return Number(avg(gaps).toFixed(1));
 }
 
+function normalizeKeyword(word) {
+  return String(word || "")
+    .toLowerCase()
+    .replace(/^#+/, "")
+    .replace(/^@+/, "")
+    .replace(/['’`]/g, "")
+    .trim();
+}
+
+function isNoiseKeyword(word) {
+  const clean = normalizeKeyword(word);
+
+  if (!clean) return true;
+
+  // terlalu pendek
+  if (clean.length < 3) return true;
+
+  // stopword umum
+  if (STOPWORDS.has(clean)) return true;
+
+  // angka semua: 000, 2026, 10000
+  if (/^\d+$/.test(clean)) return true;
+
+  // angka campur simbol uang: $10,000, 1m, 100k
+  if (/^\$?\d+[kmb]?$/.test(clean)) return true;
+
+  // tahun
+  if (/^(19|20)\d{2}$/.test(clean)) return true;
+
+  // URL / domain pecahan
+  if (
+    clean.includes("http") ||
+    clean.includes("www") ||
+    clean.includes(".com") ||
+    clean.includes(".net") ||
+    clean.includes(".org") ||
+    clean.includes("youtu") ||
+    clean.includes("bitly") ||
+    clean.includes("linktr")
+  ) {
+    return true;
+  }
+
+  // token terlalu acak, contoh: abc123def456
+  if (/[a-z]{2,}\d{3,}/i.test(clean)) return true;
+
+  // token yang kebanyakan angka
+  const digitCount = (clean.match(/\d/g) || []).length;
+  if (digitCount >= 2 && digitCount >= clean.length / 2) return true;
+
+  return false;
+}
+
 function tokenize(text) {
   return String(text || "")
     .toLowerCase()
-    .replace(/[^\p{L}\p{N}\s#@]/gu, " ")
+    .replace(/https?:\/\/\S+/g, " ")
+    .replace(/www\.\S+/g, " ")
+    .replace(/[^\p{L}\p{N}\s#@'-]/gu, " ")
     .split(/\s+/)
-    .map((word) => word.trim())
-    .filter((word) => word.length > 2 && !STOPWORDS.has(word));
+    .map(normalizeKeyword)
+    .filter((word) => !isNoiseKeyword(word));
 }
 
 function keywordCounts(videos) {
   const map = new Map();
 
   videos.forEach((video) => {
+    const titleWords = tokenize(video.title);
+
+    // Deskripsi dibatasi supaya tidak kebanyakan noise dari link, sponsor, sosial media
+    const descriptionWords = tokenize(video.description)
+      .filter((word) => !["business", "contact", "email", "merch", "shop"].includes(word))
+      .slice(0, 25);
+
+    const tagWords = (video.tags || [])
+      .flatMap(tokenize)
+      .slice(0, 20);
+
     const words = [
-      ...tokenize(video.title),
-      ...tokenize(video.description).slice(0, 40),
-      ...(video.tags || []).flatMap(tokenize),
+      ...titleWords,
+      ...titleWords, // judul diberi bobot 2x karena paling relevan
+      ...descriptionWords,
+      ...tagWords,
     ];
 
     words.forEach((word) => {
-      map.set(word, (map.get(word) || 0) + 1);
+      if (!isNoiseKeyword(word)) {
+        map.set(word, (map.get(word) || 0) + 1);
+      }
     });
   });
 
   return [...map.entries()]
     .map(([keyword, count]) => ({ keyword, count }))
-    .sort((a, b) => b.count - a.count);
+    .filter((item) => item.count >= 2 || item.keyword.length >= 5)
+    .sort((a, b) => {
+      if (b.count !== a.count) return b.count - a.count;
+      return b.keyword.length - a.keyword.length;
+    });
 }
 
 function scoreTitle(title) {
