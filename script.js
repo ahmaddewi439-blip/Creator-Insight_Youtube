@@ -18,6 +18,17 @@ const videoBoosterResult = document.getElementById("videoBoosterResult");
 const videoBoosterError = document.getElementById("videoBoosterError");
 const videoBoosterErrorMessage = document.getElementById("videoBoosterErrorMessage");
 const copyVideoDescriptionBtn = document.getElementById("copyVideoDescriptionBtn");
+const youtubeLoginCard = document.getElementById("youtubeLoginCard");
+const youtubeLoginTitle = document.getElementById("youtubeLoginTitle");
+const youtubeLoginText = document.getElementById("youtubeLoginText");
+const checkYoutubeLoginBtn = document.getElementById("checkYoutubeLoginBtn");
+
+const ownerChannelCard = document.getElementById("ownerChannelCard");
+const ownerChannelAvatar = document.getElementById("ownerChannelAvatar");
+const ownerChannelTitle = document.getElementById("ownerChannelTitle");
+const ownerChannelHandle = document.getElementById("ownerChannelHandle");
+const ownerChannelStats = document.getElementById("ownerChannelStats");
+const loadOwnerVideosBtn = document.getElementById("loadOwnerVideosBtn");
 let lastAnalysisData = null;
 let lastResultText = "";
 
@@ -955,6 +966,136 @@ copyVideoDescriptionBtn?.addEventListener("click", async () => {
   } catch {
     descBox.select();
     document.execCommand("copy");
+  }
+});
+function setYoutubeLoginState(type, title, text) {
+  if (!youtubeLoginCard) return;
+
+  youtubeLoginCard.classList.remove("success", "error");
+
+  if (type) {
+    youtubeLoginCard.classList.add(type);
+  }
+
+  if (youtubeLoginTitle) {
+    youtubeLoginTitle.textContent = title;
+  }
+
+  if (youtubeLoginText) {
+    youtubeLoginText.textContent = text;
+  }
+}
+
+function renderOwnerChannel(channel) {
+  if (!channel) return;
+
+  ownerChannelCard?.classList.remove("hidden");
+
+  if (ownerChannelAvatar) {
+    ownerChannelAvatar.src = channel.avatar || "";
+  }
+
+  if (ownerChannelTitle) {
+    ownerChannelTitle.textContent = channel.title || "Channel YouTube";
+  }
+
+  if (ownerChannelHandle) {
+    ownerChannelHandle.textContent = channel.handle || channel.id || "";
+  }
+
+  if (ownerChannelStats) {
+    const subscriberText = channel.hiddenSubscriberCount
+      ? "Subscriber hidden"
+      : `${formatNumber(channel.subscriberCount)} subscriber`;
+
+    ownerChannelStats.textContent =
+      `${subscriberText} • ${formatNumber(channel.viewCount)} views • ${formatNumber(channel.videoCount)} video`;
+  }
+}
+
+async function checkYoutubeLoginStatus() {
+  try {
+    setYoutubeLoginState(
+      null,
+      "Mengecek Login YouTube...",
+      "Sedang membaca status akun YouTube."
+    );
+
+    const response = await fetch("/api/youtube/oauth/me", {
+      method: "GET",
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Gagal mengecek status login YouTube.");
+    }
+
+    if (!data.loggedIn) {
+      ownerChannelCard?.classList.add("hidden");
+
+      setYoutubeLoginState(
+        "error",
+        "Belum Login YouTube",
+        data.message || "Klik Login YouTube untuk masuk ke owner mode."
+      );
+
+      return;
+    }
+
+    setYoutubeLoginState(
+      "success",
+      "YouTube Owner Mode Aktif",
+      "Login berhasil. Tool sudah bisa membaca channel milik akun YouTube ini."
+    );
+
+    renderOwnerChannel(data.channel);
+  } catch (error) {
+    ownerChannelCard?.classList.add("hidden");
+
+    setYoutubeLoginState(
+      "error",
+      "Gagal Mengecek Login",
+      error.message || "Terjadi kesalahan saat mengecek login YouTube."
+    );
+  }
+}
+
+checkYoutubeLoginBtn?.addEventListener("click", () => {
+  checkYoutubeLoginStatus();
+});
+
+loadOwnerVideosBtn?.addEventListener("click", () => {
+  alert("Fitur baca daftar video channel akan dibuat di tahap V4.4.");
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  const params = new URLSearchParams(window.location.search);
+  const youtubeLogin = params.get("youtubeLogin");
+  const message = params.get("message");
+
+  if (youtubeLogin === "success") {
+    checkYoutubeLoginStatus();
+
+    window.history.replaceState(
+      {},
+      document.title,
+      `${window.location.pathname}#videoBoosterSection`
+    );
+  }
+
+  if (youtubeLogin === "error") {
+    setYoutubeLoginState(
+      "error",
+      "Login YouTube Gagal",
+      message || "OAuth YouTube gagal."
+    );
+
+    window.history.replaceState(
+      {},
+      document.title,
+      `${window.location.pathname}#videoBoosterSection`
+    );
   }
 });
 setupTabs();
