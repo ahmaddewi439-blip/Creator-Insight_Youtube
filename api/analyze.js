@@ -913,10 +913,14 @@ async function callGeminiAi(prompt) {
     url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
   }
 
-  const headers = {
-    "Content-Type": "application/json",
-    "x-goog-api-key": geminiKey,
-  };
+ const headers = {
+  "Content-Type": "application/json",
+  "x-goog-api-key": geminiKey,
+};
+
+if (provider === "cloudflare" && process.env.CLOUDFLARE_API_TOKEN) {
+  headers["cf-aig-authorization"] = `Bearer ${process.env.CLOUDFLARE_API_TOKEN}`;
+}
 
   const response = await fetch(url, {
     method: "POST",
