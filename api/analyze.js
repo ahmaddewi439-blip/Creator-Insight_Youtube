@@ -1113,6 +1113,53 @@ function buildCompetitorInsight(main, competitor) {
 
   return "Performa channel utama dan kompetitor cukup seimbang. Cari celah dari top video kompetitor, lalu buat angle yang lebih kuat dan berbeda.";
 }
+function getModeInfo(limit) {
+  if (limit <= 10) {
+    return {
+      name: "Lite",
+      videoLimit: 10,
+      description: "Analisa cepat untuk 10 video terakhir.",
+      features: [
+        "Channel overview",
+        "Video audit dasar",
+        "Keyword cleaner",
+        "AI recommendation",
+        "PDF report",
+      ],
+    };
+  }
+
+  if (limit <= 30) {
+    return {
+      name: "Pro",
+      videoLimit: 30,
+      description: "Analisa lebih dalam untuk 30 video terakhir.",
+      features: [
+        "Channel overview",
+        "Video audit lengkap",
+        "SEO & keyword insight",
+        "Competitor analysis",
+        "AI growth strategy",
+        "PDF report",
+      ],
+    };
+  }
+
+  return {
+    name: "Max",
+    videoLimit: 50,
+    description: "Analisa maksimal untuk 50 video terakhir.",
+    features: [
+      "Deep channel audit",
+      "Full video audit",
+      "SEO & keyword insight",
+      "Competitor analysis",
+      "AI growth strategy",
+      "Outlier detector",
+      "PDF report",
+    ],
+  };
+}
 module.exports = async function handler(req, res) {
   try {
     if (req.method !== "POST") {
@@ -1134,7 +1181,7 @@ module.exports = async function handler(req, res) {
     }
 
     const limit = clamp(Number(videoLimit || 10), 1, 50);
-
+    const modeInfo = getModeInfo(limit);
     const mainAnalysis = await analyzeOneChannel(channelInput, limit);
 
     const competitorInputs = Array.isArray(competitors)
@@ -1182,10 +1229,13 @@ module.exports = async function handler(req, res) {
       }
     }
 
-   const aiReport = await generateAiReport(mainAnalysis, competitorResults);
+  const aiReport = await generateAiReport(mainAnalysis, competitorResults);
 const finalResult = applyAiReport(mainAnalysis, aiReport, competitorResults);
 
-return res.status(200).json(finalResult);
+return res.status(200).json({
+  ...finalResult,
+  mode: modeInfo,
+});
   } catch (error) {
     return res.status(500).json({
       message: error.message || "Terjadi kesalahan server.",
