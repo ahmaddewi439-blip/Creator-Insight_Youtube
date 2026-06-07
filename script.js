@@ -244,6 +244,43 @@ function renderCompetitors(competitors, mainData) {
   const mainHealth = Number(mainData?.summary?.healthScore || 0);
 
   competitors.forEach((comp) => {
+        if (comp.failed) {
+      const card = document.createElement("div");
+      card.className = "competitor-card pro failed";
+
+      card.innerHTML = `
+        <div class="competitor-head">
+          <div class="competitor-profile">
+            <div class="competitor-placeholder">!</div>
+            <div>
+              <h4>${escapeHtml(comp.channel?.title || "Kompetitor gagal dibaca")}</h4>
+              <p>Data tidak tersedia</p>
+            </div>
+          </div>
+
+          <span class="competitor-status lose">
+            Gagal Dibaca
+          </span>
+        </div>
+
+        <div class="gap-box">
+          <span>Error Detail</span>
+          <p>${escapeHtml(comp.errorMessage || comp.gapInsight || "Tidak ada detail error.")}</p>
+        </div>
+
+        <div class="action-mini-list">
+          <span>Solusi Cepat</span>
+          <ul>
+            <li>Coba pakai handle pendek, contoh: @markrober</li>
+            <li>Coba pakai Channel ID jika handle gagal.</li>
+            <li>Cek quota YouTube API di Google Cloud.</li>
+          </ul>
+        </div>
+      `;
+
+      box.appendChild(card);
+      return;
+    }
     const compAvgViews = Number(comp.summary?.averageViews || 0);
     const compHealth = Number(comp.summary?.healthScore || 0);
 
