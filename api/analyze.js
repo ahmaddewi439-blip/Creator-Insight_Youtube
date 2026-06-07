@@ -743,21 +743,286 @@ async function analyzeOneChannel(input, limit) {
   return buildAnalysis(channel, videos);
 }
 
-function buildCompetitorInsight(main, competitor) {
-  const mainAvg = main.summary.averageViews || 0;
-  const compAvg = competitor.summary.averageViews || 0;
+function compactVideo(video) {
+  if (!video) return null;
 
-  if (compAvg > mainAvg * 1.5) {
-    return "Kompetitor memiliki rata-rata views lebih tinggi. Pelajari pola judul, topik, dan frekuensi upload mereka.";
-  }
-
-  if (mainAvg > compAvg * 1.5) {
-    return "Channel utama sudah unggul dari kompetitor ini dalam rata-rata views video terbaru.";
-  }
-
-  return "Performa cukup seimbang. Cari celah dari video outlier kompetitor untuk membuat angle yang lebih kuat.";
+  return {
+    title: video.title,
+    views: video.viewCount,
+    likes: video.likeCount,
+    comments: video.commentCount,
+    ageDays: video.ageDays,
+    viewsPerDay: video.viewsPerDay,
+    engagementRate: video.engagementRate,
+    seoScore: video.seoScore,
+    titleScore: video.titleScore,
+    label: video.label,
+    reason: video.reason,
+  };
 }
 
+function buildAiInput(mainAnalysis, competitors) {
+  const videos = mainAnalysis.videos.items || [];
+
+  const topVideos = [...videos]
+    .sort((a, b) => b.viewCount - a.viewCount)
+    .slice(0, 8)
+    .map(compactVideo);
+
+  const weakVideos = [...videos]
+    .sort((a, b) => a.viewCount - b.viewCount)
+    .slice(0, 5)
+    .map(compactVideo);
+
+  return {
+    channel: mainAnalysis.channel,
+    summary: mainAnalysis.summary,
+    scores: mainAnalysis.scores,
+    diagnosis: mainAnalysis.diagnosis,
+    keywords: mainAnalysis.keywords,
+    bestVideo: compactVideo(mainAnalysis.videos.best),
+    weakestVideo: compactVideo(mainAnalysis.videos.weakest),
+    topVideos,
+    weakVideos,
+    competitors: (competitors || []).map((item) => ({
+      channel: item.channel,
+      summary: item.summary,
+      scores: item.scores,
+      topVideo: compactVideo(item.topVideo),
+      gapInsight: item.gapInsight,
+    })),
+  };
+}
+
+function extractJsonFromText(text) {
+  if (!text) return null;
+
+  const cleaned = String(text)
+    .replace(/```json/gi, "")
+    .replace(/```/g, "")
+    .trim();
+
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    const match = cleaned.match(/\{[\s\S]*\}/);
+    if (!match) return null;
+
+    try {
+      return JSON.parse(match[0]);
+    } catch {
+      return null;
+    }
+  }
+}
+
+function normalizeAiArray(value, fallback) {
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => String(item || "").trim())
+      .filter(Boolean)
+      .slice(0, 8);
+  }
+
+  return fallback;
+}
+function buildGeminiPrompt(aiInput) {
+  return `
+Kamu adalah AI strategist untuk creator YouTube, mirip konsultan vidIQ/TubeBuddy.
+Analisis data channel berikut dan buat report dalam Bahasa Indonesia yang tajam, spesifik, dan praktis.
+
+DATA CHANNEL:
+${JSON.stringify(aiInput, null, 2)}
+
+ATURAN:
+- Jangan mengarang data private seperti CTR, retention, watch time, demografi, atau revenue.
+- Hanya gunakan data publik yang tersedia.
+- Jangan memberi saran umum yang terlalu template.
+- Fokus pada growth, judul, topik, keyword, engagement, outlier video, dan action plan.
+- Output wajib JSON valid saja, tanpa markdown, tanpa penjelasan tambahan.
+
+FORMAT JSON WAJIB:
+{
+  "diagnosis": {
+    "title": "judul diagnosis singkat",
+    "text": "penjelasan 2-4 kalimat, spesifik berdasarkan data"
+  },
+  "recommendations": [
+    "rekomendasi pro 1",
+    "rekomendasi pro 2",
+    "rekomendasi pro 3",
+    "rekomendasi pro 4",
+    "rekomendasi pro 5"
+  ],
+  "seoSuggestions": [
+    "saran SEO 1",
+    "saran SEO 2",
+    "saran SEO 3",
+    "saran SEO 4",
+    "saran SEO 5"
+  ],
+  "titleFormulas": [
+    "judul video potensial 1",
+    "judul video potensial 2",
+    "judul video potensial 3",
+    "judul video potensial 4",
+    "judul video potensial 5"
+  ],
+  "actionPlan": [
+    "Hari 1: ...",
+    "Hari 2: ...",
+    "Hari 3: ...",
+    "Hari 4: ...",
+    "Hari 5: ...",
+    "Hari 6: ...",
+    "Hari 7: ..."
+  ],
+  "ideas": [
+    "ide konten 1",
+    "ide konten 2",
+    "ide konten 3",
+    "ide konten 4",
+    "ide konten 5",
+    "ide konten 6"
+  ],
+  "competitorInsights": [
+    "insight kompetitor 1",
+    "insight kompetitor 2",
+    "insight kompetitor 3"
+  ]
+}
+`.trim();
+}
+
+async function callGeminiAi(prompt) {
+  const provider = String(process.env.AI_PROVIDER || "").toLowerCase();
+  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+  const gatewayId = process.env.CLOUDFLARE_GATEWAY_ID || "default";
+  const geminiKey = process.env.GEMINI_API_KEY;
+  const model = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+
+  if (!geminiKey) {
+    return null;
+  }
+
+  let url = "";
+
+  if (provider === "cloudflare" && accountId && gatewayId) {
+    url = `https://gateway.ai.cloudflare.com/v1/${accountId}/${gatewayId}/google-ai-studio/v1/models/${model}:generateContent`;
+  } else {
+    url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+  }
+
+  const headers = {
+    "Content-Type": "application/json",
+    "x-goog-api-key": geminiKey,
+  };
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      contents: [
+        {
+          role: "user",
+          parts: [
+            {
+              text: prompt,
+            },
+          ],
+        },
+      ],
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 3000,
+        responseMimeType: "application/json",
+      },
+    }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error?.message || "Gemini AI gagal membuat report.");
+  }
+
+  const text =
+    data.candidates?.[0]?.content?.parts?.[0]?.text ||
+    data.candidates?.[0]?.content?.parts?.map((part) => part.text).join("\n") ||
+    "";
+
+  return extractJsonFromText(text);
+}
+async function generateAiReport(mainAnalysis, competitorResults) {
+  try {
+    const aiInput = buildAiInput(mainAnalysis, competitorResults);
+    const prompt = buildGeminiPrompt(aiInput);
+    const ai = await callGeminiAi(prompt);
+
+    if (!ai) return null;
+
+    return {
+      diagnosis: {
+        title: ai.diagnosis?.title || mainAnalysis.diagnosis.title,
+        text: ai.diagnosis?.text || mainAnalysis.diagnosis.text,
+      },
+      recommendations: normalizeAiArray(
+        ai.recommendations,
+        mainAnalysis.recommendations
+      ),
+      seoSuggestions: normalizeAiArray(
+        ai.seoSuggestions,
+        mainAnalysis.seoSuggestions
+      ),
+      titleFormulas: normalizeAiArray(
+        ai.titleFormulas,
+        mainAnalysis.titleFormulas
+      ),
+      actionPlan: normalizeAiArray(
+        ai.actionPlan,
+        mainAnalysis.actionPlan
+      ),
+      ideas: normalizeAiArray(
+        ai.ideas,
+        mainAnalysis.ideas
+      ),
+      competitorInsights: normalizeAiArray(
+        ai.competitorInsights,
+        []
+      ),
+    };
+  } catch (error) {
+    console.error("AI report fallback:", error.message);
+    return null;
+  }
+}
+
+function applyAiReport(mainAnalysis, aiReport, competitorResults) {
+  if (!aiReport) {
+    return {
+      ...mainAnalysis,
+      competitors: competitorResults,
+      aiStatus: "manual",
+    };
+  }
+
+  const updatedCompetitors = competitorResults.map((item, index) => ({
+    ...item,
+    gapInsight: aiReport.competitorInsights[index] || item.gapInsight,
+  }));
+
+  return {
+    ...mainAnalysis,
+    diagnosis: aiReport.diagnosis,
+    recommendations: aiReport.recommendations,
+    seoSuggestions: aiReport.seoSuggestions,
+    titleFormulas: aiReport.titleFormulas,
+    actionPlan: aiReport.actionPlan,
+    ideas: aiReport.ideas,
+    competitors: updatedCompetitors,
+    aiStatus: "gemini",
+  };
+}
 module.exports = async function handler(req, res) {
   try {
     if (req.method !== "POST") {
@@ -817,10 +1082,10 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    return res.status(200).json({
-      ...mainAnalysis,
-      competitors: competitorResults,
-    });
+   const aiReport = await generateAiReport(mainAnalysis, competitorResults);
+const finalResult = applyAiReport(mainAnalysis, aiReport, competitorResults);
+
+return res.status(200).json(finalResult);
   } catch (error) {
     return res.status(500).json({
       message: error.message || "Terjadi kesalahan server.",
