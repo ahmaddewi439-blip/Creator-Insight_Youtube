@@ -958,7 +958,32 @@ footer {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+.ai-status-pill {
+  padding: 13px 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(216, 184, 111, 0.32);
+  background: rgba(216, 184, 111, 0.08);
+  color: var(--gold);
+  font-weight: 1000;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+}
 
+.ai-status-pill.gemini {
+  border-color: rgba(0, 230, 138, 0.35);
+  background: rgba(0, 230, 138, 0.12);
+  color: var(--green);
+  box-shadow: 0 0 22px rgba(0, 230, 138, 0.16);
+}
+
+.ai-status-pill.manual {
+  border-color: rgba(255, 100, 100, 0.35);
+  background: rgba(255, 100, 100, 0.1);
+  color: var(--danger);
+}
 @media (max-width: 760px) {
   .main,
   .sidebar {
