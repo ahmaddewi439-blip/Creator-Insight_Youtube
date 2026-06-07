@@ -10,7 +10,9 @@ const backBtn = document.getElementById("backBtn");
 const backFromError = document.getElementById("backFromError");
 const copyResultBtn = document.getElementById("copyResultBtn");
 const copyArea = document.getElementById("copyArea");
+const downloadPdfBtn = document.getElementById("downloadPdfBtn");
 
+let lastAnalysisData = null;
 let lastResultText = "";
 
 function show(section) {
@@ -23,9 +25,11 @@ function show(section) {
 
 function formatNumber(value) {
   const n = Number(value || 0);
+
   if (n >= 1_000_000_000) return (n / 1_000_000_000).toFixed(1) + "B";
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
   if (n >= 1_000) return (n / 1_000).toFixed(1) + "K";
+
   return n.toLocaleString("id-ID");
 }
 
@@ -35,6 +39,7 @@ function formatPercent(value) {
 
 function formatDate(dateString) {
   if (!dateString) return "-";
+
   return new Date(dateString).toLocaleDateString("id-ID", {
     year: "numeric",
     month: "long",
@@ -49,6 +54,15 @@ function setText(id, text) {
 function setImage(id, src) {
   const el = document.getElementById(id);
   if (el) el.src = src || "";
+}
+
+function escapeHtml(text) {
+  return String(text || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
 function startLoadingAnimation() {
@@ -87,7 +101,7 @@ function setupTabs() {
       });
 
       button.classList.add("active");
-      document.getElementById(button.dataset.tab).classList.add("active");
+      document.getElementById(button.dataset.tab)?.classList.add("active");
     });
   });
 }
@@ -257,22 +271,16 @@ function renderCompetitors(competitors) {
   });
 }
 
-function escapeHtml(text) {
-  return String(text || "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
 function buildReport(data) {
   return `
-CREATOR INSIGHT PRO V2 REPORT
+CREATOR INSIGHT PRO V3 REPORT
 
 CHANNEL:
 ${data.channel.title}
 ${data.channel.handle || data.channel.id}
+
+AI STATUS:
+${data.aiStatus || "manual"}
 
 METRICS:
 Subscriber: ${data.channel.hiddenSubscriberCount ? "Hidden" : formatNumber(data.channel.subscriberCount)}
@@ -303,14 +311,203 @@ KEYWORDS:
 ${(data.keywords.main || []).map((k) => typeof k === "string" ? k : k.keyword).join(", ")}
 
 RECOMMENDATIONS:
-${data.recommendations.map((x, i) => `${i + 1}. ${x}`).join("\n")}
+${(data.recommendations || []).map((x, i) => `${i + 1}. ${x}`).join("\n")}
+
+SEO SUGGESTIONS:
+${(data.seoSuggestions || []).map((x, i) => `${i + 1}. ${x}`).join("\n")}
+
+TITLE FORMULA:
+${(data.titleFormulas || []).map((x, i) => `${i + 1}. ${x}`).join("\n")}
 
 ACTION PLAN:
-${data.actionPlan.map((x, i) => `${i + 1}. ${x}`).join("\n")}
+${(data.actionPlan || []).map((x, i) => `${i + 1}. ${x}`).join("\n")}
 
 CONTENT IDEAS:
-${data.ideas.map((x, i) => `${i + 1}. ${x}`).join("\n")}
+${(data.ideas || []).map((x, i) => `${i + 1}. ${x}`).join("\n")}
   `.trim();
+}
+
+function buildPdfHtml(data) {
+  const keywords = (data.keywords?.main || [])
+    .map((item) => (typeof item === "string" ? item : item.keyword))
+    .join(", ");
+
+  const listHtml = (items) => {
+    return (items || [])
+      .map((item) => `<li>${escapeHtml(item)}</li>`)
+      .join("");
+  };
+
+  return `
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Creator Insight Report - ${escapeHtml(data.channel.title)}</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      color: #102018;
+      background: #ffffff;
+      padding: 36px;
+      line-height: 1.6;
+    }
+
+    .header {
+      border-bottom: 4px solid #00a66a;
+      padding-bottom: 18px;
+      margin-bottom: 24px;
+    }
+
+    .brand {
+      color: #00a66a;
+      font-weight: 800;
+      font-size: 14px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 6px 0 4px;
+      font-size: 30px;
+    }
+
+    h2 {
+      margin-top: 28px;
+      color: #006b45;
+      border-bottom: 1px solid #d7efe5;
+      padding-bottom: 6px;
+    }
+
+    .muted {
+      color: #5c756b;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin: 18px 0;
+    }
+
+    .card {
+      border: 1px solid #d7efe5;
+      border-radius: 12px;
+      padding: 14px;
+      background: #f6fffb;
+    }
+
+    .card span {
+      display: block;
+      color: #5c756b;
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+
+    .card strong {
+      font-size: 20px;
+      color: #00452f;
+    }
+
+    .diagnosis {
+      padding: 18px;
+      border-left: 5px solid #00a66a;
+      background: #f6fffb;
+      border-radius: 12px;
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    .footer {
+      margin-top: 34px;
+      font-size: 12px;
+      color: #6b7d75;
+      border-top: 1px solid #d7efe5;
+      padding-top: 12px;
+    }
+
+    @media print {
+      body {
+        padding: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="brand">Creator Insight Pro V3</div>
+    <h1>${escapeHtml(data.channel.title)}</h1>
+    <div class="muted">${escapeHtml(data.channel.handle || data.channel.id)} • AI Status: ${escapeHtml(data.aiStatus || "manual")}</div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <span>Subscriber</span>
+      <strong>${data.channel.hiddenSubscriberCount ? "Hidden" : formatNumber(data.channel.subscriberCount)}</strong>
+    </div>
+    <div class="card">
+      <span>Total Views</span>
+      <strong>${formatNumber(data.channel.viewCount)}</strong>
+    </div>
+    <div class="card">
+      <span>Total Video</span>
+      <strong>${formatNumber(data.channel.videoCount)}</strong>
+    </div>
+    <div class="card">
+      <span>Health Score</span>
+      <strong>${data.summary.healthScore}/100</strong>
+    </div>
+  </div>
+
+  <h2>Diagnosis</h2>
+  <div class="diagnosis">
+    <strong>${escapeHtml(data.diagnosis.title)}</strong>
+    <p>${escapeHtml(data.diagnosis.text)}</p>
+  </div>
+
+  <h2>Score Detail</h2>
+  <div class="grid">
+    <div class="card"><span>Growth</span><strong>${data.scores.growth}/100</strong></div>
+    <div class="card"><span>Engagement</span><strong>${data.scores.engagement}/100</strong></div>
+    <div class="card"><span>Consistency</span><strong>${data.scores.consistency}/100</strong></div>
+    <div class="card"><span>SEO</span><strong>${data.scores.seo}/100</strong></div>
+  </div>
+
+  <h2>Keyword Utama</h2>
+  <p>${escapeHtml(keywords || "-")}</p>
+
+  <h2>Rekomendasi Pro</h2>
+  <ol>${listHtml(data.recommendations)}</ol>
+
+  <h2>Saran SEO</h2>
+  <ol>${listHtml(data.seoSuggestions)}</ol>
+
+  <h2>Title Formula</h2>
+  <ol>${listHtml(data.titleFormulas)}</ol>
+
+  <h2>Action Plan 7 Hari</h2>
+  <ol>${listHtml(data.actionPlan)}</ol>
+
+  <h2>Ide Konten Berikutnya</h2>
+  <ol>${listHtml(data.ideas)}</ol>
+
+  <div class="footer">
+    Laporan ini dibuat menggunakan data publik YouTube dan AI report dari Creator Insight Pro V3.
+    Data private seperti CTR, retention, watch time, dan demografi audience tidak termasuk.
+  </div>
+
+  <script>
+    window.onload = function() {
+      setTimeout(function() {
+        window.print();
+      }, 500);
+    };
+  </script>
+</body>
+</html>
+  `;
 }
 
 function renderResult(data) {
@@ -329,19 +526,21 @@ function renderResult(data) {
   setText("viewCount", formatNumber(data.channel.viewCount));
   setText("videoCount", formatNumber(data.channel.videoCount));
   setText("healthScore", `${data.summary.healthScore}/100`);
-const aiStatusBadge = document.getElementById("aiStatusBadge");
 
-if (aiStatusBadge) {
-  aiStatusBadge.classList.remove("gemini", "manual");
+  const aiStatusBadge = document.getElementById("aiStatusBadge");
 
-  if (data.aiStatus === "gemini") {
-    aiStatusBadge.textContent = "AI Gemini Active";
-    aiStatusBadge.classList.add("gemini");
-  } else {
-    aiStatusBadge.textContent = "Manual Fallback";
-    aiStatusBadge.classList.add("manual");
+  if (aiStatusBadge) {
+    aiStatusBadge.classList.remove("gemini", "manual");
+
+    if (data.aiStatus === "gemini") {
+      aiStatusBadge.textContent = "AI Gemini Active";
+      aiStatusBadge.classList.add("gemini");
+    } else {
+      aiStatusBadge.textContent = "Manual Fallback";
+      aiStatusBadge.classList.add("manual");
+    }
   }
-}
+
   setText("growthScore", `${data.scores.growth}/100`);
   setText("engagementScore", `${data.scores.engagement}/100`);
   setText("consistencyScore", `${data.scores.consistency}/100`);
@@ -384,6 +583,7 @@ if (aiStatusBadge) {
 
   renderCompetitors(data.competitors);
 
+  lastAnalysisData = data;
   lastResultText = buildReport(data);
   copyArea.value = lastResultText;
 
@@ -468,6 +668,24 @@ copyResultBtn.addEventListener("click", async () => {
     document.execCommand("copy");
     copyArea.classList.add("hidden");
   }
+});
+
+downloadPdfBtn?.addEventListener("click", () => {
+  if (!lastAnalysisData) {
+    alert("Belum ada data analisa untuk dibuat PDF.");
+    return;
+  }
+
+  const pdfWindow = window.open("", "_blank");
+
+  if (!pdfWindow) {
+    alert("Popup diblokir browser. Izinkan popup untuk download PDF.");
+    return;
+  }
+
+  pdfWindow.document.open();
+  pdfWindow.document.write(buildPdfHtml(lastAnalysisData));
+  pdfWindow.document.close();
 });
 
 setupTabs();
