@@ -4,12 +4,7 @@ const loadingSection = document.getElementById("loadingSection");
 const resultSection = document.getElementById("resultSection");
 const errorBox = document.getElementById("errorBox");
 const errorMessage = document.getElementById("errorMessage");
-
 const loadingText = document.getElementById("loadingText");
-const step1 = document.getElementById("step1");
-const step2 = document.getElementById("step2");
-const step3 = document.getElementById("step3");
-const step4 = document.getElementById("step4");
 
 const backBtn = document.getElementById("backBtn");
 const backFromError = document.getElementById("backFromError");
@@ -23,18 +18,19 @@ function show(section) {
   loadingSection.classList.add("hidden");
   resultSection.classList.add("hidden");
   errorBox.classList.add("hidden");
-
   section.classList.remove("hidden");
 }
 
-function formatNumber(num) {
-  const n = Number(num || 0);
-
+function formatNumber(value) {
+  const n = Number(value || 0);
   if (n >= 1_000_000_000) return (n / 1_000_000_000).toFixed(1) + "B";
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
   if (n >= 1_000) return (n / 1_000).toFixed(1) + "K";
-
   return n.toLocaleString("id-ID");
+}
+
+function formatPercent(value) {
+  return `${Number(value || 0).toFixed(2)}%`;
 }
 
 function formatDate(dateString) {
@@ -45,40 +41,55 @@ function formatDate(dateString) {
   });
 }
 
+function setText(id, text) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = text;
+}
+
+function setImage(id, src) {
+  const el = document.getElementById(id);
+  if (el) el.src = src || "";
+}
+
 function startLoadingAnimation() {
   const steps = [
-    {
-      text: "Membaca profil channel YouTube...",
-      active: step1,
-    },
-    {
-      text: "Mengambil video terbaru dari channel...",
-      active: step2,
-    },
-    {
-      text: "Menghitung performa view, like, dan komentar...",
-      active: step3,
-    },
-    {
-      text: "Menyusun diagnosis dan rekomendasi strategi...",
-      active: step4,
-    },
+    ["Membaca profil channel YouTube...", "step1"],
+    ["Mengambil video terbaru...", "step2"],
+    ["Menganalisa SEO, judul, dan keyword...", "step3"],
+    ["Membandingkan kompetitor...", "step4"],
+    ["Menyusun action plan...", "step5"],
   ];
 
-  step1.classList.remove("active");
-  step2.classList.remove("active");
-  step3.classList.remove("active");
-  step4.classList.remove("active");
+  steps.forEach(([, id]) => {
+    document.getElementById(id)?.classList.remove("active");
+  });
 
   let index = 0;
-  loadingText.textContent = steps[0].text;
-  steps[0].active.classList.add("active");
+  loadingText.textContent = steps[index][0];
+  document.getElementById(steps[index][1])?.classList.add("active");
 
   return setInterval(() => {
     index = (index + 1) % steps.length;
-    loadingText.textContent = steps[index].text;
-    steps[index].active.classList.add("active");
+    loadingText.textContent = steps[index][0];
+    document.getElementById(steps[index][1])?.classList.add("active");
   }, 900);
+}
+
+function setupTabs() {
+  document.querySelectorAll(".tab-btn").forEach((button) => {
+    button.addEventListener("click", () => {
+      document.querySelectorAll(".tab-btn").forEach((btn) => {
+        btn.classList.remove("active");
+      });
+
+      document.querySelectorAll(".tab-content").forEach((tab) => {
+        tab.classList.remove("active");
+      });
+
+      button.classList.add("active");
+      document.getElementById(button.dataset.tab).classList.add("active");
+    });
+  });
 }
 
 function buildChart(videos) {
@@ -86,17 +97,17 @@ function buildChart(videos) {
   chart.innerHTML = "";
 
   if (!videos || videos.length === 0) {
-    chart.innerHTML = `<div class="empty-chart">Belum ada data video.</div>`;
+    chart.innerHTML = `<div style="margin:auto;color:var(--muted)">Belum ada data video.</div>`;
     return;
   }
 
-  const orderedVideos = [...videos].reverse();
-  const maxViews = Math.max(...orderedVideos.map((v) => Number(v.viewCount || 0)), 1);
+  const ordered = [...videos].reverse();
+  const maxViews = Math.max(...ordered.map((v) => Number(v.viewCount || 0)), 1);
 
-  orderedVideos.forEach((video) => {
-    const height = Math.max((Number(video.viewCount || 0) / maxViews) * 100, 8);
-
+  ordered.forEach((video) => {
     const bar = document.createElement("div");
+    const height = Math.max((Number(video.viewCount || 0) / maxViews) * 100, 7);
+
     bar.className = "chart-bar";
     bar.style.height = `${height}%`;
     bar.title = `${video.title} - ${formatNumber(video.viewCount)} views`;
@@ -105,127 +116,294 @@ function buildChart(videos) {
   });
 }
 
-function fillVideoCard(prefix, video) {
-  const thumb = document.getElementById(`${prefix}VideoThumb`);
-  const title = document.getElementById(`${prefix}VideoTitle`);
-  const stats = document.getElementById(`${prefix}VideoStats`);
+function renderVideoCard(prefix, video) {
+  setImage(`${prefix}VideoThumb`, video?.thumbnail || "");
+  setText(`${prefix}VideoTitle`, video?.title || "-");
 
-  if (!video) {
-    title.textContent = "-";
-    stats.textContent = "-";
-    thumb.removeAttribute("src");
-    return;
-  }
+  setText(
+    `${prefix}VideoStats`,
+    video
+      ? `${formatNumber(video.viewCount)} views • ${formatNumber(video.likeCount)} likes • ${formatNumber(video.commentCount)} komentar`
+      : "-"
+  );
 
-  thumb.src = video.thumbnail || "";
-  title.textContent = video.title || "-";
-  stats.textContent = `${formatNumber(video.viewCount)} views • ${formatNumber(video.likeCount)} likes • ${formatNumber(video.commentCount)} komentar`;
+  setText(`${prefix}VideoReason`, video?.reason || "-");
 }
 
-function renderList(containerId, items, className) {
-  const container = document.getElementById(containerId);
-  container.innerHTML = "";
+function renderList(id, items) {
+  const box = document.getElementById(id);
+  box.innerHTML = "";
 
   if (!items || items.length === 0) {
-    const div = document.createElement("div");
-    div.className = className;
-    div.textContent = "Belum ada rekomendasi.";
-    container.appendChild(div);
+    const empty = document.createElement("div");
+    empty.className = "list-item";
+    empty.textContent = "Belum ada data.";
+    box.appendChild(empty);
     return;
   }
 
   items.forEach((item, index) => {
     const div = document.createElement("div");
-    div.className = className;
+    div.className = "list-item";
     div.textContent = `${index + 1}. ${item}`;
-    container.appendChild(div);
+    box.appendChild(div);
   });
 }
 
-function renderResult(data) {
-  const channel = data.channel;
-  const summary = data.summary;
-  const diagnosis = data.diagnosis;
-  const videos = data.videos;
+function renderKeywords(id, items) {
+  const box = document.getElementById(id);
+  box.innerHTML = "";
 
-  document.getElementById("channelAvatar").src = channel.avatar || "";
-  document.getElementById("channelTitle").textContent = channel.title || "Channel YouTube";
-  document.getElementById("channelHandle").textContent = channel.handle || channel.id || "-";
-  document.getElementById("channelPublished").textContent = `Bergabung ${formatDate(channel.publishedAt)}`;
+  if (!items || items.length === 0) {
+    const empty = document.createElement("span");
+    empty.className = "keyword";
+    empty.textContent = "Belum ada keyword";
+    box.appendChild(empty);
+    return;
+  }
 
-  document.getElementById("subscriberCount").textContent = channel.hiddenSubscriberCount
-    ? "Hidden"
-    : formatNumber(channel.subscriberCount);
+  items.forEach((item) => {
+    const span = document.createElement("span");
+    span.className = "keyword";
+    span.textContent =
+      typeof item === "string" ? item : `${item.keyword} (${item.count})`;
+    box.appendChild(span);
+  });
+}
 
-  document.getElementById("viewCount").textContent = formatNumber(channel.viewCount);
-  document.getElementById("videoCount").textContent = formatNumber(channel.videoCount);
-  document.getElementById("healthScore").textContent = `${summary.healthScore}/100`;
+function renderVideoAudit(videos) {
+  const tbody = document.getElementById("videoAuditBody");
+  tbody.innerHTML = "";
 
-  document.getElementById("diagnosisTitle").textContent = diagnosis.title;
-  document.getElementById("diagnosisText").textContent = diagnosis.text;
+  if (!videos || videos.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7">Belum ada video untuk dianalisa.</td></tr>`;
+    return;
+  }
 
-  document.getElementById("avgViewsText").textContent =
-    `Rata-rata view ${summary.analyzedVideos} video terakhir: ${formatNumber(summary.averageViews)}`;
+  videos.forEach((video) => {
+    const labelClass =
+      video.label === "Winner"
+        ? "winner"
+        : video.label === "Weak"
+        ? "weak"
+        : "normal";
 
-  document.getElementById("growthStatus").textContent = summary.growthStatus;
+    const tr = document.createElement("tr");
 
-  fillVideoCard("best", videos.best);
-  fillVideoCard("weak", videos.weakest);
+    tr.innerHTML = `
+      <td>
+        <div class="video-title-cell">
+          <img src="${video.thumbnail || ""}" alt="">
+          <div>
+            <strong>${escapeHtml(video.title)}</strong>
+            <small>${video.ageDays} hari lalu</small>
+          </div>
+        </div>
+      </td>
+      <td>${formatNumber(video.viewCount)}</td>
+      <td>${formatNumber(video.viewsPerDay)}/hari</td>
+      <td>${formatPercent(video.engagementRate)}</td>
+      <td>${video.seoScore}/100</td>
+      <td>${video.titleScore}/100</td>
+      <td><span class="label ${labelClass}">${video.label}</span></td>
+    `;
 
-  buildChart(videos.items);
+    tbody.appendChild(tr);
+  });
+}
 
-  renderList("recommendationList", data.recommendations, "recommendation-item");
-  renderList("contentIdeas", data.ideas, "idea-item");
+function renderCompetitors(competitors) {
+  const box = document.getElementById("competitorPanel");
+  box.innerHTML = "";
 
-  lastResultText = `
-CREATOR INSIGHT YOUTUBE
+  if (!competitors || competitors.length === 0) {
+    box.innerHTML = `
+      <div class="panel-card full">
+        <h3>Belum ada kompetitor</h3>
+        <p>Masukkan 1-3 channel kompetitor di form awal untuk menampilkan perbandingan.</p>
+      </div>
+    `;
+    return;
+  }
 
-Channel: ${channel.title}
-Subscriber: ${channel.hiddenSubscriberCount ? "Hidden" : formatNumber(channel.subscriberCount)}
-Total Views: ${formatNumber(channel.viewCount)}
-Total Video: ${formatNumber(channel.videoCount)}
+  competitors.forEach((comp) => {
+    const card = document.createElement("div");
+    card.className = "competitor-card";
 
-Skor Channel: ${summary.healthScore}/100
-Status Growth: ${summary.growthStatus}
-Rata-rata View: ${formatNumber(summary.averageViews)}
+    card.innerHTML = `
+      <h4>${escapeHtml(comp.channel.title)}</h4>
+      <p>${escapeHtml(comp.channel.handle || comp.channel.id || "")}</p>
 
-Diagnosis:
-${diagnosis.title}
-${diagnosis.text}
+      <div class="comp-stats">
+        <div>
+          <span>Subscriber</span>
+          <strong>${comp.channel.hiddenSubscriberCount ? "Hidden" : formatNumber(comp.channel.subscriberCount)}</strong>
+        </div>
+        <div>
+          <span>Avg Views</span>
+          <strong>${formatNumber(comp.summary.averageViews)}</strong>
+        </div>
+        <div>
+          <span>Health</span>
+          <strong>${comp.summary.healthScore}/100</strong>
+        </div>
+      </div>
 
-Video Terbaik:
-${videos.best ? videos.best.title : "-"} 
-${videos.best ? formatNumber(videos.best.viewCount) + " views" : ""}
+      <p><strong>Top Video:</strong> ${escapeHtml(comp.topVideo?.title || "-")}</p>
+      <p>${escapeHtml(comp.gapInsight || "-")}</p>
+    `;
 
-Video Terlemah:
-${videos.weakest ? videos.weakest.title : "-"} 
-${videos.weakest ? formatNumber(videos.weakest.viewCount) + " views" : ""}
+    box.appendChild(card);
+  });
+}
 
-Rekomendasi:
-${data.recommendations.map((item, i) => `${i + 1}. ${item}`).join("\n")}
+function escapeHtml(text) {
+  return String(text || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
 
-Ide Konten:
-${data.ideas.map((item, i) => `${i + 1}. ${item}`).join("\n")}
+function buildReport(data) {
+  return `
+CREATOR INSIGHT PRO V2 REPORT
+
+CHANNEL:
+${data.channel.title}
+${data.channel.handle || data.channel.id}
+
+METRICS:
+Subscriber: ${data.channel.hiddenSubscriberCount ? "Hidden" : formatNumber(data.channel.subscriberCount)}
+Total Views: ${formatNumber(data.channel.viewCount)}
+Total Videos: ${formatNumber(data.channel.videoCount)}
+Health Score: ${data.summary.healthScore}/100
+
+SCORES:
+Growth: ${data.scores.growth}/100
+Engagement: ${data.scores.engagement}/100
+Consistency: ${data.scores.consistency}/100
+SEO: ${data.scores.seo}/100
+Viral Potential: ${data.scores.viral}/100
+
+DIAGNOSIS:
+${data.diagnosis.title}
+${data.diagnosis.text}
+
+BEST VIDEO:
+${data.videos.best?.title || "-"}
+${data.videos.best ? formatNumber(data.videos.best.viewCount) + " views" : ""}
+
+WEAK VIDEO:
+${data.videos.weakest?.title || "-"}
+${data.videos.weakest ? formatNumber(data.videos.weakest.viewCount) + " views" : ""}
+
+KEYWORDS:
+${(data.keywords.main || []).map((k) => typeof k === "string" ? k : k.keyword).join(", ")}
+
+RECOMMENDATIONS:
+${data.recommendations.map((x, i) => `${i + 1}. ${x}`).join("\n")}
+
+ACTION PLAN:
+${data.actionPlan.map((x, i) => `${i + 1}. ${x}`).join("\n")}
+
+CONTENT IDEAS:
+${data.ideas.map((x, i) => `${i + 1}. ${x}`).join("\n")}
   `.trim();
+}
 
+function renderResult(data) {
+  setImage("channelAvatar", data.channel.avatar);
+  setText("channelTitle", data.channel.title);
+  setText("channelHandle", data.channel.handle || data.channel.id);
+  setText("channelPublished", `Bergabung ${formatDate(data.channel.publishedAt)}`);
+
+  setText(
+    "subscriberCount",
+    data.channel.hiddenSubscriberCount
+      ? "Hidden"
+      : formatNumber(data.channel.subscriberCount)
+  );
+
+  setText("viewCount", formatNumber(data.channel.viewCount));
+  setText("videoCount", formatNumber(data.channel.videoCount));
+  setText("healthScore", `${data.summary.healthScore}/100`);
+
+  setText("growthScore", `${data.scores.growth}/100`);
+  setText("engagementScore", `${data.scores.engagement}/100`);
+  setText("consistencyScore", `${data.scores.consistency}/100`);
+  setText("seoScore", `${data.scores.seo}/100`);
+  setText("viralScore", `${data.scores.viral}/100`);
+
+  setText("growthStatus", data.summary.growthStatus);
+  setText("engagementRate", `Engagement ${formatPercent(data.summary.engagementRate)}`);
+  setText("uploadGap", `Gap upload ${data.summary.avgUploadGapDays} hari`);
+  setText("outlierCount", `${data.summary.outlierCount} outlier video`);
+
+  setText("diagnosisTitle", data.diagnosis.title);
+  setText("diagnosisText", data.diagnosis.text);
+
+  setText(
+    "avgViewsText",
+    `Rata-rata view ${data.summary.analyzedVideos} video terakhir: ${formatNumber(data.summary.averageViews)}`
+  );
+
+  setText(
+    "trendPill",
+    `${data.summary.growthStatus} ${Number(data.summary.growthPercentage || 0).toFixed(1)}%`
+  );
+
+  renderVideoCard("best", data.videos.best);
+  renderVideoCard("weak", data.videos.weakest);
+
+  buildChart(data.videos.items);
+  renderVideoAudit(data.videos.items);
+
+  renderKeywords("mainKeywords", data.keywords.main);
+  renderKeywords("winningKeywords", data.keywords.winning);
+  renderKeywords("weakKeywords", data.keywords.weak);
+
+  renderList("seoSuggestions", data.seoSuggestions);
+  renderList("titleFormulas", data.titleFormulas);
+  renderList("recommendationList", data.recommendations);
+  renderList("actionPlan", data.actionPlan);
+  renderList("contentIdeas", data.ideas);
+
+  renderCompetitors(data.competitors);
+
+  lastResultText = buildReport(data);
   copyArea.value = lastResultText;
+
   show(resultSection);
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
 
   const channelInput = document.getElementById("channelInput").value.trim();
-  const videoLimit = document.querySelector("input[name='videoLimit']:checked").value;
+  const competitorRaw = document.getElementById("competitorInput").value.trim();
+  const videoLimit = Number(
+    document.querySelector("input[name='videoLimit']:checked").value
+  );
 
   if (!channelInput) {
-    errorMessage.textContent = "Masukkan link channel, handle, atau Channel ID terlebih dahulu.";
+    errorMessage.textContent = "Masukkan channel utama terlebih dahulu.";
     show(errorBox);
     return;
   }
 
+  const competitors = competitorRaw
+    ? competitorRaw
+        .split(/[\n,]+/)
+        .map((item) => item.trim())
+        .filter(Boolean)
+        .slice(0, 3)
+    : [];
+
   show(loadingSection);
-  const loadingInterval = startLoadingAnimation();
+  const interval = startLoadingAnimation();
 
   try {
     const response = await fetch("/api/analyze", {
@@ -235,7 +413,8 @@ form.addEventListener("submit", async (event) => {
       },
       body: JSON.stringify({
         channelInput,
-        videoLimit: Number(videoLimit),
+        competitors,
+        videoLimit,
       }),
     });
 
@@ -245,17 +424,18 @@ form.addEventListener("submit", async (event) => {
       throw new Error(data.message || "Gagal menganalisa channel.");
     }
 
-    clearInterval(loadingInterval);
+    clearInterval(interval);
     renderResult(data);
   } catch (error) {
-    clearInterval(loadingInterval);
-    errorMessage.textContent = error.message || "Terjadi kesalahan saat membaca channel.";
+    clearInterval(interval);
+    errorMessage.textContent = error.message || "Terjadi kesalahan.";
     show(errorBox);
   }
 });
 
 backBtn.addEventListener("click", () => {
   show(inputSection);
+  window.scrollTo({ top: 0, behavior: "smooth" });
 });
 
 backFromError.addEventListener("click", () => {
@@ -265,9 +445,10 @@ backFromError.addEventListener("click", () => {
 copyResultBtn.addEventListener("click", async () => {
   try {
     await navigator.clipboard.writeText(lastResultText);
-    copyResultBtn.textContent = "Berhasil Dicopy";
+    copyResultBtn.textContent = "Report Dicopy";
+
     setTimeout(() => {
-      copyResultBtn.textContent = "Copy Hasil Analisa";
+      copyResultBtn.textContent = "Copy Report";
     }, 1600);
   } catch {
     copyArea.classList.remove("hidden");
@@ -276,3 +457,5 @@ copyResultBtn.addEventListener("click", async () => {
     copyArea.classList.add("hidden");
   }
 });
+
+setupTabs();
