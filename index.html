@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Creator Insight YouTube - AI Channel Analyzer</title>
+  <meta
+    name="description"
+    content="Tool AI untuk menganalisa channel YouTube, membaca performa video, mendeteksi bottleneck, dan memberi rekomendasi strategi konten."
+  />
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <div class="app-bg">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-logo">C</div>
+        <div>
+          <h1>Creator Insight</h1>
+          <p>AI Tools untuk Creator YouTube</p>
+        </div>
+      </div>
+
+      <div class="badge">MVP Vercel</div>
+    </header>
+
+    <main class="container">
+      <!-- HERO / FORM -->
+      <section class="hero-card" id="inputSection">
+        <div class="hero-content">
+          <p class="eyebrow">AI Channel Growth Analyzer</p>
+
+          <h2>
+            Tools AI Ini Bisa Membaca Kenapa
+            <span>Channel YouTube Kamu Stuck</span>
+          </h2>
+
+          <p class="hero-desc">
+            Masukkan link channel YouTube, handle, atau Channel ID.
+            Sistem akan membaca data publik channel, performa video terbaru,
+            dan memberikan diagnosis strategi konten.
+          </p>
+
+          <form id="analyzeForm" class="analyze-form">
+            <label for="channelInput">Masukkan Channel YouTube</label>
+
+            <div class="input-row">
+              <input
+                type="text"
+                id="channelInput"
+                name="channelInput"
+                placeholder="Contoh: https://youtube.com/@namachannel"
+                autocomplete="off"
+                required
+              />
+
+              <button type="submit" id="analyzeBtn">
+                Analisa Channel
+              </button>
+            </div>
+
+            <div class="option-grid">
+              <label class="option-card active">
+                <input type="radio" name="videoLimit" value="10" checked />
+                <span>Lite</span>
+                <small>Analisa 10 video terakhir</small>
+              </label>
+
+              <label class="option-card">
+                <input type="radio" name="videoLimit" value="30" />
+                <span>Pro</span>
+                <small>Analisa 30 video terakhir</small>
+              </label>
+
+              <label class="option-card">
+                <input type="radio" name="videoLimit" value="50" />
+                <span>Max</span>
+                <small>Analisa 50 video terakhir</small>
+              </label>
+            </div>
+          </form>
+
+          <div class="feature-row">
+            <div>
+              <strong>Deteksi Masalah</strong>
+              <span>Growth bottleneck</span>
+            </div>
+            <div>
+              <strong>Peluang Konten</strong>
+              <span>Topik potensial</span>
+            </div>
+            <div>
+              <strong>Rekomendasi</strong>
+              <span>Strategi 7 hari</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- LOADING -->
+      <section class="loading-card hidden" id="loadingSection">
+        <div class="loader-ring"></div>
+
+        <h3>Sedang menganalisa channel...</h3>
+        <p id="loadingText">Membaca data channel YouTube</p>
+
+        <div class="progress-wrap">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <ul class="loading-steps">
+          <li id="step1" class="active">Membaca profil channel</li>
+          <li id="step2">Mengambil video terbaru</li>
+          <li id="step3">Menghitung performa video</li>
+          <li id="step4">Menyusun diagnosis</li>
+        </ul>
+      </section>
+
+      <!-- ERROR -->
+      <section class="error-card hidden" id="errorBox">
+        <h3>Analisa gagal</h3>
+        <p id="errorMessage">
+          Terjadi kesalahan saat membaca channel.
+        </p>
+        <button type="button" id="backFromError">
+          Coba Lagi
+        </button>
+      </section>
+
+      <!-- RESULT DASHBOARD -->
+      <section class="dashboard hidden" id="resultSection">
+        <div class="dashboard-header">
+          <button type="button" class="back-btn" id="backBtn">
+            ← Analisa Channel Lain
+          </button>
+
+          <button type="button" class="copy-btn" id="copyResultBtn">
+            Copy Hasil Analisa
+          </button>
+        </div>
+
+        <!-- CHANNEL SUMMARY -->
+        <div class="channel-card">
+          <div class="channel-info">
+            <img
+              id="channelAvatar"
+              src=""
+              alt="Foto Channel"
+              class="channel-avatar"
+            />
+
+            <div>
+              <h2 id="channelTitle">Nama Channel</h2>
+              <p id="channelHandle">@channel</p>
+              <span id="channelPublished">Bergabung -</span>
+            </div>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-card">
+              <span>Subscriber</span>
+              <strong id="subscriberCount">-</strong>
+            </div>
+
+            <div class="stat-card">
+              <span>Total Tayangan</span>
+              <strong id="viewCount">-</strong>
+            </div>
+
+            <div class="stat-card">
+              <span>Total Video</span>
+              <strong id="videoCount">-</strong>
+            </div>
+
+            <div class="stat-card highlight">
+              <span>Skor Channel</span>
+              <strong id="healthScore">-</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- DIAGNOSIS + CHART -->
+        <div class="dashboard-grid">
+          <div class="diagnosis-card">
+            <div class="warning-icon">!</div>
+            <h3 id="diagnosisTitle">Growth Bottleneck</h3>
+            <p id="diagnosisText">
+              Sistem akan menampilkan masalah utama channel di sini.
+            </p>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-top">
+              <div>
+                <h3>Performa Video Terbaru</h3>
+                <p id="avgViewsText">Rata-rata view: -</p>
+              </div>
+
+              <div class="growth-box">
+                <strong id="growthStatus">-</strong>
+                <span>Status Growth</span>
+              </div>
+            </div>
+
+            <div class="mini-chart" id="miniChart">
+              <div class="empty-chart">Grafik akan muncul setelah analisa.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VIDEO INSIGHT -->
+        <div class="video-insight-grid">
+          <div class="video-card">
+            <h3>Video Terbaik</h3>
+            <div class="video-preview">
+              <img id="bestVideoThumb" src="" alt="Thumbnail Video Terbaik" />
+              <div>
+                <h4 id="bestVideoTitle">-</h4>
+                <p id="bestVideoStats">-</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="video-card">
+            <h3>Video Terlemah</h3>
+            <div class="video-preview">
+              <img id="weakVideoThumb" src="" alt="Thumbnail Video Terlemah" />
+              <div>
+                <h4 id="weakVideoTitle">-</h4>
+                <p id="weakVideoStats">-</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI RECOMMENDATION -->
+        <div class="recommendation-card">
+          <div class="section-title">
+            <h3>Rekomendasi AI</h3>
+            <p>Strategi yang bisa dilakukan untuk memperbaiki performa channel.</p>
+          </div>
+
+          <div id="recommendationList" class="recommendation-list">
+            <div class="recommendation-item">
+              Hasil rekomendasi akan muncul di sini setelah analisa.
+            </div>
+          </div>
+        </div>
+
+        <!-- CONTENT IDEAS -->
+        <div class="ideas-card">
+          <div class="section-title">
+            <h3>Ide Konten Berikutnya</h3>
+            <p>Ide konten berdasarkan pola video yang sudah dianalisa.</p>
+          </div>
+
+          <div id="contentIdeas" class="ideas-list">
+            <div class="idea-item">Ide konten akan muncul setelah analisa.</div>
+          </div>
+        </div>
+
+        <!-- RAW COPY AREA -->
+        <textarea id="copyArea" class="hidden" readonly></textarea>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>
+        Creator Insight YouTube membaca data publik channel melalui YouTube Data API.
+        Data internal seperti CTR, retention, dan watch time membutuhkan login Analytics.
+      </p>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
