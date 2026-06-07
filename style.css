@@ -1057,3 +1057,146 @@ footer {
     width: 100%;
   }
 }
+.competitor-card.pro {
+  display: grid;
+  gap: 18px;
+}
+
+.competitor-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.competitor-profile {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.competitor-profile img {
+  width: 58px;
+  height: 58px;
+  border-radius: 18px;
+  object-fit: cover;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid var(--line);
+}
+
+.competitor-profile h4 {
+  margin: 0 0 4px;
+}
+
+.competitor-profile p {
+  color: var(--green);
+  font-size: 13px;
+}
+
+.competitor-status {
+  padding: 9px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 1000;
+  white-space: nowrap;
+}
+
+.competitor-status.win {
+  color: var(--green);
+  background: rgba(0, 230, 138, 0.12);
+  border: 1px solid rgba(0, 230, 138, 0.28);
+}
+
+.competitor-status.lose {
+  color: var(--danger);
+  background: rgba(255, 100, 100, 0.12);
+  border: 1px solid rgba(255, 100, 100, 0.28);
+}
+
+.competitor-status.equal {
+  color: var(--gold);
+  background: rgba(216, 184, 111, 0.1);
+  border: 1px solid rgba(216, 184, 111, 0.28);
+}
+
+.competitor-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 11px;
+}
+
+.competitor-metric {
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.045);
+  border: 1px solid rgba(0, 255, 153, 0.12);
+}
+
+.competitor-metric span,
+.top-video-box span,
+.gap-box span,
+.action-mini-list span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.competitor-metric strong {
+  display: block;
+  color: var(--text);
+  font-size: 20px;
+}
+
+.competitor-metric small {
+  display: block;
+  color: var(--muted);
+  margin-top: 5px;
+  font-size: 12px;
+}
+
+.top-video-box,
+.gap-box,
+.action-mini-list {
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.045);
+  border: 1px solid rgba(0, 255, 153, 0.12);
+}
+
+.top-video-box strong {
+  display: block;
+  line-height: 1.35;
+  color: var(--text);
+}
+
+.top-video-box p,
+.gap-box p {
+  color: var(--muted);
+  margin-top: 6px;
+  line-height: 1.55;
+}
+
+.action-mini-list ul {
+  margin-left: 18px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.action-mini-list li {
+  margin-bottom: 6px;
+}
+
+@media (max-width: 760px) {
+  .competitor-head {
+    flex-direction: column;
+  }
+
+  .competitor-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .competitor-status {
+    width: fit-content;
+  }
+}
