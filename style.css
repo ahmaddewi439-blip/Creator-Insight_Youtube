@@ -1413,3 +1413,133 @@ footer {
     grid-template-columns: 1fr;
   }
 }
+/* V4.3 OAUTH YOUTUBE OWNER MODE */
+.youtube-login-card,
+.owner-channel-card {
+  margin: 22px 0;
+  padding: 22px;
+  border-radius: 26px;
+  border: 1px solid var(--line);
+  background:
+    radial-gradient(circle at top right, rgba(0, 230, 138, 0.1), transparent 34%),
+    rgba(0, 0, 0, 0.22);
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: center;
+}
+
+.youtube-login-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.youtube-icon {
+  width: 58px;
+  height: 58px;
+  border-radius: 20px;
+  display: grid;
+  place-items: center;
+  color: #03130d;
+  background: linear-gradient(135deg, var(--green), var(--green2));
+  font-size: 24px;
+  font-weight: 1000;
+  box-shadow: 0 0 28px rgba(0, 230, 138, 0.22);
+}
+
+.youtube-login-info h3,
+.owner-channel-card h3 {
+  font-size: 22px;
+  margin-bottom: 6px;
+}
+
+.youtube-login-info p {
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.youtube-login-actions,
+.owner-channel-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.login-link {
+  width: auto;
+  min-height: 46px;
+  padding: 14px 18px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.owner-channel-card {
+  background:
+    radial-gradient(circle at top right, rgba(216, 184, 111, 0.11), transparent 34%),
+    rgba(0, 0, 0, 0.22);
+}
+
+.owner-channel-card .channel-profile {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.owner-channel-card .channel-profile img {
+  width: 72px;
+  height: 72px;
+  border-radius: 22px;
+  object-fit: cover;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.owner-channel-card .channel-profile p {
+  color: var(--green);
+  margin: 4px 0;
+}
+
+.owner-channel-card .channel-profile span {
+  color: var(--muted);
+}
+
+.youtube-login-card.success {
+  border-color: rgba(0, 230, 138, 0.35);
+  background: rgba(0, 230, 138, 0.08);
+}
+
+.youtube-login-card.error {
+  border-color: rgba(255, 100, 100, 0.35);
+  background: rgba(255, 100, 100, 0.08);
+}
+
+.youtube-login-card.error .youtube-icon {
+  color: var(--danger);
+  background: rgba(255, 100, 100, 0.12);
+  border: 1px solid rgba(255, 100, 100, 0.32);
+  box-shadow: none;
+}
+
+@media (max-width: 900px) {
+  .youtube-login-card,
+  .owner-channel-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .youtube-login-actions,
+  .owner-channel-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .youtube-login-actions a,
+  .youtube-login-actions button,
+  .owner-channel-actions button {
+    width: 100%;
+  }
+}
