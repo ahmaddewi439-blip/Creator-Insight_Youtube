@@ -1,12 +1,53 @@
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
 
-function toNumber(value) {
+const STOPWORDS = new Set([
+  "the", "and", "for", "you", "your", "with", "from", "this", "that", "are",
+  "was", "were", "will", "how", "why", "what", "when", "where", "into",
+  "video", "shorts", "short", "youtube", "official", "full", "new",
+  "yang", "dan", "untuk", "dengan", "ini", "itu", "dari", "cara", "bisa",
+  "akan", "atau", "pada", "dalam", "jadi", "lebih", "kamu", "saya"
+]);
+
+function n(value) {
   return Number(value || 0);
 }
 
-function average(numbers) {
+function avg(items) {
+  if (!items || items.length === 0) return 0;
+  return items.reduce((sum, item) => sum + Number(item || 0), 0) / items.length;
+}
+
+function median(numbers) {
   if (!numbers || numbers.length === 0) return 0;
-  return numbers.reduce((sum, item) => sum + Number(item || 0), 0) / numbers.length;
+
+  const arr = numbers.map(Number).sort((a, b) => a - b);
+  const mid = Math.floor(arr.length / 2);
+
+  return arr.length % 2 ? arr[mid] : (arr[mid - 1] + arr[mid]) / 2;
+}
+
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function daysSince(dateString) {
+  if (!dateString) return 0;
+
+  const diff = Date.now() - new Date(dateString).getTime();
+  return Math.max(Math.ceil(diff / (1000 * 60 * 60 * 24)), 1);
+}
+
+function getThumb(thumbnails) {
+  if (!thumbnails) return "";
+
+  return (
+    thumbnails.maxres?.url ||
+    thumbnails.standard?.url ||
+    thumbnails.high?.url ||
+    thumbnails.medium?.url ||
+    thumbnails.default?.url ||
+    ""
+  );
 }
 
 function parseDurationToSeconds(duration) {
@@ -16,23 +57,7 @@ function parseDurationToSeconds(duration) {
 
   if (!match) return 0;
 
-  const hours = Number(match[1] || 0);
-  const minutes = Number(match[2] || 0);
-  const seconds = Number(match[3] || 0);
-
-  return hours * 3600 + minutes * 60 + seconds;
-}
-
-function getBestThumbnail(thumbnails) {
-  if (!thumbnails) return "";
-  return (
-    thumbnails.maxres?.url ||
-    thumbnails.standard?.url ||
-    thumbnails.high?.url ||
-    thumbnails.medium?.url ||
-    thumbnails.default?.url ||
-    ""
-  );
+  return n(match[1]) * 3600 + n(match[2]) * 60 + n(match[3]);
 }
 
 function extractInput(input) {
@@ -85,27 +110,23 @@ async function youtubeRequest(endpoint, params) {
   const data = await response.json();
 
   if (!response.ok) {
-    const message =
-      data.error?.message ||
-      "Gagal mengambil data dari YouTube API.";
-
-    throw new Error(message);
+    throw new Error(data.error?.message || "Gagal mengambil data dari YouTube API.");
   }
 
   return data;
 }
 
-async function getChannelById(channelId) {
+async function getChannelById(id) {
   const data = await youtubeRequest("channels", {
     part: "snippet,statistics,contentDetails",
-    id: channelId,
+    id,
   });
 
   return data.items?.[0] || null;
 }
 
-async function resolveChannel(channelInput) {
-  const parsed = extractInput(channelInput);
+async function resolveChannel(input) {
+  const parsed = extractInput(input);
 
   if (parsed.type === "id") {
     const channel = await getChannelById(parsed.value);
@@ -130,20 +151,20 @@ async function resolveChannel(channelInput) {
     if (data.items?.[0]) return data.items[0];
   }
 
-  const searchData = await youtubeRequest("search", {
+  const search = await youtubeRequest("search", {
     part: "snippet",
+    q: parsed.value,
     type: "channel",
     maxResults: "1",
-    q: parsed.value,
   });
 
-  const foundChannelId = searchData.items?.[0]?.snippet?.channelId;
+  const foundId = search.items?.[0]?.snippet?.channelId;
 
-  if (!foundChannelId) {
-    throw new Error("Channel tidak ditemukan. Coba gunakan link channel yang lengkap atau handle @channel.");
+  if (!foundId) {
+    throw new Error("Channel tidak ditemukan. Coba pakai handle @channel atau link channel lengkap.");
   }
 
-  const channel = await getChannelById(foundChannelId);
+  const channel = await getChannelById(foundId);
 
   if (!channel) {
     throw new Error("Channel ditemukan, tetapi detail channel gagal dibaca.");
@@ -164,258 +185,476 @@ async function getLatestVideoIds(uploadPlaylistId, limit) {
     .filter(Boolean);
 }
 
-async function getVideoDetails(videoIds) {
-  if (!videoIds || videoIds.length === 0) return [];
+async function getVideos(ids) {
+  if (!ids || ids.length === 0) return [];
 
   const data = await youtubeRequest("videos", {
     part: "snippet,statistics,contentDetails",
-    id: videoIds.join(","),
-    maxResults: "50",
+    id: ids.join(","),
   });
 
   return (data.items || []).map((item) => {
-    const statistics = item.statistics || {};
     const snippet = item.snippet || {};
+    const statistics = item.statistics || {};
     const contentDetails = item.contentDetails || {};
+
+    const ageDays = daysSince(snippet.publishedAt);
+    const viewCount = n(statistics.viewCount);
+    const likeCount = n(statistics.likeCount);
+    const commentCount = n(statistics.commentCount);
+    const engagementRate = viewCount > 0 ? ((likeCount + commentCount) / viewCount) * 100 : 0;
 
     return {
       id: item.id,
       title: snippet.title || "Tanpa Judul",
       description: snippet.description || "",
+      tags: snippet.tags || [],
       publishedAt: snippet.publishedAt,
-      thumbnail: getBestThumbnail(snippet.thumbnails),
-      viewCount: toNumber(statistics.viewCount),
-      likeCount: toNumber(statistics.likeCount),
-      commentCount: toNumber(statistics.commentCount),
+      thumbnail: getThumb(snippet.thumbnails),
+      viewCount,
+      likeCount,
+      commentCount,
+      ageDays,
+      viewsPerDay: Math.round(viewCount / ageDays),
+      engagementRate: Number(engagementRate.toFixed(2)),
       durationSeconds: parseDurationToSeconds(contentDetails.duration),
     };
   });
 }
 
-function calculateUploadGapDays(videos) {
+function calculateUploadGap(videos) {
   if (!videos || videos.length < 2) return 0;
 
   const dates = videos
-    .map((video) => new Date(video.publishedAt).getTime())
+    .map((v) => new Date(v.publishedAt).getTime())
     .filter(Boolean)
     .sort((a, b) => b - a);
 
   const gaps = [];
 
   for (let i = 0; i < dates.length - 1; i++) {
-    const diff = Math.abs(dates[i] - dates[i + 1]);
-    gaps.push(diff / (1000 * 60 * 60 * 24));
+    gaps.push(Math.abs(dates[i] - dates[i + 1]) / (1000 * 60 * 60 * 24));
   }
 
-  return average(gaps);
+  return Number(avg(gaps).toFixed(1));
 }
 
-function buildAnalysis(channel, videos) {
-  const stats = channel.statistics || {};
-  const snippet = channel.snippet || {};
+function tokenize(text) {
+  return String(text || "")
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s#@]/gu, " ")
+    .split(/\s+/)
+    .map((word) => word.trim())
+    .filter((word) => word.length > 2 && !STOPWORDS.has(word));
+}
 
-  const subscriberCount = toNumber(stats.subscriberCount);
-  const totalViews = toNumber(stats.viewCount);
-  const totalVideos = toNumber(stats.videoCount);
-  const hiddenSubscriberCount = Boolean(stats.hiddenSubscriberCount);
+function keywordCounts(videos) {
+  const map = new Map();
 
-  const viewCounts = videos.map((video) => video.viewCount);
-  const likeCounts = videos.map((video) => video.likeCount);
-  const commentCounts = videos.map((video) => video.commentCount);
+  videos.forEach((video) => {
+    const words = [
+      ...tokenize(video.title),
+      ...tokenize(video.description).slice(0, 40),
+      ...(video.tags || []).flatMap(tokenize),
+    ];
 
-  const averageViews = Math.round(average(viewCounts));
-  const averageLikes = Math.round(average(likeCounts));
-  const averageComments = Math.round(average(commentCounts));
+    words.forEach((word) => {
+      map.set(word, (map.get(word) || 0) + 1);
+    });
+  });
 
-  const totalAnalyzedViews = viewCounts.reduce((sum, value) => sum + value, 0);
-  const totalAnalyzedEngagement =
-    likeCounts.reduce((sum, value) => sum + value, 0) +
-    commentCounts.reduce((sum, value) => sum + value, 0);
+  return [...map.entries()]
+    .map(([keyword, count]) => ({ keyword, count }))
+    .sort((a, b) => b.count - a.count);
+}
 
-  const engagementRate =
-    totalAnalyzedViews > 0
-      ? (totalAnalyzedEngagement / totalAnalyzedViews) * 100
-      : 0;
+function scoreTitle(title) {
+  const text = String(title || "");
+  let score = 35;
 
-  const half = Math.max(Math.floor(videos.length / 2), 1);
-  const recentVideos = videos.slice(0, half);
-  const olderVideos = videos.slice(half);
+  const length = text.length;
+  const words = text.split(/\s+/).filter(Boolean);
 
-  const recentAvg = average(recentVideos.map((video) => video.viewCount));
-  const olderAvg = average(olderVideos.map((video) => video.viewCount));
+  if (length >= 35 && length <= 75) score += 20;
+  else if (length >= 20 && length <= 95) score += 10;
 
-  const growthPercentage =
-    olderAvg > 0 ? ((recentAvg - olderAvg) / olderAvg) * 100 : 0;
+  if (/\d/.test(text)) score += 12;
+  if (/[?!]/.test(text)) score += 8;
 
-  const avgUploadGapDays = calculateUploadGapDays(videos);
-
-  const best = videos.length
-    ? videos.reduce((max, video) => (video.viewCount > max.viewCount ? video : max), videos[0])
-    : null;
-
-  const weakest = videos.length
-    ? videos.reduce((min, video) => (video.viewCount < min.viewCount ? video : min), videos[0])
-    : null;
-
-  let trendScore = 50;
-  if (growthPercentage > 30) trendScore = 90;
-  else if (growthPercentage > 10) trendScore = 75;
-  else if (growthPercentage > -10) trendScore = 60;
-  else if (growthPercentage > -30) trendScore = 40;
-  else trendScore = 25;
-
-  let engagementScore = 40;
-  if (engagementRate >= 5) engagementScore = 90;
-  else if (engagementRate >= 2) engagementScore = 75;
-  else if (engagementRate >= 1) engagementScore = 60;
-  else if (engagementRate >= 0.4) engagementScore = 45;
-  else engagementScore = 25;
-
-  let consistencyScore = 50;
-  if (avgUploadGapDays > 0 && avgUploadGapDays <= 3) consistencyScore = 90;
-  else if (avgUploadGapDays <= 7) consistencyScore = 75;
-  else if (avgUploadGapDays <= 14) consistencyScore = 55;
-  else consistencyScore = 35;
-
-  let audienceScore = 60;
-  if (!hiddenSubscriberCount && subscriberCount > 0) {
-    const viewToSubRate = (averageViews / subscriberCount) * 100;
-
-    if (viewToSubRate >= 30) audienceScore = 95;
-    else if (viewToSubRate >= 15) audienceScore = 80;
-    else if (viewToSubRate >= 7) audienceScore = 65;
-    else if (viewToSubRate >= 3) audienceScore = 45;
-    else audienceScore = 25;
+  if (/(secret|mistake|ignored|until|before|after|why|how|best|worst|rare|viral|stuck|growth|hidden|tips|cara|kesalahan|rahasia|terbaik)/i.test(text)) {
+    score += 15;
   }
 
+  if (words.length >= 5 && words.length <= 12) score += 10;
+
+  return clamp(score, 0, 100);
+}
+
+function scoreSeo(video) {
+  let score = 30;
+
+  const titleWords = tokenize(video.title);
+  const descWords = tokenize(video.description);
+  const tags = video.tags || [];
+
+  if (titleWords.length >= 4) score += 15;
+  if (video.description && video.description.length >= 150) score += 15;
+  if (tags.length >= 3) score += 15;
+  if (video.title.length >= 35 && video.title.length <= 75) score += 10;
+  if (titleWords.some((word) => descWords.includes(word))) score += 10;
+  if (video.thumbnail) score += 5;
+
+  return clamp(score, 0, 100);
+}
+
+function enrichVideos(videos) {
+  const avgViews = avg(videos.map((v) => v.viewCount));
+  const medViews = median(videos.map((v) => v.viewCount)) || avgViews || 1;
+
+  return videos.map((video) => {
+    const performanceIndex = medViews > 0 ? video.viewCount / medViews : 0;
+    const titleScore = scoreTitle(video.title);
+    const seoScore = scoreSeo(video);
+
+    let label = "Normal";
+    let reason = "Performa berada di sekitar rata-rata channel.";
+
+    if (performanceIndex >= 1.8) {
+      label = "Winner";
+      reason = `${performanceIndex.toFixed(1)}x lebih tinggi dari median channel. Pola ini layak diulang.`;
+    } else if (performanceIndex <= 0.55) {
+      label = "Weak";
+      reason = "Performa jauh di bawah median channel. Perlu evaluasi hook, judul, dan thumbnail.";
+    }
+
+    return {
+      ...video,
+      performanceIndex: Number(performanceIndex.toFixed(2)),
+      titleScore,
+      seoScore,
+      label,
+      reason,
+    };
+  });
+}
+
+function buildScores(channel, videos) {
+  const stats = channel.statistics || {};
+  const subscriberCount = n(stats.subscriberCount);
+  const hiddenSubscriberCount = Boolean(stats.hiddenSubscriberCount);
+
+  const viewCounts = videos.map((v) => v.viewCount);
+  const avgViews = avg(viewCounts);
+
+  const half = Math.max(Math.floor(videos.length / 2), 1);
+  const recentAvg = avg(videos.slice(0, half).map((v) => v.viewCount));
+  const olderAvg = avg(videos.slice(half).map((v) => v.viewCount));
+  const growthPercentage = olderAvg > 0 ? ((recentAvg - olderAvg) / olderAvg) * 100 : 0;
+
+  const engagementRate = avg(videos.map((v) => v.engagementRate));
+  const uploadGap = calculateUploadGap(videos);
+  const seoAvg = Math.round(avg(videos.map((v) => v.seoScore)));
+  const outlierCount = videos.filter((v) => v.label === "Winner").length;
+
+  let growth = 55;
+  if (growthPercentage >= 40) growth = 95;
+  else if (growthPercentage >= 15) growth = 82;
+  else if (growthPercentage >= -10) growth = 65;
+  else if (growthPercentage >= -30) growth = 42;
+  else growth = 25;
+
+  let engagement = 35;
+  if (engagementRate >= 6) engagement = 95;
+  else if (engagementRate >= 3) engagement = 82;
+  else if (engagementRate >= 1.5) engagement = 65;
+  else if (engagementRate >= 0.5) engagement = 45;
+
+  let consistency = 45;
+  if (uploadGap > 0 && uploadGap <= 3) consistency = 92;
+  else if (uploadGap <= 7) consistency = 78;
+  else if (uploadGap <= 14) consistency = 58;
+  else consistency = 35;
+
+  let viral = 40;
+  if (outlierCount >= 3) viral = 90;
+  else if (outlierCount === 2) viral = 78;
+  else if (outlierCount === 1) viral = 62;
+
+  if (!hiddenSubscriberCount && subscriberCount > 0) {
+    const viewToSub = (avgViews / subscriberCount) * 100;
+
+    if (viewToSub >= 50) viral += 8;
+    else if (viewToSub >= 20) viral += 5;
+    else if (viewToSub < 3) viral -= 10;
+  }
+
+  viral = clamp(viral, 0, 100);
+
   const healthScore = Math.round(
-    trendScore * 0.35 +
-      engagementScore * 0.25 +
-      consistencyScore * 0.2 +
-      audienceScore * 0.2
+    growth * 0.27 +
+    engagement * 0.2 +
+    consistency * 0.18 +
+    seoAvg * 0.17 +
+    viral * 0.18
   );
 
   let growthStatus = "Stabil";
   if (growthPercentage > 15) growthStatus = "Naik";
   if (growthPercentage < -15) growthStatus = "Turun";
 
-  let diagnosisTitle = "Channel Cukup Sehat";
-  let diagnosisText =
-    "Channel memiliki performa yang cukup stabil. Fokus utama sekarang adalah memperkuat pola konten terbaik dan menjaga konsistensi upload.";
-
-  if (videos.length === 0) {
-    diagnosisTitle = "Data Video Belum Cukup";
-    diagnosisText =
-      "Sistem belum menemukan video terbaru untuk dianalisa. Pastikan channel memiliki video publik.";
-  } else if (growthPercentage < -25) {
-    diagnosisTitle = "Growth Bottleneck";
-    diagnosisText =
-      "Performa video terbaru terlihat menurun dibanding video sebelumnya. Ini biasanya terjadi karena topik mulai kurang menarik, judul kurang kuat, atau pola konten tidak lagi sesuai dengan minat audience.";
-  } else if (!hiddenSubscriberCount && subscriberCount > 0 && averageViews < subscriberCount * 0.03) {
-    diagnosisTitle = "Audience Tidak Terserap";
-    diagnosisText =
-      "Rata-rata view video terbaru masih rendah dibanding jumlah subscriber. Artinya subscriber belum banyak terdorong untuk klik video baru. Perlu perbaikan pada judul, thumbnail, dan angle topik.";
-  } else if (engagementRate < 0.5) {
-    diagnosisTitle = "Engagement Rendah";
-    diagnosisText =
-      "Like dan komentar masih rendah dibanding jumlah view. Konten perlu dibuat lebih interaktif dengan pertanyaan, opini, konflik ringan, atau call to action yang lebih natural.";
-  } else if (avgUploadGapDays > 14) {
-    diagnosisTitle = "Upload Tidak Konsisten";
-    diagnosisText =
-      "Jarak upload antar video cukup jauh. Konsistensi upload sangat berpengaruh pada sinyal channel dan kebiasaan audience untuk kembali menonton.";
-  }
-
-  const recommendations = [];
-
-  if (best) {
-    recommendations.push(
-      `Ulangi pola dari video terbaik "${best.title}" karena video tersebut memberi sinyal topik yang paling disukai audience.`
-    );
-  }
-
-  if (growthPercentage < 0) {
-    recommendations.push(
-      "Perbaiki 3 detik pertama video, judul, dan thumbnail karena performa terbaru menunjukkan tanda penurunan."
-    );
-  }
-
-  if (engagementRate < 1) {
-    recommendations.push(
-      "Tambahkan pertanyaan di akhir video agar penonton terdorong komentar, misalnya meminta opini atau pengalaman mereka."
-    );
-  }
-
-  if (avgUploadGapDays > 7) {
-    recommendations.push(
-      "Buat jadwal upload yang lebih konsisten, minimal 2–3 kali seminggu untuk menjaga momentum channel."
-    );
-  }
-
-  recommendations.push(
-    "Gunakan format judul yang lebih spesifik, misalnya mengandung angka, masalah, hasil, atau rasa penasaran."
-  );
-
-  recommendations.push(
-    "Buat variasi konten dari video terbaik: part 2, update terbaru, kesalahan umum, tutorial cepat, atau studi kasus."
-  );
-
-  const ideas = [];
-
-  if (best) {
-    ideas.push(`Buat video lanjutan dari topik: ${best.title}`);
-    ideas.push(`Buat versi lebih singkat dan lebih padat dari video terbaik tersebut.`);
-  }
-
-  ideas.push("Buat konten: 5 kesalahan yang membuat channel YouTube sulit berkembang.");
-  ideas.push("Buat konten: Bedah channel kecil yang berhasil naik cepat.");
-  ideas.push("Buat konten: Strategi upload 7 hari untuk menaikkan performa channel.");
-  ideas.push("Buat konten: Cara membuat judul dan thumbnail yang lebih mudah diklik.");
-
   return {
-    channel: {
-      id: channel.id,
-      title: snippet.title,
-      handle: snippet.customUrl || "",
-      avatar: getBestThumbnail(snippet.thumbnails),
-      publishedAt: snippet.publishedAt,
-      subscriberCount,
-      hiddenSubscriberCount,
-      viewCount: totalViews,
-      videoCount: totalVideos,
+    scores: {
+      growth,
+      engagement,
+      consistency,
+      seo: seoAvg,
+      viral,
     },
     summary: {
       analyzedVideos: videos.length,
-      averageViews,
-      averageLikes,
-      averageComments,
-      engagementRate: Number(engagementRate.toFixed(2)),
+      averageViews: Math.round(avgViews),
+      medianViews: Math.round(median(viewCounts)),
       recentAvg: Math.round(recentAvg),
       olderAvg: Math.round(olderAvg),
       growthPercentage: Number(growthPercentage.toFixed(2)),
       growthStatus,
-      avgUploadGapDays: Number(avgUploadGapDays.toFixed(1)),
+      engagementRate: Number(engagementRate.toFixed(2)),
+      avgUploadGapDays: uploadGap,
+      outlierCount,
       healthScore,
     },
-    diagnosis: {
-      title: diagnosisTitle,
-      text: diagnosisText,
+  };
+}
+
+function buildDiagnosis(summary, scores, channel, videos) {
+  let title = "Channel Cukup Sehat";
+  let text = "Channel memiliki fondasi yang cukup baik. Fokus berikutnya adalah memperbanyak format yang terbukti menang dan memperbaiki SEO judul/deskripsi.";
+
+  if (!videos.length) {
+    return {
+      title: "Data Video Belum Cukup",
+      text: "Channel belum memiliki video publik yang cukup untuk dianalisa.",
+    };
+  }
+
+  if (summary.growthPercentage < -25) {
+    title = "Growth Bottleneck";
+    text = "Performa video terbaru turun cukup besar dibanding video sebelumnya. Biasanya penyebabnya adalah topik mulai melemah, hook kurang kuat, atau format konten tidak konsisten.";
+  } else if (scores.seo < 50) {
+    title = "SEO Channel Lemah";
+    text = "Judul, deskripsi, atau keyword video belum cukup kuat. Perbaiki struktur judul, gunakan keyword yang konsisten, dan tambahkan deskripsi yang lebih informatif.";
+  } else if (scores.engagement < 45) {
+    title = "Engagement Rendah";
+    text = "Penonton belum banyak memberi like atau komentar. Tambahkan pertanyaan, konflik ringan, atau CTA natural di akhir video.";
+  } else if (scores.consistency < 50) {
+    title = "Upload Tidak Konsisten";
+    text = "Jarak upload terlalu jauh sehingga momentum channel melemah. Buat jadwal upload yang lebih tetap.";
+  } else if (summary.outlierCount > 0) {
+    title = "Ada Format Pemenang";
+    text = "Channel memiliki video outlier yang performanya jauh di atas median. Ini sinyal kuat bahwa format/topik tersebut perlu dibuat seri lanjutan.";
+  }
+
+  return { title, text };
+}
+
+function keywordInsights(videos) {
+  const all = keywordCounts(videos).slice(0, 15);
+
+  const winners = videos.filter((v) => v.label === "Winner");
+  const weak = videos.filter((v) => v.label === "Weak");
+
+  return {
+    main: all.slice(0, 10),
+    winning: keywordCounts(winners).slice(0, 8),
+    weak: keywordCounts(weak).slice(0, 8),
+  };
+}
+function buildRecommendations(summary, scores, videos, keywords) {
+  const best = videos.find((v) => v.label === "Winner") || videos[0];
+
+  const recommendations = [];
+
+  if (best) {
+    recommendations.push(`Buat seri lanjutan dari video "${best.title}" karena performanya paling kuat dibanding video lain.`);
+  }
+
+  if (summary.growthPercentage < 0) {
+    recommendations.push("Perbaiki hook 3 detik pertama, karena performa terbaru menunjukkan penurunan.");
+  }
+
+  if (scores.seo < 60) {
+    recommendations.push("Naikkan SEO score dengan judul 35-75 karakter, keyword utama di awal judul, deskripsi minimal 150 karakter, dan tag relevan.");
+  }
+
+  if (scores.engagement < 60) {
+    recommendations.push("Tambahkan engagement trigger: pertanyaan opini, pilihan A/B, atau komentar yang mudah dijawab penonton.");
+  }
+
+  if (scores.consistency < 65) {
+    recommendations.push("Buat jadwal upload minimal 2-3 kali per minggu agar sinyal channel lebih stabil.");
+  }
+
+  const topKeyword = keywords.main?.[0]?.keyword;
+
+  if (topKeyword) {
+    recommendations.push(`Perkuat cluster keyword "${topKeyword}" karena paling sering muncul di channel ini.`);
+  }
+
+  recommendations.push("Gunakan thumbnail dengan satu fokus visual, kontras tinggi, dan teks pendek 2-4 kata.");
+  recommendations.push("Setiap minggu audit 5 video terakhir: cari winner, weak video, dan format yang perlu diulang.");
+
+  return recommendations;
+}
+
+function buildSeoSuggestions(summary, scores, keywords) {
+  const list = [];
+
+  const mainKeyword = keywords.main?.[0]?.keyword || "keyword utama";
+
+  list.push(`Letakkan keyword "${mainKeyword}" di awal judul video berikutnya.`);
+  list.push("Gunakan judul dengan struktur: masalah + rasa penasaran + hasil.");
+  list.push("Tambahkan 2-3 kalimat deskripsi yang menjelaskan isi video dan mengulang keyword utama secara natural.");
+  list.push("Tambahkan 5-8 tag relevan yang masih satu cluster dengan topik channel.");
+
+  if (scores.seo < 60) {
+    list.push("SEO score masih rendah. Prioritaskan perbaikan judul dan deskripsi pada video baru.");
+  }
+
+  if (summary.outlierCount > 0) {
+    list.push("Gunakan keyword dari video outlier sebagai bahan topik seri berikutnya.");
+  }
+
+  return list;
+}
+
+function buildTitleFormulas(videos, keywords) {
+  const keyword = keywords.main?.[0]?.keyword || "topik utama";
+
+  return [
+    `Kenapa ${keyword} Bisa Membuat Channel Kamu Naik?`,
+    `5 Kesalahan ${keyword} yang Sering Diabaikan Creator`,
+    `Saya Coba Strategi ${keyword} Selama 7 Hari, Hasilnya...`,
+    `Jangan Upload Video ${keyword} Sebelum Tahu Hal Ini`,
+    `Cara Membuat Konten ${keyword} yang Lebih Mudah Diklik`,
+  ];
+}
+
+function buildActionPlan(summary, scores, videos) {
+  const best = videos.find((v) => v.label === "Winner") || videos[0];
+
+  return [
+    `Hari 1: Audit video terbaik${best ? ` yaitu "${best.title}"` : ""}, catat topik, hook, judul, dan gaya thumbnail.`,
+    "Hari 2: Buat 5 variasi judul baru dari topik terbaik, pilih yang paling spesifik dan bikin penasaran.",
+    "Hari 3: Buat 2 konsep thumbnail dengan visual sederhana, fokus pada satu objek/emosi utama.",
+    "Hari 4: Upload video baru dengan format yang mirip video terbaik, tapi angle berbeda.",
+    "Hari 5: Balas komentar dan tambahkan CTA natural untuk meningkatkan engagement.",
+    "Hari 6: Bandingkan performa 24 jam pertama dengan rata-rata channel.",
+    "Hari 7: Buat keputusan: lanjutkan format pemenang, perbaiki format lemah, dan susun jadwal upload minggu berikutnya.",
+  ];
+}
+
+function buildIdeas(videos, keywords) {
+  const best = videos.find((v) => v.label === "Winner") || videos[0];
+  const keyword = keywords.main?.[0]?.keyword || "channel YouTube";
+
+  const ideas = [];
+
+  if (best) {
+    ideas.push(`Part 2 dari video: ${best.title}`);
+    ideas.push(`Versi lebih singkat dari topik: ${best.title}`);
+  }
+
+  ideas.push(`5 fakta menarik tentang ${keyword} yang jarang dibahas.`);
+  ideas.push(`Kesalahan umum dalam konten ${keyword} dan cara menghindarinya.`);
+  ideas.push(`Eksperimen 7 hari membuat konten ${keyword}.`);
+  ideas.push("Bedah video yang paling berhasil dan kenapa orang mau klik.");
+
+  return ideas;
+}
+
+function buildAnalysis(channel, rawVideos) {
+  const snippet = channel.snippet || {};
+  const stats = channel.statistics || {};
+  const videos = enrichVideos(rawVideos);
+
+  const { scores, summary } = buildScores(channel, videos);
+  const diagnosis = buildDiagnosis(summary, scores, channel, videos);
+
+  const sortedByViews = [...videos].sort((a, b) => b.viewCount - a.viewCount);
+  const best = sortedByViews[0] || null;
+  const weakest = sortedByViews[sortedByViews.length - 1] || null;
+
+  const keywords = keywordInsights(videos);
+
+  const recommendations = buildRecommendations(summary, scores, videos, keywords);
+  const seoSuggestions = buildSeoSuggestions(summary, scores, keywords);
+  const titleFormulas = buildTitleFormulas(videos, keywords);
+  const actionPlan = buildActionPlan(summary, scores, videos);
+  const ideas = buildIdeas(videos, keywords);
+
+  return {
+    channel: {
+      id: channel.id,
+      title: snippet.title || "Channel YouTube",
+      handle: snippet.customUrl || "",
+      avatar: getThumb(snippet.thumbnails),
+      publishedAt: snippet.publishedAt,
+      subscriberCount: n(stats.subscriberCount),
+      hiddenSubscriberCount: Boolean(stats.hiddenSubscriberCount),
+      viewCount: n(stats.viewCount),
+      videoCount: n(stats.videoCount),
     },
+    scores,
+    summary,
+    diagnosis,
     videos: {
       items: videos,
       best,
       weakest,
+      outliers: videos.filter((v) => v.label === "Winner"),
     },
+    keywords,
     recommendations,
+    seoSuggestions,
+    titleFormulas,
+    actionPlan,
     ideas,
   };
+}
+
+async function analyzeOneChannel(input, limit) {
+  const channel = await resolveChannel(input);
+  const uploadPlaylistId = channel.contentDetails?.relatedPlaylists?.uploads;
+
+  if (!uploadPlaylistId) {
+    throw new Error("Playlist upload channel tidak ditemukan.");
+  }
+
+  const ids = await getLatestVideoIds(uploadPlaylistId, limit);
+  const videos = await getVideos(ids);
+
+  return buildAnalysis(channel, videos);
+}
+
+function buildCompetitorInsight(main, competitor) {
+  const mainAvg = main.summary.averageViews || 0;
+  const compAvg = competitor.summary.averageViews || 0;
+
+  if (compAvg > mainAvg * 1.5) {
+    return "Kompetitor memiliki rata-rata views lebih tinggi. Pelajari pola judul, topik, dan frekuensi upload mereka.";
+  }
+
+  if (mainAvg > compAvg * 1.5) {
+    return "Channel utama sudah unggul dari kompetitor ini dalam rata-rata views video terbaru.";
+  }
+
+  return "Performa cukup seimbang. Cari celah dari video outlier kompetitor untuk membuat angle yang lebih kuat.";
 }
 
 module.exports = async function handler(req, res) {
   try {
     if (req.method !== "POST") {
-      return res.status(405).json({
-        message: "Method tidak diizinkan.",
-      });
+      return res.status(405).json({ message: "Method tidak diizinkan." });
     }
 
     if (!YOUTUBE_API_KEY) {
@@ -424,31 +663,57 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    const { channelInput, videoLimit } = req.body || {};
+    const { channelInput, competitors = [], videoLimit = 10 } = req.body || {};
 
     if (!channelInput) {
       return res.status(400).json({
-        message: "Masukkan link channel, handle, atau Channel ID.",
+        message: "Masukkan channel utama terlebih dahulu.",
       });
     }
 
-    const limit = Math.min(Math.max(Number(videoLimit || 10), 1), 50);
+    const limit = clamp(Number(videoLimit || 10), 1, 50);
 
-    const channel = await resolveChannel(channelInput);
-    const uploadPlaylistId = channel.contentDetails?.relatedPlaylists?.uploads;
+    const mainAnalysis = await analyzeOneChannel(channelInput, limit);
 
-    if (!uploadPlaylistId) {
-      return res.status(404).json({
-        message: "Playlist upload channel tidak ditemukan.",
-      });
+    const competitorInputs = Array.isArray(competitors)
+      ? competitors.slice(0, 3).filter(Boolean)
+      : [];
+
+    const competitorResults = [];
+
+    for (const compInput of competitorInputs) {
+      try {
+        const comp = await analyzeOneChannel(compInput, Math.min(limit, 15));
+
+        competitorResults.push({
+          channel: comp.channel,
+          summary: comp.summary,
+          scores: comp.scores,
+          topVideo: comp.videos.best,
+          gapInsight: buildCompetitorInsight(mainAnalysis, comp),
+        });
+      } catch (error) {
+        competitorResults.push({
+          channel: {
+            title: compInput,
+            handle: "",
+            subscriberCount: 0,
+            hiddenSubscriberCount: true,
+          },
+          summary: {
+            averageViews: 0,
+            healthScore: 0,
+          },
+          topVideo: null,
+          gapInsight: `Gagal membaca kompetitor ini: ${error.message}`,
+        });
+      }
     }
 
-    const videoIds = await getLatestVideoIds(uploadPlaylistId, limit);
-    const videos = await getVideoDetails(videoIds);
-
-    const result = buildAnalysis(channel, videos);
-
-    return res.status(200).json(result);
+    return res.status(200).json({
+      ...mainAnalysis,
+      competitors: competitorResults,
+    });
   } catch (error) {
     return res.status(500).json({
       message: error.message || "Terjadi kesalahan server.",
