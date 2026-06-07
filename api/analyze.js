@@ -281,6 +281,15 @@ function isNoiseKeyword(word) {
   // terlalu pendek
   if (clean.length < 3) return true;
 
+  // hanya simbol, strip, underscore, titik, atau kombinasi simbol
+  if (/^[\W_]+$/u.test(clean)) return true;
+
+  // strip panjang seperti --------
+  if (/^-{2,}$/.test(clean)) return true;
+
+  // tidak punya huruf sama sekali
+  if (!/\p{L}/u.test(clean)) return true;
+
   // stopword umum
   if (STOPWORDS.has(clean)) return true;
 
