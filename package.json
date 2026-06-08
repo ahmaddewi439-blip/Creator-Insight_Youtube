@@ -16,14 +16,7 @@
     "node-fetch": "^3.3.2"
   },
   "devDependencies": {},
-  "keywords": [
-    "youtube",
-    "analytics",
-    "AI",
-    "gemini",
-    "dashboard",
-    "creator"
-  ],
+  "keywords": ["youtube","analytics","AI","gemini","dashboard","creator"],
   "author": "Your Name",
   "license": "MIT"
 }
