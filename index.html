@@ -9,6 +9,7 @@
 </head>
 <body>
   <div class="dashboard">
+    <!-- Sidebar / Navigation -->
     <aside class="sidebar">
       <div class="logo">Creator Insight</div>
       <ul class="menu">
@@ -22,7 +23,10 @@
       <div class="badge ai-status">AI Gemini Active</div>
       <div class="badge mode-status">Mode: Pro</div>
     </aside>
+
+    <!-- Main Content -->
     <main class="content">
+      <!-- Overview -->
       <section id="overview" class="tab-content active">
         <h2>Overview Channel</h2>
         <div class="channel-summary">
@@ -49,23 +53,39 @@
           <ul></ul>
         </div>
         <div class="ai-report"></div>
+
+        <!-- Tombol Copy & Download PDF -->
+        <div class="report-buttons">
+          <button onclick="copyReport()">Copy AI Report</button>
+          <button onclick="downloadPDF()">Download / Print Report</button>
+        </div>
       </section>
+
+      <!-- Video Audit -->
       <section id="video-audit" class="tab-content">
         <h2>Video Audit</h2>
         <div class="audit-table"></div>
       </section>
+
+      <!-- SEO & Keywords -->
       <section id="seo-keywords" class="tab-content">
         <h2>SEO & Keywords</h2>
         <div class="keyword-panel"></div>
       </section>
+
+      <!-- Competitors -->
       <section id="competitors" class="tab-content">
         <h2>Competitor Analysis</h2>
         <div class="competitor-cards"></div>
       </section>
+
+      <!-- Action Plan -->
       <section id="action-plan" class="tab-content">
         <h2>Action Plan 7 Hari</h2>
         <div class="action-list"></div>
       </section>
+
+      <!-- Settings / Mode -->
       <section id="settings" class="tab-content">
         <h2>Settings / Mode</h2>
         <div class="settings-panel">
@@ -75,6 +95,7 @@
       </section>
     </main>
   </div>
+
   <script src="script.js"></script>
 </body>
 </html>
