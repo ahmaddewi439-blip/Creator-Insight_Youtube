@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Creator Insight YouTube</title>
   <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <div class="dashboard">
@@ -32,53 +33,49 @@
           <div class="avatar"></div>
           <div class="info">
             <h3>@ChannelName</h3>
-            <p>Subscribers: 308M | Views: 58.1B | Videos: 816</p>
+            <p>Subscribers: 0 | Views: 0 | Videos: 0</p>
           </div>
         </div>
         <div class="scores">
-          <div class="score-card">Channel Score: 87</div>
-          <div class="score-card">Growth: 86</div>
-          <div class="score-card">Engagement: 84</div>
-          <div class="score-card">Consistency: 78</div>
-          <div class="score-card">SEO: 90</div>
-          <div class="score-card">Viral Potential: 88</div>
+          <div class="score-card">Channel Score: 0</div>
+          <div class="score-card">Growth: 0</div>
+          <div class="score-card">Engagement: 0</div>
+          <div class="score-card">Consistency: 0</div>
+          <div class="score-card">SEO: 0</div>
+          <div class="score-card">Viral Potential: 0</div>
         </div>
         <div class="performance-overview">
           <h3>Performance Overview</h3>
-          <div class="chart-placeholder">[Chart Here]</div>
+          <canvas class="chart-placeholder"></canvas>
         </div>
         <div class="top-videos">
           <h3>Top Videos</h3>
-          <ul>
-            <li>Video 1 - Winner</li>
-            <li>Video 2 - Winner</li>
-            <li>Video 3 - Normal</li>
-          </ul>
+          <ul></ul>
         </div>
       </section>
 
       <!-- Video Audit -->
       <section id="video-audit" class="tab-content">
         <h2>Video Audit</h2>
-        <div class="audit-table">[Video table placeholder]</div>
+        <div class="audit-table"></div>
       </section>
 
       <!-- SEO & Keywords -->
       <section id="seo-keywords" class="tab-content">
         <h2>SEO & Keywords</h2>
-        <div class="keyword-panel">[Keyword list / suggestions]</div>
+        <div class="keyword-panel"></div>
       </section>
 
       <!-- Competitors -->
       <section id="competitors" class="tab-content">
         <h2>Competitor Analysis</h2>
-        <div class="competitor-cards">[Competitor cards]</div>
+        <div class="competitor-cards"></div>
       </section>
 
       <!-- Action Plan -->
       <section id="action-plan" class="tab-content">
         <h2>Action Plan 7 Hari</h2>
-        <div class="action-list">[Checklist items]</div>
+        <div class="action-list"></div>
       </section>
 
       <!-- Settings / Mode -->
@@ -91,7 +88,6 @@
       </section>
     </main>
   </div>
-
   <script src="script.js"></script>
 </body>
 </html>
