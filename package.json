@@ -1,0 +1,22 @@
+{
+  "name": "creator-insight-youtube",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Creator Insight YouTube / AI YouTube Channel Analyzer",
+  "main": "index.html",
+  "scripts": {
+    "start": "vercel dev",
+    "deploy": "vercel --prod"
+  },
+  "engines": {
+    "node": "20.x"
+  },
+  "dependencies": {
+    "chart.js": "^4.4.0",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {},
+  "keywords": ["youtube","analytics","AI","gemini","dashboard","creator"],
+  "author": "Your Name",
+  "license": "MIT"
+}
