@@ -4,10 +4,13 @@ body {
   background: #0d1117;
   color: #c9d1d9;
 }
+
+/* Dashboard Layout */
 .dashboard {
   display: flex;
   min-height: 100vh;
 }
+
 /* Sidebar */
 .sidebar {
   width: 240px;
@@ -44,7 +47,7 @@ body {
   color: #000;
 }
 
-/* Main content */
+/* Main Content */
 .content {
   flex: 1;
   padding: 20px;
@@ -56,6 +59,8 @@ body {
 .tab-content.active {
   display: block;
 }
+
+/* Channel Summary */
 .channel-summary {
   display: flex;
   margin-bottom: 20px;
@@ -67,6 +72,16 @@ body {
   border-radius: 50%;
   margin-right: 20px;
 }
+.channel-summary .info h3 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+.channel-summary .info p {
+  margin: 5px 0 0 0;
+  font-size: 0.9rem;
+}
+
+/* Score Cards */
 .scores {
   display: flex;
   gap: 10px;
@@ -78,7 +93,10 @@ body {
   border-radius: 8px;
   flex: 1 1 150px;
   text-align: center;
+  font-size: 0.9rem;
 }
+
+/* Performance Overview */
 .performance-overview,
 .top-videos {
   background: #161b22;
@@ -100,20 +118,81 @@ body {
   padding: 8px;
   border-bottom: 1px solid #30363d;
   text-align: left;
+  font-size: 0.9rem;
 }
 .audit-table img {
   width: 80px;
 }
 
-/* Responsive mobile */
+/* Keyword Panel */
+.keyword-panel {
+  background: #161b22;
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+/* Competitor Cards */
+.competitor-cards {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.competitor-cards .card {
+  background: #161b22;
+  padding: 15px;
+  border-radius: 8px;
+  flex: 1 1 200px;
+}
+
+/* Action Plan */
+.action-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.action-list .action-item {
+  background: #161b22;
+  padding: 15px;
+  border-radius: 8px;
+}
+
+/* Settings Panel */
+.settings-panel {
+  background: #161b22;
+  padding: 15px;
+  border-radius: 8px;
+}
+
+/* AI Report Panel */
+.ai-report {
+  background: #161b22;
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 20px;
+  white-space: pre-wrap;
+}
+
+/* Responsive Mobile */
 @media (max-width: 768px) {
-  .dashboard { flex-direction: column; }
+  .dashboard {
+    flex-direction: column;
+  }
   .sidebar {
     width: 100%;
     display: flex;
     flex-direction: row;
     overflow-x: auto;
   }
-  .sidebar .menu { display: flex; flex-direction: row; gap: 10px; }
-  .sidebar .menu li { flex: 0 0 auto; }
+  .sidebar .menu {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+  }
+  .sidebar .menu li {
+    flex: 0 0 auto;
+  }
+  .scores {
+    flex-direction: column;
+  }
 }
