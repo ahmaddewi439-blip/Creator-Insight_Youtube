@@ -22,7 +22,7 @@ export default function RobloxNews() {
         return res.json();
       })
       .then((data) => {
-        const latestTopics: RobloxTopic[] = data.slice(0, 6); // maksimal 6 topik
+        const latestTopics: RobloxTopic[] = data.slice(0, 6);
         setTopics(latestTopics);
         setLoading(false);
       })
@@ -33,51 +33,71 @@ export default function RobloxNews() {
       });
   }, []);
 
+  const sourceColors: { [key: string]: string } = {
+    devforum: "#ff6f61",
+    newsroom: "#1a73e8",
+    twitter: "#00acee",
+  };
+
   return (
-    <div style={{ padding: "2rem", maxWidth: "800px", margin: "0 auto" }}>
+    <div style={{ padding: "2rem", maxWidth: "900px", margin: "0 auto" }}>
       <div
         style={{
-          backgroundColor: "#1a73e8",
+          backgroundColor: "#222",
           color: "#fff",
           padding: "1rem",
           borderRadius: "8px",
           marginBottom: "2rem",
           fontWeight: "bold",
+          fontSize: "1.1rem",
+          textAlign: "center",
         }}
       >
-        Data digabung dari <span style={{ textDecoration: "underline" }}>DevForum</span>,{" "}
-        <span style={{ textDecoration: "underline" }}>Newsroom</span>, dan{" "}
-        <span style={{ textDecoration: "underline" }}>Twitter resmi Roblox</span>
+        Data digabung dari{" "}
+        <span style={{ textDecoration: "underline", color: "#ff6f61" }}>DevForum</span>,{" "}
+        <span style={{ textDecoration: "underline", color: "#1a73e8" }}>Newsroom</span>, dan{" "}
+        <span style={{ textDecoration: "underline", color: "#00acee" }}>Twitter resmi Roblox</span>
       </div>
 
       {loading && <div>Loading Roblox news...</div>}
       {error && <div style={{ color: "red" }}>Error: {error}</div>}
 
-      <ul style={{ listStyle: "none", padding: 0 }}>
+      <div style={{ display: "grid", gap: "1rem", gridTemplateColumns: "1fr" }}>
         {topics.map((topic, index) => (
-          <li
+          <a
             key={index}
+            href={topic.url}
+            target="_blank"
+            rel="noopener noreferrer"
             style={{
-              border: "1px solid #444",
-              borderRadius: "8px",
+              display: "block",
+              borderRadius: "10px",
               padding: "1rem",
-              marginBottom: "1rem",
+              backgroundColor: "#1e1e1e",
+              color: "#fff",
+              borderLeft: `6px solid ${sourceColors[topic.source] || "#888"}`,
+              textDecoration: "none",
+              transition: "transform 0.2s, box-shadow 0.2s",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLAnchorElement).style.transform = "scale(1.02)";
+              (e.currentTarget as HTMLAnchorElement).style.boxShadow = "0 4px 15px rgba(0,0,0,0.5)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLAnchorElement).style.transform = "scale(1)";
+              (e.currentTarget as HTMLAnchorElement).style.boxShadow = "none";
             }}
           >
-            <a
-              href={topic.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ fontWeight: "bold", fontSize: "1.1rem" }}
-            >
+            <div style={{ fontWeight: "bold", fontSize: "1.15rem", marginBottom: "0.5rem" }}>
               {topic.title}
-            </a>
-            <div style={{ fontSize: "0.9rem", color: "#aaa" }}>
-              Source: {topic.source} | Date: {topic.date}
             </div>
-          </li>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", color: "#ccc" }}>
+              <span>Source: {topic.source}</span>
+              <span>Date: {topic.date}</span>
+            </div>
+          </a>
         ))}
-      </ul>
+      </div>
     </div>
   );
 }
