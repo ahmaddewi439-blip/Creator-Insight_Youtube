@@ -1,49 +1,48 @@
-import { NextResponse } from "next/server";
+import type { NextApiRequest, NextApiResponse } from "next";
 
-export const runtime = "edge";
-
-async function fetchDevForum() {
-  const res = await fetch('https://devforum.roblox.com/c/updates/announcements/36');
-  const html = await res.text();
-  // Dummy parser, ambil 2-3 topik
-  return html.match(/<a href="(\/t\/.*?)">([^<]+)<\/a>/g)?.slice(0,3) || [];
+// Tipe data untuk topik Roblox
+interface RobloxTopic {
+  title: string;
+  link: string;
 }
 
-async function fetchNewsroom() {
-  const res = await fetch('https://about.roblox.com/newsroom');
-  const html = await res.text();
-  return html.match(/<a href="(\/newsroom\/.*?)">([^<]+)<\/a>/g)?.slice(0,3) || [];
-}
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  try {
+    // Ambil data dari 3 sumber: devforum, newsroom, twitter
+    const devforumRes = await fetch("https://api-roblox-devforum.example.com/latest");
+    const devforumData = await devforumRes.json();
 
-async function fetchTwitter() {
-  // Dummy placeholder, nanti diganti dengan Twitter API v2
-  return [
-    { title: "Twitter update 1", link: "https://twitter.com/Roblox/status/1" },
-    { title: "Twitter update 2", link: "https://twitter.com/Roblox/status/2" }
-  ];
-}
+    const newsroomRes = await fetch("https://api-roblox-newsroom.example.com/latest");
+    const newsroomData = await newsroomRes.json();
 
-export async function GET() {
-  const [devforum, newsroom, twitter] = await Promise.all([
-    fetchDevForum(), fetchNewsroom(), fetchTwitter()
-  ]);
+    const twitterRes = await fetch("https://api-roblox-twitter.example.com/latest");
+    const twitterData = await twitterRes.json();
 
-  // Gabungkan semua topik, hapus duplikasi, ambil 6 teratas
-  const allTopicsRaw = [...devforum, ...newsroom, ...twitter];
-  const titles = new Set();
-  const topics = [];
+    // Gabungkan semua data ke array topics
+    const topics: RobloxTopic[] = [];
+    const titles = new Set<string>();
 
-  for (const t of allTopicsRaw) {
-    const title = typeof t === 'string' ? t : t.title;
-    if (!titles.has(title) && topics.length < 6) {
-      titles.add(title);
-      topics.push(t);
-    }
+    const allSources = [...devforumData, ...newsroomData, ...twitterData];
+
+    allSources.forEach((t) => {
+      // Pastikan t adalah objek dengan title dan link
+      if (typeof t === "string") {
+        t = { title: t, link: "" }; // Jika hanya string, buat objek kosong untuk link
+      }
+
+      const title = t.title;
+      if (!titles.has(title) && topics.length < 6) {
+        titles.add(title);
+        topics.push(t);
+      }
+    });
+
+    res.status(200).json({ topics, source: "devforum + newsroom + twitter" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to fetch Roblox news" });
   }
-
-  return NextResponse.json({
-    success: true,
-    source: "aggregate-official",
-    topics
-  });
 }
