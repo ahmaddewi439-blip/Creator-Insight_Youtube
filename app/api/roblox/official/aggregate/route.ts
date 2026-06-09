@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
-// Normalisasi topik agar compatible dengan UI
+// Normalisasi topik agar kompatibel dengan UI
 function normalizeTopic(topic: any, index: number) {
   const metrics = topic.metrics || {};
   const totalScore =
@@ -15,7 +15,8 @@ function normalizeTopic(topic: any, index: number) {
     link: topic?.link || topic?.url || "",
     url: topic?.url || topic?.link || "",
     date: topic?.date || topic?.publishedAt || "",
-    summary: topic?.summary || "Update resmi Roblox dari sumber resmi.",
+    summary:
+      topic?.summary || "Update resmi Roblox dari Newsroom, DevForum, atau akun official.",
     score: totalScore,
     topicScore: {
       trend: metrics.trend || 0,
@@ -31,37 +32,62 @@ function normalizeTopic(topic: any, index: number) {
   };
 }
 
-// Mock data sementara supaya UI langsung muncul
+// Fetch semua topik Roblox dari official sources
 async function getTopics(req: Request) {
-  const topics = [
-    {
-      id: "topic-1",
-      title: "Weekly Roblox Update",
+  try {
+    // DEVFORUM
+    const devForumResp = await fetch("https://devforum.roblox.com/latest.json");
+    const devForumData = await devForumResp.json();
+    const devTopics = (devForumData?.topics || []).map((t: any) => ({
+      id: t.id,
+      title: t.title,
+      link: `https://devforum.roblox.com/t/${t.slug}/${t.id}`,
       source: "DevForum",
-      link: "https://devforum.roblox.com",
-      date: "2026-06-09",
-      summary: "Update resmi Roblox dari DevForum.",
-      metrics: { trend: 15, visual: 15, engagement: 15 },
+      date: t.created_at,
+      summary: t.excerpt,
+      metrics: { trend: t.views || 0, visual: 5, engagement: t.reply_count || 0 },
       confidence: "high",
-      whyTrending: "Topik ramai di DevForum",
-      trendReason: "Aktual dan banyak dibahas",
-    },
-    {
-      id: "topic-2",
-      title: "New Roblox Event Announcement",
-      source: "Newsroom",
-      link: "https://news.roblox.com",
-      date: "2026-06-09",
-      summary: "Event baru Roblox resmi diumumkan.",
-      metrics: { trend: 12, visual: 14, engagement: 14 },
-      confidence: "medium",
-      whyTrending: "Event trending di komunitas",
-      trendReason: "Aktual, visual menarik, dan source resmi",
-    },
-  ];
+    }));
 
-  // Normalisasi untuk UI
-  return topics.map(normalizeTopic);
+    // NEWSROOM
+    const newsResp = await fetch(
+      "https://en.help.roblox.com/hc/en-us/sections/360005972993-Roblox-News.json"
+    );
+    const newsData = await newsResp.json();
+    const newsTopics = (newsData?.articles || []).map((n: any) => ({
+      id: n.id,
+      title: n.title,
+      link: n.url,
+      source: "Newsroom",
+      date: n.published_at,
+      summary: n.excerpt,
+      metrics: { trend: 5, visual: 5, engagement: 0 },
+      confidence: "medium",
+    }));
+
+    // TWITTER/X (placeholder)
+    const twitterResp = await fetch("https://api.twitter.com/2/tweets?ids=<tweet_ids>", {
+      headers: { Authorization: `Bearer ${process.env.TWITTER_BEARER_TOKEN}` },
+    });
+    const twitterData = await twitterResp.json();
+    const twitterTopics = (twitterData?.data || []).map((tw: any) => ({
+      id: tw.id,
+      title: tw.text,
+      link: `https://twitter.com/Roblox/status/${tw.id}`,
+      source: "Twitter",
+      date: tw.created_at,
+      summary: tw.text,
+      metrics: { trend: 5, visual: 5, engagement: tw.public_metrics?.like_count || 0 },
+      confidence: "medium",
+    }));
+
+    const allTopics = [...devTopics, ...newsTopics, ...twitterTopics];
+
+    return allTopics.map(normalizeTopic);
+  } catch (err: any) {
+    console.error("Failed fetching Roblox topics:", err.message);
+    return [];
+  }
 }
 
 // POST handler untuk Generate Ide
@@ -84,7 +110,7 @@ export async function POST(req: Request) {
   }
 }
 
-// GET handler untuk health check / debug
+// GET handler untuk health check
 export async function GET(req: Request) {
   return NextResponse.json({
     status: "API Roblox Official Aggregate ready",
