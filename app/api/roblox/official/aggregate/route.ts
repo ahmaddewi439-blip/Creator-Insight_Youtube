@@ -11,6 +11,8 @@ type RobloxTopic = {
   date?: string;
   summary: string;
   score: number | null;
+  viralScore: number | null;
+  topicScore: number | null;
   scoreLabel: string;
   confidence: "high" | "medium" | "low";
   whyTrending: string;
