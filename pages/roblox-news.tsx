@@ -1,14 +1,20 @@
 // pages/roblox-news.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 interface RobloxTopic {
   title: string;
-  url: string;
-  source: string; // devforum, newsroom, twitter
+  link: string;
+  source: string;
   date: string;
 }
+
+const sourceColors: Record<string, string> = {
+  "Dev Forum": "bg-blue-500",
+  "Newsroom": "bg-green-500",
+  "Twitter": "bg-cyan-500",
+};
 
 export default function RobloxNews() {
   const [topics, setTopics] = useState<RobloxTopic[]>([]);
@@ -18,99 +24,59 @@ export default function RobloxNews() {
   useEffect(() => {
     fetch("/api/roblox/aggregate")
       .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch Roblox news");
+        if (!res.ok) throw new Error("Failed to fetch Roblox news.");
         return res.json();
       })
       .then((data) => {
-        const latestTopics: RobloxTopic[] = data.slice(0, 6);
-        setTopics(latestTopics);
+        const topTopics = data.slice(0, 6).map((t: any) => ({
+          title: t.title,
+          link: t.link,
+          source: t.source,
+          date: t.date,
+        }));
+        setTopics(topTopics);
         setLoading(false);
       })
       .catch((err) => {
         console.error(err);
-        setError(err.message);
+        setError("Tidak bisa memuat berita Roblox terbaru.");
         setLoading(false);
       });
   }, []);
 
-  const sourceColors: { [key: string]: string } = {
-    devforum: "#ff6f61",
-    newsroom: "#1a73e8",
-    twitter: "#00acee",
-  };
-
   return (
-    <div style={{ padding: "1rem", maxWidth: "1200px", margin: "0 auto" }}>
-      <div
-        style={{
-          backgroundColor: "#222",
-          color: "#fff",
-          padding: "1rem",
-          borderRadius: "8px",
-          marginBottom: "2rem",
-          fontWeight: "bold",
-          fontSize: "1.1rem",
-          textAlign: "center",
-        }}
-      >
-        Data digabung dari{" "}
-        <span style={{ textDecoration: "underline", color: "#ff6f61" }}>DevForum</span>,{" "}
-        <span style={{ textDecoration: "underline", color: "#1a73e8" }}>Newsroom</span>, dan{" "}
-        <span style={{ textDecoration: "underline", color: "#00acee" }}>Twitter resmi Roblox</span>
-      </div>
+    <div className="max-w-4xl mx-auto p-4">
+      <h1 className="text-3xl font-bold mb-6 text-center">Berita Roblox Terbaru</h1>
 
-      {loading && <div>Loading Roblox news...</div>}
-      {error && <div style={{ color: "red" }}>Error: {error}</div>}
+      {loading && <p className="text-center">Memuat berita terbaru...</p>}
+      {error && <p className="text-center text-red-500">{error}</p>}
 
-      <div
-        style={{
-          display: "grid",
-          gap: "1rem",
-          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-        }}
-      >
-        {topics.map((topic, index) => (
-          <a
-            key={index}
-            href={topic.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              display: "block",
-              borderRadius: "10px",
-              padding: "1rem",
-              backgroundColor: "#1e1e1e",
-              color: "#fff",
-              borderLeft: `6px solid ${sourceColors[topic.source] || "#888"}`,
-              textDecoration: "none",
-              transition: "transform 0.2s, box-shadow 0.2s",
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLAnchorElement).style.transform = "scale(1.02)";
-              (e.currentTarget as HTMLAnchorElement).style.boxShadow =
-                "0 4px 15px rgba(0,0,0,0.5)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLAnchorElement).style.transform = "scale(1)";
-              (e.currentTarget as HTMLAnchorElement).style.boxShadow = "none";
-            }}
-          >
-            <div style={{ fontWeight: "bold", fontSize: "1.15rem", marginBottom: "0.5rem" }}>
-              {topic.title}
-            </div>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                fontSize: "0.85rem",
-                color: "#ccc",
-              }}
+      {!loading && !error && topics.length === 0 && (
+        <p className="text-center">Tidak ada berita terbaru saat ini.</p>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {!loading &&
+          !error &&
+          topics.map((topic, idx) => (
+            <a
+              key={idx}
+              href={topic.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block border rounded-lg shadow-md hover:shadow-xl transition bg-white dark:bg-gray-800 p-4"
             >
-              <span>Source: {topic.source}</span>
-              <span>Date: {topic.date}</span>
-            </div>
-          </a>
-        ))}
+              <div className="flex justify-between items-center mb-2">
+                <span
+                  className={`text-xs font-semibold text-white px-2 py-1 rounded ${sourceColors[topic.source]}`}
+                >
+                  {topic.source}
+                </span>
+                <span className="text-gray-400 text-xs">{new Date(topic.date).toLocaleDateString()}</span>
+              </div>
+              <h2 className="font-semibold text-lg dark:text-white">{topic.title}</h2>
+            </a>
+          ))}
       </div>
     </div>
   );
