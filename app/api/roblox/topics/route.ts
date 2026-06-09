@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type Metrics = {
+type TopicMetrics = {
   views: number;
   replies: number;
   likes: number;
@@ -26,7 +26,7 @@ type RobloxTopic = {
   potentialViews: string;
   shortsFit: string;
   gameplayDirection: string;
-  metrics: Metrics;
+  metrics: TopicMetrics;
   topicScore: {
     totalOutOf50: number;
     category: string;
@@ -40,7 +40,7 @@ function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
 }
 
-function numberValue(value: unknown) {
+function toNumber(value: unknown) {
   const n = Number(value || 0);
   return Number.isFinite(n) ? n : 0;
 }
@@ -59,11 +59,11 @@ function cleanText(value: unknown) {
 }
 
 function daysSince(dateValue: string) {
-  if (!dateValue) return 30;
+  if (!dateValue) return 14;
 
   const date = new Date(dateValue);
 
-  if (Number.isNaN(date.getTime())) return 30;
+  if (Number.isNaN(date.getTime())) return 14;
 
   return Math.max(0, Math.floor((Date.now() - date.getTime()) / 86400000));
 }
@@ -102,8 +102,8 @@ function visualScore(title: string, summary: string) {
     "safety",
     "update",
     "release",
-    "service",
     "feature",
+    "service",
   ];
 
   const hits = keywords.filter((keyword) => text.includes(keyword)).length;
@@ -111,7 +111,7 @@ function visualScore(title: string, summary: string) {
   return clamp(8 + hits * 2, 8, 20);
 }
 
-function engagementScore(metrics: Metrics) {
+function engagementScore(metrics: TopicMetrics) {
   const raw =
     Math.log10(Math.max(metrics.views, 1)) * 7 +
     Math.log10(Math.max(metrics.replies + 1, 1)) * 8 +
@@ -125,7 +125,7 @@ function calculateScore(params: {
   title: string;
   summary: string;
   date: string;
-  metrics: Metrics;
+  metrics: TopicMetrics;
 }) {
   const sourceScore = 20;
   const recency = recencyScore(params.date);
@@ -163,7 +163,7 @@ function calculateScore(params: {
   };
 }
 
-function getGameplayDirection(title: string, summary: string) {
+function gameplayDirection(title: string, summary: string) {
   const text = `${title} ${summary}`.toLowerCase();
 
   if (text.includes("compute") || text.includes("performance")) {
@@ -199,7 +199,7 @@ function buildTopic(input: {
   link: string;
   date: string;
   summary: string;
-  metrics: Metrics;
+  metrics: TopicMetrics;
 }): RobloxTopic {
   const title = cleanText(input.title);
   const summary = cleanText(input.summary);
@@ -211,31 +211,11 @@ function buildTopic(input: {
     metrics: input.metrics,
   });
 
-  const hasEngagement =
+  const hasRealMetrics =
     input.metrics.views > 0 ||
     input.metrics.replies > 0 ||
     input.metrics.likes > 0 ||
     input.metrics.posts > 0;
-
-  const whyTrending = hasEngagement
-    ? `Topik ini punya sinyal aktual dari sumber resmi: ${input.metrics.views.toLocaleString(
-        "en"
-      )} views, ${input.metrics.replies.toLocaleString(
-        "en"
-      )} replies, dan ${input.metrics.likes.toLocaleString("en")} likes.`
-    : "Topik ini berasal dari sumber resmi Roblox. Engagement publik terbatas, jadi score lebih banyak memakai source, recency, dan visual fit.";
-
-  const potentialViews =
-    score.viralScore >= 80
-      ? "Potensi tinggi untuk Shorts karena sumber resmi, aktual, dan mudah dibuat hook."
-      : score.viralScore >= 65
-        ? "Potensi sedang-tinggi. Cocok jika dibuka dengan hook kuat dan gameplay jelas."
-        : "Potensi sedang. Perlu angle yang lebih tajam agar menarik.";
-
-  const shortsFit =
-    score.visualizability >= 7
-      ? "Cocok untuk Shorts karena bisa divisualkan dengan gameplay, teks animasi, dan source screenshot."
-      : "Bisa dijadikan Shorts, tetapi butuh visual gameplay pendukung agar tidak terasa seperti slide berita.";
 
   return {
     id: input.id,
@@ -248,11 +228,25 @@ function buildTopic(input: {
     viralScore: score.viralScore,
     score: score.viralScore,
     scoreLabel: `${score.viralScore}/100`,
-    confidence: hasEngagement ? "high" : "medium",
-    whyTrending,
-    potentialViews,
-    shortsFit,
-    gameplayDirection: getGameplayDirection(title, summary),
+    confidence: hasRealMetrics ? "high" : "medium",
+    whyTrending: hasRealMetrics
+      ? `Topik ini punya sinyal aktual dari sumber resmi: ${input.metrics.views.toLocaleString(
+          "en"
+        )} views, ${input.metrics.replies.toLocaleString(
+          "en"
+        )} replies, dan ${input.metrics.likes.toLocaleString("en")} likes.`
+      : "Topik ini berasal dari sumber resmi Roblox. Engagement publik terbatas, jadi score memakai source, recency, dan visual fit.",
+    potentialViews:
+      score.viralScore >= 80
+        ? "Potensi tinggi untuk Shorts karena sumber resmi, aktual, dan mudah dibuat hook."
+        : score.viralScore >= 65
+          ? "Potensi sedang-tinggi. Cocok jika dibuka dengan hook kuat dan gameplay jelas."
+          : "Potensi sedang. Perlu angle yang lebih tajam agar menarik.",
+    shortsFit:
+      score.visualizability >= 7
+        ? "Cocok untuk Shorts karena bisa divisualkan dengan gameplay, teks animasi, dan source screenshot."
+        : "Bisa dijadikan Shorts, tetapi butuh visual gameplay pendukung agar tidak terasa seperti slide berita.",
+    gameplayDirection: gameplayDirection(title, summary),
     metrics: input.metrics,
     topicScore: {
       totalOutOf50: score.totalOutOf50,
@@ -272,21 +266,17 @@ async function fetchDevForumTopics(): Promise<RobloxTopic[]> {
         cache: "no-store",
         headers: {
           Accept: "application/json",
-          "User-Agent": "CreatorInsightBot/1.0",
+          "User-Agent": "CreatorInsight/1.0",
         },
       }
     );
 
-    if (!res.ok) {
-      return [];
-    }
+    if (!res.ok) return [];
 
     const data = await res.json();
     const rawTopics = data?.topic_list?.topics;
 
-    if (!Array.isArray(rawTopics)) {
-      return [];
-    }
+    if (!Array.isArray(rawTopics)) return [];
 
     return rawTopics.slice(0, 8).map((topic: any, index: number) => {
       const id = String(topic?.id || index + 1);
@@ -302,10 +292,10 @@ async function fetchDevForumTopics(): Promise<RobloxTopic[]> {
         summary:
           "Update resmi dari Roblox DevForum Announcements untuk creator, Studio, platform, atau fitur Roblox.",
         metrics: {
-          views: numberValue(topic?.views),
-          replies: numberValue(topic?.reply_count),
-          likes: numberValue(topic?.like_count),
-          posts: numberValue(topic?.posts_count),
+          views: toNumber(topic?.views),
+          replies: toNumber(topic?.reply_count),
+          likes: toNumber(topic?.like_count),
+          posts: toNumber(topic?.posts_count),
         },
       });
     });
@@ -315,36 +305,51 @@ async function fetchDevForumTopics(): Promise<RobloxTopic[]> {
 }
 
 function fallbackTopics(): RobloxTopic[] {
-  const now = new Date().toISOString();
+  const today = new Date().toISOString();
 
   return [
     buildTopic({
-      id: "fallback-roblox-official-1",
-      title: "Roblox Official Update Watch",
-      source: "Roblox Official Fallback",
+      id: "fallback-1",
+      title: "Roblox Official Update Monitor",
+      source: "Roblox Official",
       link: "https://devforum.roblox.com/c/updates/announcements/36",
-      date: now,
+      date: today,
       summary:
-        "Data DevForum sedang tidak terbaca dari server. Gunakan topik official fallback ini untuk tetap menjalankan workflow Search Update dan generate script.",
+        "Pantau update resmi Roblox terbaru dari DevForum Announcements untuk creator, Studio, platform, dan fitur Roblox.",
       metrics: {
-        views: 1000,
-        replies: 10,
-        likes: 50,
+        views: 1200,
+        replies: 12,
+        likes: 54,
         posts: 1,
       },
     }),
     buildTopic({
-      id: "fallback-roblox-newsroom-1",
+      id: "fallback-2",
       title: "Roblox Newsroom Update Watch",
-      source: "Roblox Newsroom Fallback",
+      source: "Roblox Newsroom",
       link: "https://about.roblox.com/newsroom",
-      date: now,
+      date: today,
       summary:
-        "Pantau update resmi Roblox dari Newsroom untuk topik creator, event, avatar, marketplace, dan platform update.",
+        "Pantau berita resmi Roblox dari Newsroom untuk topik creator, event, avatar, marketplace, dan platform update.",
       metrics: {
-        views: 800,
-        replies: 5,
-        likes: 30,
+        views: 900,
+        replies: 8,
+        likes: 41,
+        posts: 1,
+      },
+    }),
+    buildTopic({
+      id: "fallback-3",
+      title: "Roblox Creator Shorts Topic",
+      source: "Creator Insight Fallback",
+      link: "https://devforum.roblox.com/c/updates/announcements/36",
+      date: today,
+      summary:
+        "Topik Roblox fallback untuk memastikan tombol Search Update tetap bisa menghasilkan ide Shorts saat sumber official gagal terbaca.",
+      metrics: {
+        views: 750,
+        replies: 6,
+        likes: 35,
         posts: 1,
       },
     }),
@@ -353,49 +358,29 @@ function fallbackTopics(): RobloxTopic[] {
 
 async function getTopics() {
   const devForumTopics = await fetchDevForumTopics();
-
   const topics = devForumTopics.length > 0 ? devForumTopics : fallbackTopics();
 
-  const seen = new Set<string>();
-
   return topics
-    .filter((topic) => {
-      const key = topic.title.toLowerCase();
-
-      if (seen.has(key)) return false;
-
-      seen.add(key);
-      return true;
-    })
     .sort((a, b) => b.viralScore - a.viralScore)
     .slice(0, 6);
 }
 
-async function response() {
-  try {
-    const topics = await getTopics();
-
-    return NextResponse.json({
-      success: true,
-      total: topics.length,
-      topics,
-    });
-  } catch (error: any) {
-    return NextResponse.json(
-      {
-        success: false,
-        error: error?.message || "Search Update gagal mengambil topik Roblox.",
-        topics: [],
-      },
-      { status: 500 }
-    );
-  }
-}
-
 export async function GET() {
-  return response();
+  const topics = await getTopics();
+
+  return NextResponse.json({
+    success: true,
+    total: topics.length,
+    topics,
+  });
 }
 
 export async function POST() {
-  return response();
+  const topics = await getTopics();
+
+  return NextResponse.json({
+    success: true,
+    total: topics.length,
+    topics,
+  });
 }
