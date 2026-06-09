@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+<<<<<<< HEAD
 type TopicMetrics = {
   views: number;
   replies: number;
@@ -242,6 +243,52 @@ function buildTopic(input: {
 }
 
 async function fetchDevForumTopics(): Promise<RobloxTopic[]> {
+=======
+function normalizeTopic(topic: any, index: number) {
+  const score =
+    typeof topic?.score === "number"
+      ? topic.score
+      : typeof topic?.topicScore === "number"
+      ? topic.topicScore
+      : null;
+
+  return {
+    id: topic?.id || `topic-${index + 1}`,
+    title: topic?.title || `Roblox Official Update ${index + 1}`,
+    source: topic?.source || "Roblox Official",
+    link: topic?.link || topic?.url || "",
+    url: topic?.url || topic?.link || "",
+    date: topic?.date || topic?.publishedAt || "",
+    summary:
+      topic?.summary ||
+      "Update resmi Roblox dari Newsroom, DevForum, atau akun official.",
+    score,
+    scoreLabel:
+      topic?.scoreLabel ||
+      (typeof score === "number" ? `${score}/100` : "Data belum cukup"),
+    confidence: topic?.confidence || "low",
+    whyTrending: topic?.whyTrending || topic?.trendReason || 
+      "Topik ini berasal dari sumber resmi Roblox.",
+  };
+}
+
+export async function GET(req: Request) {
+  // nanti akan berisi panggilan API fetch topic Roblox
+}
+async function getTopics(req: Request) {
+  try {
+    // ambil data topic Roblox dari API resmi
+    const topicsResponse = await fetch("https://api.roblox.com/official/topics");
+    const topics = await topicsResponse.json();
+    return topics;
+  } catch (error: any) {
+    console.error("Gagal mengambil topic Roblox:", error.message);
+    return [];
+  }
+}
+
+export async function POST(req: Request) {
+>>>>>>> e2f0c8b (Fix Roblox search update button topics route)
   try {
     const res = await fetch(
       "https://devforum.roblox.com/c/updates/announcements/36/l/latest.json",
@@ -435,25 +482,32 @@ async function response() {
   try {
     const topics = await getTopics();
 
+    const normalizedTopics = topics.map((topic, index) =>
+      normalizeTopic(topic, index)
+    );
+
     return NextResponse.json({
       success: true,
+<<<<<<< HEAD
       total: topics.length,
       sourcePolicy:
         "Official Roblox sources only: DevForum Announcements, Roblox Newsroom, and Roblox Official X if token is available.",
       topics,
+=======
+      total: normalizedTopics.length,
+      topics: normalizedTopics,
+      message: "Data topics berhasil diambil dari Roblox official sources.",
+>>>>>>> e2f0c8b (Fix Roblox search update button topics route)
     });
   } catch (error: any) {
     return NextResponse.json(
-      {
-        success: false,
-        error: error?.message || "Gagal mengambil topik Roblox.",
-        topics: [],
-      },
+      { success: false, error: error.message, topics: [] },
       { status: 500 }
     );
   }
 }
 
+<<<<<<< HEAD
 export async function GET() {
   return response();
 }
@@ -461,3 +515,183 @@ export async function GET() {
 export async function POST() {
   return response();
 }
+=======
+// helper tambahan untuk scoring
+function clamp(value: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function num(value: unknown) {
+  const numberValue = Number(value || 0);
+  return Number.isFinite(numberValue) ? numberValue : 0;
+}
+function getTopicScore100(topic: AnyTopic) {
+  const direct = typeof topic?.viralScore === "number" ? topic.viralScore : null;
+  const score = typeof topic?.score === "number" ? topic.score : null;
+
+  if (direct !== null) return clamp(Math.round(direct), 1, 100);
+  if (score !== null) return clamp(Math.round(score), 1, 100);
+
+  // fallback jika tidak ada nilai resmi
+  return 50;
+}
+
+function hasKeyword(text: string, keywords: string[]) {
+  const lower = text.toLowerCase();
+  return keywords.some((kw) => lower.includes(kw.toLowerCase()));
+}
+
+function prepareGeminiPrompts(topic: AnyTopic) {
+  // prompt 1: visual utama Roblox Shorts
+  const prompt1 = `Screenshot of Roblox newsroom or game page for topic "${topic.title}", vertical 9:16, scene-specific, no logo, no watermark, readable text`;
+
+  // prompt 2: visual tambahan avatar atau gameplay
+  const prompt2 = `Roblox avatar or gameplay related to "${topic.title}", vertical 9:16, scene-specific, practical gameplay visualization, no logo, no watermark`;
+
+  return [prompt1, prompt2];
+}
+
+function enrichTopicForShorts(topic: AnyTopic) {
+  const score100 = getTopicScore100(topic);
+  const trend = topic?.metrics?.views ? Math.min(Math.floor(Math.log10(topic.metrics.views || 1) * 10), 10) : 5;
+  const engagement = topic?.metrics ? Math.min(Math.floor(Math.log10((topic.metrics.likes || 0) + 1) * 10), 10) : 5;
+  const visual = topic?.metrics ? Math.min(Math.floor(Math.log10((topic.metrics.replies || 0) + 1) * 10), 10) : 5;
+
+  const [prompt1, prompt2] = prepareGeminiPrompts(topic);
+
+  return {
+    ...topic,
+    score100,
+    trend,
+    engagement,
+    visual,
+    geminiPrompts: [prompt1, prompt2],
+  };
+}
+export async function generateShortsResponse(topic: AnyTopic, language: string, duration: string, style: string) {
+  // enrichment topic: scoring, trend, visual, engagement, gemini prompts
+  const enrichedTopic = enrichTopicForShorts(topic);
+
+  // struktur 5 scene standar Roblox Shorts
+  const scenes = [
+    {
+      scene: 1,
+      name: "Strong Hook",
+      duration: "0-3s",
+      goal: "Stop scrolling immediately with a powerful visual and question.",
+      overlayText: `WHAT'S NEW IN ROBLOX?`,
+      vo: `Dari sumber resmi Roblox, ada beberapa info penting yang harus kamu tahu hari ini.`,
+      imagePrompts: enrichedTopic.geminiPrompts,
+      gameplayDirection: "Use gameplay or newsroom visuals; high attention grab.",
+      editingDirection: "Smooth zoom and text pop-ups; strong first frame",
+      sfx: "Gentle chime or alert sound"
+    },
+    {
+      scene: 2,
+      name: "Context / Key Info",
+      duration: "3-7s",
+      goal: "Introduce main topic clearly",
+      overlayText: "ROBLOX UPDATE",
+      vo: `Update resmi Roblox dari DevForum dan Newsroom hari ini.`,
+      imagePrompts: enrichedTopic.geminiPrompts,
+      gameplayDirection: "Show avatar or screenshot highlighting update",
+      editingDirection: "Zoom/pan subtly; text for title/date",
+      sfx: "Typing or subtle notification sound"
+    },
+    {
+      scene: 3,
+      name: "Details / Extra Info",
+      duration: "7-25s",
+      goal: "Give main fact and key details",
+      overlayText: "FEATURES & EVENTS",
+      vo: `Beberapa fitur terbaru dan item limited sekarang tersedia.`,
+      imagePrompts: enrichedTopic.geminiPrompts,
+      gameplayDirection: "Highlight gameplay items or avatars",
+      editingDirection: "Subtle zoom & pop-up animations for text",
+      sfx: "Soft clicks or game sounds"
+    },
+    {
+      scene: 4,
+      name: "Twist / Engagement Hook",
+      duration: "25-40s",
+      goal: "Add extra surprising fact",
+      overlayText: "DID YOU KNOW?",
+      vo: `Ada item gratis yang bisa langsung kamu klaim hari ini.`,
+      imagePrompts: enrichedTopic.geminiPrompts,
+      gameplayDirection: "Show avatar collecting item or feature",
+      editingDirection: "Pan and pop animations for emphasis",
+      sfx: "Soft chime"
+    },
+    {
+      scene: 5,
+      name: "CTA / Engagement",
+      duration: "40-60s",
+      goal: "Encourage subscribe, comment, and follow",
+      overlayText: "FOLLOW FOR MORE",
+      vo: `Apa pendapatmu tentang update ini? Jangan lupa follow untuk berita Roblox terbaru!`,
+      imagePrompts: enrichedTopic.geminiPrompts,
+      gameplayDirection: "Highlight gameplay or topic recap",
+      editingDirection: "Zoom on CTA text; animation pop-ups",
+      sfx: "Alert or notification sound"
+    }
+  ];
+
+  return NextResponse.json({
+    success: true,
+    topicScore: enrichedTopic.score100,
+    totalScore: {
+      trend: enrichedTopic.trend,
+      visual: enrichedTopic.visual,
+      engagement: enrichedTopic.engagement,
+      total: enrichedTopic.score100
+    },
+    scenes,
+    language,
+    durationTarget: duration,
+    voStyle: style,
+    caption: enrichedTopic.title,
+    hashtags: ["#Roblox", "#RobloxUpdate", "#Shorts"],
+    pinnedComment: `Update resmi Roblox: ${enrichedTopic.title}`,
+    thumbnailTexts: [enrichedTopic.title, "Roblox Shorts"],
+    assetChecklist: [],
+    finalQualityChecklist: [],
+  });
+}
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+    const { language = "en", duration = "60", style = "Natural News" } = body;
+
+    // Ambil topik Roblox terbaru
+    const topics = await getTopics(req);
+
+    if (!topics || topics.length === 0) {
+      return NextResponse.json({
+        success: false,
+        error: "Tidak ada topik Roblox terbaru ditemukan."
+      }, { status: 404 });
+    }
+
+    // Pilih topik pertama sebagai default
+    const selectedTopic = normalizeTopic(topics[0], 0);
+
+    // Generate Roblox Shorts JSON lengkap
+    const shortsJSON = await generateShortsResponse(selectedTopic, language, duration, style);
+
+    return NextResponse.json(shortsJSON);
+
+  } catch (error: any) {
+    console.error("Error generating Roblox Shorts:", error.message);
+
+    return NextResponse.json({
+      success: false,
+      error: error.message || "Terjadi kesalahan saat memproses request."
+    }, { status: 500 });
+  }
+}
+
+// Optional GET untuk debug / health check
+export async function GET(req: Request) {
+  return NextResponse.json({ status: "API Roblox Shorts siap", timestamp: new Date() });
+}
+>>>>>>> e2f0c8b (Fix Roblox search update button topics route)
