@@ -1,333 +1,546 @@
-import { callAIJson } from "@/lib/ai";
+import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
-type AnyTopic = Record<string, any>;
+type Topic = {
+  id?: string;
+  title?: string;
+  source?: string;
+  link?: string;
+  url?: string;
+  date?: string;
+  summary?: string;
+  viralScore?: number;
+  score?: number;
+  scoreLabel?: string;
+  whyTrending?: string;
+  potentialViews?: string;
+  shortsFit?: string;
+  gameplayDirection?: string;
+  metrics?: {
+    views?: number;
+    replies?: number;
+    likes?: number;
+    posts?: number;
+  };
+  topicScore?: {
+    totalOutOf50?: number;
+    category?: string;
+    trendRelevance?: number;
+    visualizability?: number;
+    engagementPotential?: number;
+  };
+};
 
-function fallbackScript(topic: AnyTopic, language: string, duration: string, style: string) {
-  const title = topic?.title || "Roblox Update";
-  const isIndo = String(language).toLowerCase().includes("indo");
+function clamp(value: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, value));
+}
 
-  const scenes = isIndo
+function toNumber(value: unknown) {
+  const n = Number(value || 0);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function isIndonesian(language: string) {
+  const value = String(language || "").toLowerCase();
+  return value.includes("indo") || value === "id" || value === "indonesia";
+}
+
+function cleanText(value: unknown) {
+  return String(value || "")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function getTopicText(topic: Topic) {
+  return `${topic?.title || ""} ${topic?.summary || ""}`.toLowerCase();
+}
+
+function getTopicType(topic: Topic) {
+  const text = getTopicText(topic);
+
+  if (text.includes("compute") || text.includes("performance") || text.includes("service")) {
+    return "performance";
+  }
+
+  if (text.includes("debug") || text.includes("logging") || text.includes("studio")) {
+    return "developer";
+  }
+
+  if (
+    text.includes("avatar") ||
+    text.includes("item") ||
+    text.includes("marketplace") ||
+    text.includes("limited") ||
+    text.includes("free")
+  ) {
+    return "avatar-item";
+  }
+
+  if (text.includes("event") || text.includes("experience") || text.includes("game")) {
+    return "event-game";
+  }
+
+  return "official-update";
+}
+
+function getScore(topic: Topic) {
+  const directScore = toNumber(topic?.viralScore || topic?.score);
+  const metrics = topic?.metrics || {};
+
+  const views = toNumber(metrics.views);
+  const replies = toNumber(metrics.replies);
+  const likes = toNumber(metrics.likes);
+  const posts = toNumber(metrics.posts);
+
+  const trendRelevance =
+    topic?.topicScore?.trendRelevance ||
+    clamp(Math.round(Math.log10(Math.max(views, 1)) * 2.5), 1, 10);
+
+  const visualizability =
+    topic?.topicScore?.visualizability ||
+    clamp(getTopicType(topic) === "official-update" ? 7 : 9, 1, 10);
+
+  const engagementPotential =
+    topic?.topicScore?.engagementPotential ||
+    clamp(
+      Math.round(
+        Math.log10(Math.max(likes + replies + posts + 1, 1)) * 2.5
+      ),
+      1,
+      10
+    );
+
+  const totalOutOf50 =
+    topic?.topicScore?.totalOutOf50 ||
+    clamp(trendRelevance + visualizability + engagementPotential + 15, 1, 50);
+
+  const category =
+    topic?.topicScore?.category ||
+    (totalOutOf50 >= 40
+      ? "Very Suitable"
+      : totalOutOf50 >= 30
+        ? "Suitable"
+        : totalOutOf50 >= 20
+          ? "Reconsider"
+          : "Replace");
+
+  return {
+    sourceTopicScoreOutOf100: directScore || clamp(totalOutOf50 * 2, 1, 100),
+    trendRelevance,
+    visualizability,
+    engagementPotential,
+    totalOutOf50,
+    category,
+    scoringBasis: {
+      views,
+      replies,
+      likes,
+      posts,
+      source: topic?.source || "Roblox Official",
+      note:
+        "Score dihitung dari metadata topik yang tersedia: source official, views, replies, likes, posts, recency, dan visual fit. Ini bukan score resmi Roblox.",
+    },
+  };
+}
+
+function getVisualBase(topic: Topic) {
+  const type = getTopicType(topic);
+
+  if (type === "performance") {
+    return {
+      main:
+        "a Roblox-inspired blocky game world showing performance improvement, glowing compute/server energy, fast-moving avatar, before-after speed comparison, subtle dashboard elements",
+      alt:
+        "a Roblox-inspired creator testing a game performance update, server room energy effect, smooth gameplay motion trails, green dark tech atmosphere",
+    };
+  }
+
+  if (type === "developer") {
+    return {
+      main:
+        "a Roblox-inspired developer workspace with Studio-like panels, structured logging dashboard, debug console visualization, creator avatar analyzing update data",
+      alt:
+        "a Roblox-inspired game testing scene with debug markers, clean code panels, creator avatar, green neon developer UI, professional update visual",
+    };
+  }
+
+  if (type === "avatar-item") {
+    return {
+      main:
+        "a Roblox-inspired avatar marketplace scene with item preview cards, blocky avatars, glowing accessory display, clean shop UI, exciting item reveal",
+      alt:
+        "a Roblox-inspired avatar showcase with limited item display, inventory panel, dramatic reveal lighting, mobile Shorts thumbnail layout",
+    };
+  }
+
+  if (type === "event-game") {
+    return {
+      main:
+        "a Roblox-inspired event lobby with glowing portal, blocky players gathering, reward display, countdown energy, cinematic game update atmosphere",
+      alt:
+        "a Roblox-inspired gameplay scene with players reacting to a new event, bright portal, reward icons, dynamic gaming news composition",
+    };
+  }
+
+  return {
+    main:
+      "a Roblox-inspired official update scene with blocky avatars reacting to a glowing news panel, gaming news atmosphere, dark green futuristic UI",
+    alt:
+      "a Roblox-inspired creator news dashboard with update cards, avatar reaction, modern gaming interface, clean mobile Shorts composition",
+  };
+}
+
+function geminiPrompt(params: {
+  topic: Topic;
+  sceneNumber: number;
+  sceneName: string;
+  goal: string;
+  overlayText: string;
+  variant: 1 | 2;
+}) {
+  const title = cleanText(params.topic?.title || "Roblox Official Update");
+  const source = cleanText(params.topic?.source || "Roblox official source");
+  const visual = getVisualBase(params.topic);
+  const visualDirection = params.variant === 1 ? visual.main : visual.alt;
+
+  const sceneDirection: Record<number, string> = {
+    1: "Scene 1 is a scroll-stopping hook. Use close-up reaction, dramatic lighting, strong curiosity, immediate visual impact.",
+    2: "Scene 2 explains the official source. Show source/news context clearly without copying real website branding.",
+    3: "Scene 3 explains the main information. Show the feature, update, or impact with simple visual hierarchy.",
+    4: "Scene 4 adds a twist or discussion point. Show player reactions, comparison, or surprising impact.",
+    5: "Scene 5 is a CTA end screen. Show an avatar pointing to like, comment, and subscribe/follow buttons.",
+  };
+
+  return [
+    "Gemini image prompt.",
+    "Create a vertical 9:16 image for YouTube Shorts.",
+    `Topic: "${title}".`,
+    `Official source context: ${source}.`,
+    `Scene ${params.sceneNumber}: ${params.sceneName}.`,
+    `Scene goal: ${params.goal}.`,
+    `Overlay text safe space needed for: "${params.overlayText}".`,
+    visualDirection,
+    sceneDirection[params.sceneNumber],
+    "Style: premium dark green gaming news, cinematic lighting, high contrast, sharp focus, mobile-first composition.",
+    "Use Roblox-inspired blocky avatars and game environments, but do not include real Roblox logo, real brand logo, watermark, or copyrighted UI.",
+    "Do not generate tiny unreadable text. Leave clean empty space for editor overlay text.",
+    "Make it suitable as a Shorts visual asset, not a full poster, not horizontal, not cluttered.",
+  ].join(" ");
+}
+
+function makeScenes(topic: Topic, language: string) {
+  const indo = isIndonesian(language);
+  const title = cleanText(topic?.title || "Roblox Update");
+  const summary = cleanText(
+    topic?.summary ||
+      "Update resmi Roblox yang penting untuk creator dan player."
+  );
+  const source = cleanText(topic?.source || "Roblox official source");
+  const gameplay =
+    topic?.gameplayDirection ||
+    "Gunakan gameplay Roblox yang relevan sebagai background, source screenshot, zoom/pan, dan pop-up teks singkat.";
+
+  const scenes = indo
     ? [
         {
           scene: 1,
           name: "Strong Hook",
           duration: "0-3s",
-          goal: "stop scrolling",
-          overlayText: "Player Roblox wajib tahu ini!",
-          vo: `Roblox lagi ramai karena ${title}, dan banyak player belum sadar dampaknya.`,
-          imagePrompts: [
-            "Vertical 9:16 Roblox news thumbnail, shocked Roblox avatars, glowing update icon, dramatic green lighting, high contrast",
-            "Vertical 9:16 Roblox avatar looking at a mysterious notification screen, modern gaming UI, suspense atmosphere"
-          ],
-          gameplayDirection: "Pakai clip avatar berlari cepat di lobby Roblox atau area event. Tambahkan zoom-in cepat di 1 detik pertama.",
-          editingDirection: "Fast zoom, glitch transition, big text overlay, notification SFX.",
-          sfx: "notification pop + whoosh"
+          goal: "Menahan penonton agar tidak scroll dalam 3 detik pertama.",
+          overlayText: getTopicType(topic) === "performance"
+            ? "GAME ROBLOX KAMU BISA LEBIH KENCANG?"
+            : "PLAYER ROBLOX WAJIB TAHU INI!",
+          vo:
+            getTopicType(topic) === "performance"
+              ? "Kalau game Roblox kamu terasa berat, update ini bisa jadi penting banget."
+              : `Ada update Roblox resmi yang perlu kamu tahu: ${title}.`,
+          gameplayDirection:
+            "Rekam 3 detik gameplay cepat: avatar bergerak, zoom mendadak, reaction shot, atau visual yang langsung menunjukkan masalah/topik utama.",
+          editingDirection:
+            "Fast zoom di detik pertama, teks besar langsung muncul, tambahkan shake ringan dan sound alert.",
+          sfx: "whoosh cepat + alert pop",
         },
         {
           scene: 2,
-          name: "Context",
+          name: "Official Context",
           duration: "3-12s",
-          goal: "explain topic quickly",
-          overlayText: "Kenapa ini ramai?",
-          vo: "Topik ini ramai karena bisa memengaruhi cara player bermain, mencari item, atau mengikuti event Roblox.",
-          imagePrompts: [
-            "Vertical 9:16 Roblox event lobby with many players, glowing portal, gaming news style",
-            "Vertical 9:16 Roblox marketplace or avatar editor concept, item icons, clean UI, green highlights"
-          ],
-          gameplayDirection: "Rekam avatar berjalan ke portal/event atau membuka avatar editor/marketplace. Tempo lebih pelan agar VO mudah dipahami.",
-          editingDirection: "Pan movement, pop-up keywords, soft zoom.",
-          sfx: "soft whoosh"
+          goal: "Menjelaskan bahwa topik berasal dari sumber resmi.",
+          overlayText: "INI DARI SUMBER RESMI",
+          vo: `Topik ini berasal dari ${source}, jadi bukan sekadar rumor komunitas.`,
+          gameplayDirection:
+            "Tampilkan screenshot/screen recording sumber resmi sebagai bukti, lalu transisi ke gameplay Roblox yang relevan.",
+          editingDirection:
+            "Smooth pan di source visual, highlight judul topik, lalu swipe transition ke gameplay.",
+          sfx: "typing halus + smooth whoosh",
         },
         {
           scene: 3,
-          name: "Main Fact",
+          name: "Main Information",
           duration: "12-28s",
-          goal: "deliver the main value",
-          overlayText: "Ini poin utamanya",
-          vo: "Poin terpentingnya, player perlu tahu apa yang berubah sebelum melewatkan kesempatan atau salah mengambil keputusan.",
-          imagePrompts: [
-            "Vertical 9:16 rare Roblox item icons with countdown timer, dramatic gaming lighting",
-            "Vertical 9:16 Roblox avatar holding a glowing item while other avatars react with surprise"
-          ],
-          gameplayDirection: "Pakai clip avatar mengambil reward, membuka inventory, atau menunjukkan item/fasilitas yang dibahas.",
-          editingDirection: "Highlight object, countdown overlay, quick cuts.",
-          sfx: "item sparkle"
+          goal: "Menyampaikan inti berita/update dengan jelas.",
+          overlayText: "INI POIN UTAMANYA",
+          vo: `Intinya, ${summary}`,
+          gameplayDirection: `${gameplay} Pakai footage 12-16 detik yang paling jelas mendukung poin utama.`,
+          editingDirection:
+            "Tambahkan 2-3 bullet pop-up, zoom ke objek penting, dan highlight kata kunci.",
+          sfx: "soft click + impact ringan",
         },
         {
           scene: 4,
           name: "Extra Twist",
           duration: "28-45s",
-          goal: "increase curiosity",
-          overlayText: "Dampaknya bisa besar",
-          vo: "Kalau ini benar berlanjut, update seperti ini bisa mengubah cara event dan item Roblox dibuat ke depannya.",
-          imagePrompts: [
-            "Vertical 9:16 Roblox event portal with players entering, cinematic green glow, high detail",
-            "Vertical 9:16 split screen Roblox players debating an update, one side excited, one side confused"
-          ],
-          gameplayDirection: "Pakai clip avatar berada di area ramai/event atau map yang relevan. Tambahkan komentar pop-up sebagai visual reaksi player.",
-          editingDirection: "Split screen, comment bubbles, parallax.",
-          sfx: "riser + pop"
+          goal: "Meningkatkan rasa penasaran dan komentar.",
+          overlayText: "DAMPAKNYA BISA BESAR",
+          vo:
+            "Yang menarik, update seperti ini bisa memengaruhi cara game Roblox dibuat, dimainkan, atau dipromosikan.",
+          gameplayDirection:
+            "Gunakan gameplay area ramai, avatar reaction, atau before-after shot. Tambahkan bubble komentar seolah player sedang bereaksi.",
+          editingDirection:
+            "Split screen, comment bubble, zoom pelan, dan highlight kata kunci.",
+          sfx: "riser pendek + pop",
         },
         {
           scene: 5,
           name: "Strong CTA",
           duration: "45-60s",
-          goal: "drive comments, likes, subscribe",
-          overlayText: "Setuju atau tidak?",
-          vo: "Menurut kamu ini update bagus atau malah harus diubah? Tulis pendapat kamu di komentar, like video ini, dan subscribe biar nggak ketinggalan update Roblox berikutnya.",
-          imagePrompts: [
-            "Vertical 9:16 Roblox avatar pointing to like comment subscribe buttons, green neon gaming background",
-            "Vertical 9:16 clean Roblox news end screen with like comment subscribe icons, modern dark green style"
-          ],
-          gameplayDirection: "Rekam avatar menghadap kamera, melambaikan tangan, atau berdiri di depan background Roblox yang menarik.",
-          editingDirection: "Like/comment/subscribe animation, smooth zoom out.",
-          sfx: "button click + success chime"
-        }
+          goal: "Mengajak like, comment, dan subscribe/follow.",
+          overlayText: "MENURUT KAMU BAGUS ATAU TIDAK?",
+          vo:
+            "Menurut kamu update ini bagus atau justru perlu diubah? Tulis pendapat kamu di komentar, like video ini, dan subscribe biar tidak ketinggalan update Roblox berikutnya.",
+          gameplayDirection:
+            "Rekam avatar menghadap kamera atau berdiri di lokasi Roblox yang menarik. Tambahkan animasi like, comment, dan subscribe/follow.",
+          editingDirection:
+            "CTA button animation, smooth zoom out, end screen bersih dengan teks besar.",
+          sfx: "button click + success chime",
+        },
       ]
     : [
         {
           scene: 1,
           name: "Strong Hook",
           duration: "0-3s",
-          goal: "stop scrolling",
-          overlayText: "Roblox players need to see this!",
-          vo: `Roblox players are talking about ${title}, and most people still do not know why it matters.`,
-          imagePrompts: [
-            "Vertical 9:16 Roblox news thumbnail, shocked Roblox avatars, glowing update icon, dramatic green lighting, high contrast",
-            "Vertical 9:16 Roblox avatar looking at a mysterious notification screen, modern gaming UI, suspense atmosphere"
-          ],
-          gameplayDirection: "Use a fast clip of your avatar running through a Roblox lobby or event area. Add a quick zoom in the first second.",
-          editingDirection: "Fast zoom, glitch transition, big text overlay, notification SFX.",
-          sfx: "notification pop + whoosh"
+          goal: "Stop viewers from scrolling in the first 3 seconds.",
+          overlayText: getTopicType(topic) === "performance"
+            ? "COULD YOUR ROBLOX GAME RUN FASTER?"
+            : "ROBLOX PLAYERS NEED TO SEE THIS!",
+          vo:
+            getTopicType(topic) === "performance"
+              ? "If your Roblox game feels heavy, this update could be a big deal."
+              : `There is an official Roblox update you should know about: ${title}.`,
+          gameplayDirection:
+            "Record a fast 3-second gameplay clip: avatar movement, sudden zoom-in, reaction shot, or a visual that instantly shows the main topic.",
+          editingDirection:
+            "Fast zoom in the first second, big text immediately, light shake, and alert sound.",
+          sfx: "fast whoosh + alert pop",
         },
         {
           scene: 2,
-          name: "Context",
+          name: "Official Context",
           duration: "3-12s",
-          goal: "explain topic quickly",
-          overlayText: "Why is this trending?",
-          vo: "This topic is getting attention because it could affect how players join events, collect items, or experience Roblox updates.",
-          imagePrompts: [
-            "Vertical 9:16 Roblox event lobby with many players, glowing portal, gaming news style",
-            "Vertical 9:16 Roblox marketplace or avatar editor concept, item icons, clean UI, green highlights"
-          ],
-          gameplayDirection: "Record your avatar walking toward a portal/event or opening the avatar editor/marketplace. Keep this clip calmer so viewers can follow the VO.",
-          editingDirection: "Pan movement, pop-up keywords, soft zoom.",
-          sfx: "soft whoosh"
+          goal: "Explain that the topic comes from an official source.",
+          overlayText: "THIS IS FROM AN OFFICIAL SOURCE",
+          vo: `This topic comes from ${source}, so it is not just a community rumor.`,
+          gameplayDirection:
+            "Show a screenshot or screen recording of the official source as proof, then transition into relevant Roblox gameplay.",
+          editingDirection:
+            "Smooth pan on the source visual, highlight the topic title, then swipe transition into gameplay.",
+          sfx: "soft typing + smooth whoosh",
         },
         {
           scene: 3,
-          name: "Main Fact",
+          name: "Main Information",
           duration: "12-28s",
-          goal: "deliver the main value",
-          overlayText: "Here is the main point",
-          vo: "The biggest thing players need to understand is what changed before they miss an opportunity or make the wrong move.",
-          imagePrompts: [
-            "Vertical 9:16 rare Roblox item icons with countdown timer, dramatic gaming lighting",
-            "Vertical 9:16 Roblox avatar holding a glowing item while other avatars react with surprise"
-          ],
-          gameplayDirection: "Use a clip of your avatar collecting a reward, opening inventory, or showing the item/feature being discussed.",
-          editingDirection: "Highlight object, countdown overlay, quick cuts.",
-          sfx: "item sparkle"
+          goal: "Deliver the core update clearly.",
+          overlayText: "HERE IS THE MAIN POINT",
+          vo: `The key point is this: ${summary}`,
+          gameplayDirection: `${gameplay} Use a 12-16 second clip that clearly supports the main point.`,
+          editingDirection:
+            "Add 2-3 pop-up bullets, zoom into the important object, and highlight key words.",
+          sfx: "soft click + light impact",
         },
         {
           scene: 4,
           name: "Extra Twist",
           duration: "28-45s",
-          goal: "increase curiosity",
-          overlayText: "This could matter later",
-          vo: "If this keeps going, updates like this could change how future Roblox events and items work.",
-          imagePrompts: [
-            "Vertical 9:16 Roblox event portal with players entering, cinematic green glow, high detail",
-            "Vertical 9:16 split screen Roblox players debating an update, one side excited, one side confused"
-          ],
-          gameplayDirection: "Use footage of your avatar in a busy event area or relevant map. Add comment pop-ups to show player reactions.",
-          editingDirection: "Split screen, comment bubbles, parallax.",
-          sfx: "riser + pop"
+          goal: "Increase curiosity and comments.",
+          overlayText: "THIS COULD MATTER LATER",
+          vo:
+            "The interesting part is that updates like this can change how Roblox games are built, played, or promoted.",
+          gameplayDirection:
+            "Use busy gameplay, avatar reaction, or a before-after shot. Add comment bubbles to show player reactions.",
+          editingDirection:
+            "Split screen, comment bubbles, slow zoom, and keyword highlights.",
+          sfx: "short riser + pop",
         },
         {
           scene: 5,
           name: "Strong CTA",
           duration: "45-60s",
-          goal: "drive comments, likes, subscribe",
-          overlayText: "Good or bad update?",
-          vo: "Do you think this Roblox update is good, or should Roblox change it back? Comment your answer, like this video, and subscribe so you do not miss the next Roblox update.",
-          imagePrompts: [
-            "Vertical 9:16 Roblox avatar pointing to like comment subscribe buttons, green neon gaming background",
-            "Vertical 9:16 clean Roblox news end screen with like comment subscribe icons, modern dark green style"
-          ],
-          gameplayDirection: "Record your avatar facing the camera, waving, or standing in front of an interesting Roblox background.",
-          editingDirection: "Like/comment/subscribe animation, smooth zoom out.",
-          sfx: "button click + success chime"
-        }
+          goal: "Drive likes, comments, and subscribe/follow.",
+          overlayText: "GOOD UPDATE OR BAD UPDATE?",
+          vo:
+            "Do you think this update is good, or should Roblox change it? Comment your opinion, like this video, and subscribe so you do not miss the next Roblox update.",
+          gameplayDirection:
+            "Record your avatar facing the camera or standing in an interesting Roblox location. Add like, comment, and subscribe/follow animations.",
+          editingDirection:
+            "CTA button animation, smooth zoom out, clean end screen with large text.",
+          sfx: "button click + success chime",
+        },
       ];
 
+  return scenes.map((scene) => ({
+    ...scene,
+    imagePrompts: [
+      geminiPrompt({
+        topic,
+        sceneNumber: scene.scene,
+        sceneName: scene.name,
+        goal: scene.goal,
+        overlayText: scene.overlayText,
+        variant: 1,
+      }),
+      geminiPrompt({
+        topic,
+        sceneNumber: scene.scene,
+        sceneName: scene.name,
+        goal: scene.goal,
+        overlayText: scene.overlayText,
+        variant: 2,
+      }),
+    ],
+  }));
+}
+
+function buildResult(topic: Topic, language: string, duration: string, style: string) {
+  const indo = isIndonesian(language);
+  const title = cleanText(topic?.title || "Roblox Update");
+  const score = getScore(topic);
+  const scenes = makeScenes(topic, language);
+
   return {
-    videoTitle: title,
+    videoTitle: indo
+      ? `${title}: Kenapa Ini Penting?`
+      : `${title}: Why This Matters`,
+    selectedTopic: topic,
     language,
-    durationTarget: duration,
-    style,
-    topicScore: {
-      uniqueShock: 8,
-      trendRelevance: 8,
-      visualizability: 8,
-      easyToUnderstand: 8,
-      engagementPotential: 9,
-      totalOutOf50: 41,
-      category: "Very suitable"
-    },
+    durationTarget: duration || "60 seconds",
+    style: style || "Natural News",
+    topicScore: score,
+    realScoringNote:
+      "Views, replies, likes, dan posts berasal dari metadata topik. Score adalah analisis internal untuk prediksi potensi Shorts, bukan score resmi Roblox.",
     scenes,
     fullVO: scenes.map((scene) => scene.vo).join(" "),
     gameplayPlan: {
-      mainGameplayType: topic?.gameplayDirection || "Roblox event exploration + avatar showcase",
-      recommendedRobloxGamesOrMaps: topic?.recommendedGameTypes || ["event game", "obby", "avatar editor", "survival"],
+      mainGameplayType:
+        topic?.gameplayDirection ||
+        "Roblox gameplay support: source screenshot, avatar movement, event/gameplay clip, and CTA shot.",
+      recommendedRobloxGamesOrMaps: [
+        "relevant Roblox gameplay background",
+        "avatar showcase or event lobby",
+        "creator testing scene",
+        "clean CTA end screen",
+      ],
       clipsToRecord: [
-        "Scene 1: fast lobby/event run clip, 3 seconds",
-        "Scene 2: avatar walking to event/menu, 6-9 seconds",
-        "Scene 3: reward/item/feature showcase, 12-16 seconds",
-        "Scene 4: busy map or reaction style footage, 10-15 seconds",
-        "Scene 5: avatar facing camera for CTA, 5-8 seconds"
+        "Scene 1: fast hook clip, 3 seconds",
+        "Scene 2: official source screenshot or screen recording, 6-9 seconds",
+        "Scene 3: main gameplay explanation clip, 12-16 seconds",
+        "Scene 4: reaction or before-after clip, 10-15 seconds",
+        "Scene 5: CTA avatar or end screen clip, 5-8 seconds",
       ],
       recordingTips: [
-        "Record vertical-friendly footage with the avatar centered.",
-        "Keep UI readable and avoid messy crowded clips during explanation.",
-        "Use your best moment in the first 3 seconds to stop scrolling."
-      ]
+        "Use vertical 9:16 framing.",
+        "Keep the avatar or source visual centered.",
+        "Use animated text, not long paragraphs.",
+        "Put the strongest visual in the first 3 seconds.",
+      ],
     },
-    caption: isIndo
-      ? "Update Roblox ini lagi ramai. Menurut kamu bagus atau harus diubah?"
-      : "This Roblox update is getting attention. Good change or bad change?",
-    description: isIndo
-      ? "Bahas update Roblox terbaru dengan hook kuat, gameplay pendukung, dan penjelasan singkat untuk Shorts."
-      : "A quick Roblox Shorts breakdown with strong hook, gameplay support, and a clear update explanation.",
-    hashtags: ["#Roblox", "#RobloxUpdate", "#RobloxNews", "#RobloxShorts", "#Gaming"],
-    pinnedComment: isIndo
-      ? "Menurut kamu update ini bagus atau tidak? Tulis pendapat kamu 👇"
-      : "Do you think this update is good or bad? Comment below 👇",
-    thumbnailTexts: isIndo
-      ? ["ROBLOX BERUBAH?", "PLAYER WAJIB TAHU", "UPDATE BARU!"]
-      : ["ROBLOX CHANGED?", "PLAYERS NEED THIS", "NEW UPDATE!"],
-    assetChecklist: ["Roblox gameplay clips", "topic screenshots/source visuals", "like/comment/subscribe animation", "sound effects"],
-    finalQualityChecklist: ["First 3 seconds have a strong hook", "VO sounds natural", "CTA asks for comment, like, and subscribe", "Gameplay supports the topic"]
+    caption: indo
+      ? `Update Roblox ini penting buat creator dan player. Menurut kamu bagus atau tidak?`
+      : `This Roblox update matters for creators and players. Good change or bad change?`,
+    description: indo
+      ? `Bahas update Roblox terbaru dari sumber resmi dengan hook kuat, gameplay pendukung, dan CTA natural.`
+      : `A Roblox official update breakdown with strong hook, supporting gameplay, and natural CTA.`,
+    hashtags: [
+      "#Roblox",
+      "#RobloxUpdate",
+      "#RobloxNews",
+      "#RobloxShorts",
+      "#Gaming",
+    ],
+    pinnedComment: indo
+      ? "Menurut kamu update ini bagus atau tidak? Tulis pendapat kamu di komentar."
+      : "Do you think this update is good or bad? Comment your opinion.",
+    thumbnailTexts: indo
+      ? ["ROBLOX UPDATE BARU!", "PLAYER WAJIB TAHU", "INI DAMPAKNYA"]
+      : ["NEW ROBLOX UPDATE!", "PLAYERS NEED THIS", "WHY IT MATTERS"],
+    assetChecklist: [
+      "Official source screenshot or screen recording",
+      "Personal Roblox gameplay footage",
+      "Animated text overlay",
+      "Like/comment/subscribe animation",
+      "SFX: whoosh, pop, chime",
+    ],
+    finalQualityChecklist: [
+      "Scene 1 has a strong 0-3s hook",
+      "Each scene has natural VO",
+      "Each scene has exactly 2 Gemini-ready image prompts",
+      "Gameplay supports the topic, not filler",
+      "Scene 5 includes question + comment + like + subscribe/follow CTA",
+    ],
   };
 }
 
 export async function GET() {
-  return Response.json({
-    ok: true,
+  return NextResponse.json({
+    success: true,
     endpoint: "/api/roblox/script",
-    method: "POST",
-    message: "Roblox script route is active. Use POST with { topic, language, duration, style }."
+    message:
+      "Use POST with { topic, language, duration, style } to generate Roblox Shorts script and Gemini image prompts.",
   });
 }
 
-export async function POST(request: Request) {
-  let topic: AnyTopic | null = null;
-  let language = "English";
-  let duration = "60 seconds";
-  let style = "Natural News";
-
+export async function POST(req: Request) {
   try {
-    const body = await request.json().catch(() => ({}));
-    topic = body?.topic;
-    language = body?.language || "English";
-    duration = body?.duration || "60 seconds";
-    style = body?.style || "Natural News";
+    const body = await req.json().catch(() => ({}));
+
+    const topic = body?.topic as Topic | undefined;
+    const language = String(body?.language || "Indonesia");
+    const duration = String(body?.duration || "60 seconds");
+    const style = String(body?.style || "Natural News");
 
     if (!topic) {
-      return Response.json({ error: "Topik belum dipilih." }, { status: 400 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Topik belum dipilih.",
+        },
+        { status: 400 }
+      );
     }
 
-    const system = "You are a professional Roblox YouTube Shorts producer, scriptwriter, VO director, and gameplay director. Return only valid JSON.";
-    const user = `Generate a complete Roblox Shorts production package.
+    const result = buildResult(topic, language, duration, style);
 
-Selected topic:
-${JSON.stringify(topic, null, 2)}
-
-Settings:
-- Language: ${language}
-- Duration: ${duration}
-- VO style: ${style}
-- Video length: 45-60 seconds
-- Scene count: 5 scenes
-
-MANDATORY RULES:
-1. First 3 seconds must be a very strong scroll-stopping hook. No greeting. No slow intro.
-2. Ending CTA must strongly encourage comment, like, and subscribe/follow naturally.
-3. CTA formula: question + comment prompt + like + subscribe/follow reason.
-4. VO must sound human, natural, and not robotic.
-5. Each scene must include exactly 2 image prompts.
-6. Every scene must include gameplay direction: what Roblox gameplay to record, camera movement, clip duration, and purpose.
-7. Gameplay should support the news/topic, not replace it. Target visual mix: topic visuals 50%, personal gameplay 20%, animated text 15%, effects/transitions 10%, CTA 5%.
-8. Do not invent dangerous/exploit instructions. Safety topics must use neutral illustrative gameplay.
-
-Return JSON exactly:
-{
-  "videoTitle": "short optimized title",
-  "language": "${language}",
-  "durationTarget": "${duration}",
-  "topicScore": {
-    "uniqueShock": number,
-    "trendRelevance": number,
-    "visualizability": number,
-    "easyToUnderstand": number,
-    "engagementPotential": number,
-    "totalOutOf50": number,
-    "category": "Very suitable/Suitable/Reconsider/Replace"
-  },
-  "scenes": [
-    {
-      "scene": 1,
-      "name": "Strong Hook",
-      "duration": "0-3s",
-      "goal": "stop scrolling",
-      "overlayText": "big overlay text",
-      "vo": "voice over for this scene",
-      "imagePrompts": ["prompt 1 vertical 9:16", "prompt 2 vertical 9:16"],
-      "gameplayDirection": "exact gameplay to record and how to use it",
-      "editingDirection": "zoom/pan/glitch/text/sfx",
-      "sfx": "sound effect idea"
-    }
-  ],
-  "fullVO": "combined full VO copy-ready",
-  "gameplayPlan": {
-    "mainGameplayType": "recommended gameplay type",
-    "recommendedRobloxGamesOrMaps": ["game/map type ideas"],
-    "clipsToRecord": ["clip list with duration and scene usage"],
-    "recordingTips": ["tips"]
-  },
-  "caption": "copy-ready caption",
-  "description": "copy-ready YouTube Shorts description",
-  "hashtags": ["#Roblox"],
-  "pinnedComment": "comment that invites replies",
-  "thumbnailTexts": ["text options"],
-  "assetChecklist": ["assets needed"],
-  "finalQualityChecklist": ["hook check", "cta check", "vo check"]
-}`;
-
-    const result = await callAIJson([{ role: "system", content: system }, { role: "user", content: user }], 0.78);
-
-    if (result.parsed) {
-      return Response.json({ result: result.parsed });
-    }
-
-    return Response.json({
-      result: fallbackScript(topic, language, duration, style),
-      fallback: true,
-      warning: "AI response was not valid JSON, so fallback script was returned.",
-      raw: result.raw
+    return NextResponse.json({
+      success: true,
+      enhanced: true,
+      result,
+      scenes: result.scenes,
+      topicScore: result.topicScore,
     });
-  } catch (err: any) {
-    if (!topic) {
-      return Response.json({ error: err?.message || "Gagal generate script Roblox." }, { status: 500 });
-    }
-
-    return Response.json({
-      result: fallbackScript(topic, language, duration, style),
-      fallback: true,
-      warning: err?.message || "Gagal generate script Roblox, fallback script returned."
-    });
+  } catch (error: any) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: error?.message || "Gagal generate script Roblox Shorts.",
+      },
+      { status: 500 }
+    );
   }
 }
