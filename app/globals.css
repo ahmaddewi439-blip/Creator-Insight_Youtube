@@ -130,3 +130,141 @@ a { color: inherit; }
   .input, .select { width: 100%; min-width: 0; }
   .table-wrapper { overflow-x: auto; margin: 0 -8px; padding: 0 8px; }
 }
+/* =========================
+   MOBILE RESPONSIVE FIX
+   Creator Insight
+========================= */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  padding-bottom: 96px;
+}
+
+/* Supaya semua card tidak melebar keluar layar */
+.card,
+.dashboard-card,
+.overview-card,
+.channel-card,
+.stat-card,
+.panel,
+section,
+main {
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* Gambar thumbnail tidak memaksa layout melebar */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Fix card channel di mobile */
+@media (max-width: 768px) {
+  .channel-card,
+  .overview-card,
+  .dashboard-card {
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  .channel-card .stats,
+  .overview-card .stats,
+  .dashboard-card .stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .channel-card .stat,
+  .overview-card .stat,
+  .dashboard-card .stat {
+    min-width: 0;
+    text-align: center;
+  }
+
+  .channel-card h1,
+  .channel-card h2,
+  .channel-card h3,
+  .overview-card h1,
+  .overview-card h2,
+  .overview-card h3 {
+    max-width: 100%;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+}
+
+/* Fix tabel Top Videos agar tidak kepotong */
+.table-wrapper,
+.top-videos-wrapper,
+.video-table-wrapper {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+table {
+  width: 100%;
+  max-width: 100%;
+  border-collapse: collapse;
+}
+
+@media (max-width: 768px) {
+  table {
+    min-width: 620px;
+  }
+
+  th,
+  td {
+    white-space: normal;
+    vertical-align: top;
+  }
+
+  td,
+  th {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+}
+
+/* Judul video panjang biar turun baris, bukan dorong kolom */
+.video-title,
+.video-name,
+td p,
+td div {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* Bottom navigation jangan menutup konten */
+.bottom-nav,
+.mobile-bottom-nav,
+nav.fixed,
+.fixed.bottom-0 {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@media (max-width: 768px) {
+  main,
+  .main-content,
+  .page-content,
+  .dashboard-content {
+    padding-bottom: 120px !important;
+  }
+}
