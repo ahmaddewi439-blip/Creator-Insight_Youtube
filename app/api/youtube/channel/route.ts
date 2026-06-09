@@ -1,18 +1,56 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { getMyChannel } from "@/lib/youtube";
-
-export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
-    const accessToken = (session as any)?.accessToken;
-    if (!accessToken) return Response.json({ error: "Belum login YouTube." }, { status: 401 });
+    const apiKey = process.env.YOUTUBE_API_KEY;
+    const channelId =
+      process.env.YOUTUBE_CHANNEL_ID ||
+      process.env.NEXT_PUBLIC_YOUTUBE_CHANNEL_ID;
 
-    const channel = await getMyChannel(accessToken);
+    if (!apiKey) {
+      return Response.json(
+        { error: "YOUTUBE_API_KEY belum diisi di Vercel." },
+        { status: 500 }
+      );
+    }
+
+    if (!channelId) {
+      return Response.json(
+        { error: "YOUTUBE_CHANNEL_ID belum diisi di Vercel." },
+        { status: 500 }
+      );
+    }
+
+    const url =
+      "https://www.googleapis.com/youtube/v3/channels" +
+      `?part=snippet,statistics,contentDetails,brandingSettings` +
+      `&id=${encodeURIComponent(channelId)}` +
+      `&key=${encodeURIComponent(apiKey)}`;
+
+    const res = await fetch(url, { cache: "no-store" });
+    const data = await res.json();
+
+    if (!res.ok) {
+      return Response.json(
+        { error: data?.error?.message || "Gagal mengambil data channel YouTube." },
+        { status: res.status }
+      );
+    }
+
+    const channel = data?.items?.[0];
+
+    if (!channel) {
+      return Response.json(
+        { error: "Channel tidak ditemukan. Cek kembali YOUTUBE_CHANNEL_ID." },
+        { status: 404 }
+      );
+    }
+
     return Response.json({ channel });
-  } catch (err: any) {
-    return Response.json({ error: err?.message || "Gagal mengambil channel." }, { status: 500 });
+  } catch (error: any) {
+    return Response.json(
+      { error: error?.message || "Terjadi error saat mengambil channel." },
+      { status: 500 }
+    );
   }
 }
