@@ -1,3 +1,20 @@
+export type CreatorChannel = {
+  title: string;
+  username: string;
+  thumbnail: string;
+  subscriberCount: string;
+  totalViews: string;
+  totalVideos: string;
+  joined: string;
+};
+
+export type CreatorVideo = {
+  title: string;
+  thumbnail: string;
+  views: string;
+  likes: string;
+};
+
 export type RobloxQuerySource = "DevForum" | "Newsroom" | "Roblox Official";
 
 export type RobloxQueryItem = {
@@ -47,6 +64,33 @@ export const robloxQueries: RobloxQueryItem[] = [
   },
 ];
 
+export async function fetchChannels(): Promise<CreatorChannel[]> {
+  return [
+    {
+      title: "Creator Insight",
+      username: "creator-insight",
+      thumbnail:
+        "https://placehold.co/160x160/png?text=CI",
+      subscriberCount: "-",
+      totalViews: "-",
+      totalVideos: "-",
+      joined: "-",
+    },
+  ];
+}
+
+export async function fetchTopVideos(): Promise<CreatorVideo[]> {
+  return [
+    {
+      title: "Roblox Shorts Topic Generator",
+      thumbnail:
+        "https://placehold.co/320x180/png?text=Roblox+Shorts",
+      views: "-",
+      likes: "-",
+    },
+  ];
+}
+
 export const ROBLOX_QUERIES = robloxQueries;
 export const queries = robloxQueries;
 export const robloxNewsQueries = robloxQueries;
@@ -62,7 +106,7 @@ export async function fetchRobloxQueries() {
 }
 
 export function getTopRobloxQueries(limit = 6) {
-  return robloxQueries
+  return [...robloxQueries]
     .sort((a, b) => a.priority - b.priority)
     .slice(0, limit);
 }
