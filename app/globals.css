@@ -268,3 +268,117 @@ nav.fixed,
     padding-bottom: 120px !important;
   }
 }
+/* =========================
+   MOBILE FIX - CREATOR INSIGHT
+========================= */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  padding-bottom: 110px;
+}
+
+/* Semua card jangan melebar keluar layar */
+main,
+section,
+div {
+  max-width: 100%;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Text panjang jangan dorong layout */
+h1,
+h2,
+h3,
+p,
+span,
+div,
+a {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* Mobile card fix */
+@media (max-width: 768px) {
+  .top-videos-card {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .top-videos-row {
+    min-width: 640px;
+  }
+
+  /* Untuk layout grid/div yang terlalu lebar */
+  [class*="grid"] {
+    max-width: 100%;
+  }
+
+  /* Card channel agar tidak kepotong kanan */
+  .channel-card,
+  .overview-card,
+  .dashboard-card {
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  /* Statistik channel jadi 2 kolom di HP */
+  .channel-stats,
+  .stats {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 16px !important;
+    width: 100% !important;
+  }
+
+  .stat,
+  .stat-card {
+    min-width: 0 !important;
+    text-align: center;
+  }
+
+  /* Thumbnail video jangan terlalu besar */
+  .video-thumb,
+  .thumbnail {
+    width: 90px !important;
+    min-width: 90px !important;
+    max-width: 90px !important;
+    border-radius: 12px;
+  }
+
+  /* Judul video panjang turun baris */
+  .video-title,
+  .video-name {
+    white-space: normal !important;
+    line-height: 1.25;
+  }
+
+  /* Bottom nav tidak menutup konten */
+  main,
+  .main-content,
+  .dashboard-content {
+    padding-bottom: 130px !important;
+  }
+
+  nav,
+  .bottom-nav,
+  .mobile-bottom-nav {
+    max-width: 100%;
+  }
+}
