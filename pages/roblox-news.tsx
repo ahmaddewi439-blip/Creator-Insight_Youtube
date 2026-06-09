@@ -40,7 +40,7 @@ export default function RobloxNews() {
   };
 
   return (
-    <div style={{ padding: "2rem", maxWidth: "900px", margin: "0 auto" }}>
+    <div style={{ padding: "1rem", maxWidth: "1200px", margin: "0 auto" }}>
       <div
         style={{
           backgroundColor: "#222",
@@ -62,7 +62,13 @@ export default function RobloxNews() {
       {loading && <div>Loading Roblox news...</div>}
       {error && <div style={{ color: "red" }}>Error: {error}</div>}
 
-      <div style={{ display: "grid", gap: "1rem", gridTemplateColumns: "1fr" }}>
+      <div
+        style={{
+          display: "grid",
+          gap: "1rem",
+          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+        }}
+      >
         {topics.map((topic, index) => (
           <a
             key={index}
@@ -81,7 +87,8 @@ export default function RobloxNews() {
             }}
             onMouseEnter={(e) => {
               (e.currentTarget as HTMLAnchorElement).style.transform = "scale(1.02)";
-              (e.currentTarget as HTMLAnchorElement).style.boxShadow = "0 4px 15px rgba(0,0,0,0.5)";
+              (e.currentTarget as HTMLAnchorElement).style.boxShadow =
+                "0 4px 15px rgba(0,0,0,0.5)";
             }}
             onMouseLeave={(e) => {
               (e.currentTarget as HTMLAnchorElement).style.transform = "scale(1)";
@@ -91,7 +98,14 @@ export default function RobloxNews() {
             <div style={{ fontWeight: "bold", fontSize: "1.15rem", marginBottom: "0.5rem" }}>
               {topic.title}
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", color: "#ccc" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                fontSize: "0.85rem",
+                color: "#ccc",
+              }}
+            >
               <span>Source: {topic.source}</span>
               <span>Date: {topic.date}</span>
             </div>
