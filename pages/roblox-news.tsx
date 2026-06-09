@@ -22,8 +22,7 @@ export default function RobloxNews() {
         return res.json();
       })
       .then((data) => {
-        // Ambil maksimal 6 topik terbaru
-        const latestTopics: RobloxTopic[] = data.slice(0, 6);
+        const latestTopics: RobloxTopic[] = data.slice(0, 6); // maksimal 6 topik
         setTopics(latestTopics);
         setLoading(false);
       })
@@ -34,13 +33,26 @@ export default function RobloxNews() {
       });
   }, []);
 
-  if (loading) return <div>Loading Roblox news...</div>;
-  if (error) return <div>Error: {error}</div>;
-
   return (
     <div style={{ padding: "2rem", maxWidth: "800px", margin: "0 auto" }}>
-      <h1>Topik Roblox Terbaru</h1>
-      <p>Data digabung dari DevForum, Newsroom, dan Twitter resmi Roblox.</p>
+      <div
+        style={{
+          backgroundColor: "#1a73e8",
+          color: "#fff",
+          padding: "1rem",
+          borderRadius: "8px",
+          marginBottom: "2rem",
+          fontWeight: "bold",
+        }}
+      >
+        Data digabung dari <span style={{ textDecoration: "underline" }}>DevForum</span>,{" "}
+        <span style={{ textDecoration: "underline" }}>Newsroom</span>, dan{" "}
+        <span style={{ textDecoration: "underline" }}>Twitter resmi Roblox</span>
+      </div>
+
+      {loading && <div>Loading Roblox news...</div>}
+      {error && <div style={{ color: "red" }}>Error: {error}</div>}
+
       <ul style={{ listStyle: "none", padding: 0 }}>
         {topics.map((topic, index) => (
           <li
