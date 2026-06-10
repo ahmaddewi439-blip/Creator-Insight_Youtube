@@ -1,4 +1,5 @@
 import { google } from 'googleapis'
+import { getAuth } from './auth'
 
 const youtube = google.youtube('v3')
 
@@ -12,11 +13,9 @@ export interface VideoItem {
   thumbnail?: string
 }
 
-export async function fetchChannelVideos(auth: any): Promise<VideoItem[]> {
-  const youtubeClient = youtube
-
-  // Ambil playlist uploads dari channel
-  const channelRes = await youtubeClient.channels.list({
+export async function fetchChannelVideos(): Promise<VideoItem[]> {
+  const auth = await getAuth()
+  const channelRes = await youtube.channels.list({
     auth,
     part: ['contentDetails'],
     mine: true,
@@ -27,8 +26,7 @@ export async function fetchChannelVideos(auth: any): Promise<VideoItem[]> {
 
   if (!uploadsPlaylistId) return []
 
-  // Ambil video dari playlist
-  const playlistRes = await youtubeClient.playlistItems.list({
+  const playlistRes = await youtube.playlistItems.list({
     auth,
     playlistId: uploadsPlaylistId,
     part: ['snippet', 'contentDetails'],
@@ -39,7 +37,7 @@ export async function fetchChannelVideos(auth: any): Promise<VideoItem[]> {
     playlistRes.data.items?.map((item: any) => ({
       id: item.contentDetails.videoId,
       title: item.snippet.title,
-      status: 'public', // playlistItems tidak punya status, default public
+      status: 'public',
       thumbnail: item.snippet.thumbnails?.medium?.url,
     })) || []
 
