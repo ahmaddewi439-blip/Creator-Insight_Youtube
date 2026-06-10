@@ -10,12 +10,7 @@ export async function getAuth() {
     throw new Error('Missing Google OAuth environment variables')
   }
 
-  const oAuth2Client = new google.auth.OAuth2(
-    clientId,
-    clientSecret,
-    redirectUri
-  )
-
+  const oAuth2Client = new google.auth.OAuth2(clientId, clientSecret, redirectUri)
   oAuth2Client.setCredentials({
     refresh_token: refreshToken,
   })
