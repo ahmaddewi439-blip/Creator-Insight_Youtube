@@ -75,8 +75,40 @@ function ScoreRing({ value, label }: { value: number; label: string }) {
 }
 
 function VideoRow({ video, index, onSelect }: { video: any; index: number; onSelect?: (video: any) => void }) {
-  const thumb = video?.thumbnail || video?.snippet?.thumbnails?.medium?.url || video?.snippet?.thumbnails?.default?.url;
-  const privacy = video?.status || video?.privacyStatus || video?.status?.privacyStatus || "Published";
+  const thumb = video?.thumbnail || video?.snippet?.thumbnails?.high?.url || video?.snippet?.thumbnails?.medium?.url || video?.snippet?.thumbnails?.default?.url;
+  const rawStatus = video?.status?.privacyStatus || video?.privacyStatus || video?.status || "Published";
+  const statusKey = String(rawStatus).toLowerCase();
+
+  const statusLabel =
+    statusKey === "public" || statusKey === "published"
+      ? "Published"
+      : statusKey === "scheduled"
+      ? "Scheduled"
+      : statusKey === "private"
+      ? "Private"
+      : statusKey === "unlisted"
+      ? "Unlisted"
+      : String(rawStatus);
+
+  const statusStyle: any =
+    statusKey === "public" || statusKey === "published"
+      ? {
+          background: "rgba(34,197,94,0.16)",
+          borderColor: "rgba(34,197,94,0.45)",
+          color: "#22c55e",
+        }
+      : statusKey === "scheduled"
+      ? {
+          background: "rgba(245,158,11,0.18)",
+          borderColor: "rgba(245,158,11,0.45)",
+          color: "#f59e0b",
+        }
+      : {
+          background: "rgba(148,163,184,0.14)",
+          borderColor: "rgba(148,163,184,0.35)",
+          color: "#cbd5e1",
+        };
+
   return (
     <tr>
       <td>{index + 1}</td>
@@ -91,7 +123,7 @@ function VideoRow({ video, index, onSelect }: { video: any; index: number; onSel
       </td>
       <td>{compact(video?.views ?? video?.statistics?.viewCount)}</td>
       <td>{compact(video?.likes ?? video?.statistics?.likeCount)}</td>
-      <td><span className={privacy === "public" ? "status-pill" : "status-pill yellow"}>{privacy}</span></td>
+      <td><span className="status-pill" style={statusStyle}>{statusLabel}</span></td>
       {onSelect && <td><button className="btn" onClick={() => onSelect(video)}>Optimize</button></td>}
     </tr>
   );
@@ -310,7 +342,7 @@ export default function CreatorInsightApp() {
           {avatar ? <img className="avatar" src={avatar} alt="channel avatar" /> : <div className="avatar" />}
           <div>
             <h1>{channel?.title || channel?.snippet?.title || "Your YouTube Channel"}</h1>
-            <p>{channel?.snippet?.customUrl || channel?.id || "Login berhasil. Data channel akan tampil di sini."}</p>
+            <p>{channel?.description || channel?.snippet?.customUrl || channel?.id || "Login berhasil. Data channel akan tampil di sini."}</p>
             <div className="badges">
               <span className="badge">YouTube</span>
               <span className="badge">Roblox Shorts</span>
