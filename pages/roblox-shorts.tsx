@@ -32,7 +32,7 @@ export default function VideoOptimizerPage() {
             <li key={v.id}>
               <img src={v.thumbnail} alt={v.title} width={120} />
               <strong>{v.title}</strong>
-              <span> ({v.status})</span>
+              <span> ({v.publishedAt})</span>
             </li>
           ))}
         </ul>
