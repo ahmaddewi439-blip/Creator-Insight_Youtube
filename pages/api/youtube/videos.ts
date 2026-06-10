@@ -1,14 +1,38 @@
-import type { NextApiRequest, NextApiResponse } from 'next'
-import { fetchChannelVideos, VideoItem } from '../../../lib/youtube/fetchVideos'
-import { getAuth } from '../../../lib/youtube/auth'
+import { useEffect, useState } from 'react'
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  try {
-    const auth = await getAuth()
-    const videos: VideoItem[] = await fetchChannelVideos(auth)
-    res.status(200).json(videos)
-  } catch (error) {
-    console.error(error)
-    res.status(500).json({ error: 'Failed to fetch videos' })
+interface VideoItem {
+  id: string
+  title: string
+  status: 'public' | 'scheduled' | 'private'
+  scheduledDate?: string
+  views?: number
+  likes?: number
+  thumbnail?: string
+}
+
+export default function VideoOptimizerPage() {
+  const [videos, setVideos] = useState<VideoItem[]>([])
+  const [loading, setLoading] = useState(false)
+
+  async function loadVideos() {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/youtube/videos')
+      const data: VideoItem[] = await res.json()
+      setVideos(data)
+    } catch (err) {
+      console.error(err)
+    }
+    setLoading(false)
   }
+
+  useEffect(() => {
+    loadVideos()
+  }, [])
+
+  return (
+    <div>
+      {/* Render table / UI sama seperti sebelumnya */}
+    </div>
+  )
 }
