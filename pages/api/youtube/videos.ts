@@ -1,14 +1,16 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { fetchChannelVideos, VideoItem } from '../../../app/lib/youtube/fetchVideos'
-import { getAuth } from '../../../app/lib/youtube/auth'
+import { fetchChannelVideos, type VideoItem } from '../../../app/lib/youtube/fetchVideos'
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+type ApiResponse = VideoItem[] | { error: string }
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<ApiResponse>
+) {
   try {
-    const auth = await getAuth()
-    const videos: VideoItem[] = await fetchChannelVideos(auth)
+    const videos = await fetchChannelVideos()
     res.status(200).json(videos)
   } catch (err: any) {
-    console.error(err)
-    res.status(500).json({ error: 'Failed to fetch videos' })
+    res.status(500).json({ error: err.message || 'Unknown error' })
   }
 }
