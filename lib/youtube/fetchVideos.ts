@@ -1,43 +1,79 @@
-import { google } from 'googleapis'
+export type VideoItem = {
+  id: string;
+  title: string;
+  description: string;
+  thumbnail: string;
+  publishedAt: string;
+  channelTitle: string;
+};
 
-const youtube = google.youtube('v3')
+type YouTubeSearchItem = {
+  id?: {
+    videoId?: string;
+  };
+  snippet?: {
+    title?: string;
+    description?: string;
+    publishedAt?: string;
+    channelTitle?: string;
+    thumbnails?: {
+      high?: {
+        url?: string;
+      };
+      medium?: {
+        url?: string;
+      };
+      default?: {
+        url?: string;
+      };
+    };
+  };
+};
 
-export interface VideoItem {
-  id: string
-  title: string
-  status: 'public' | 'scheduled' | 'private'
-  scheduledDate?: string
-  views?: number
-  likes?: number
-  thumbnail?: string
-}
+export async function fetchChannelVideos(_auth?: unknown): Promise<VideoItem[]> {
+  const apiKey = process.env.YOUTUBE_API_KEY;
+  const channelId = process.env.YOUTUBE_CHANNEL_ID;
 
-export async function fetchChannelVideos(auth: any): Promise<VideoItem[]> {
-  const youtubeClient = youtube
+  if (!apiKey) {
+    throw new Error("YOUTUBE_API_KEY belum diisi di .env.local");
+  }
 
-  const channelRes = await youtubeClient.channels.list({
-    auth,
-    part: ['contentDetails'],
-    mine: true,
-  })
+  if (!channelId) {
+    throw new Error("YOUTUBE_CHANNEL_ID belum diisi di .env.local");
+  }
 
-  const uploadsPlaylistId = channelRes.data.items?.[0]?.contentDetails?.relatedPlaylists?.uploads
-  if (!uploadsPlaylistId) return []
+  const url = new URL("https://www.googleapis.com/youtube/v3/search");
 
-  const playlistRes = await youtubeClient.playlistItems.list({
-    auth,
-    playlistId: uploadsPlaylistId,
-    part: ['snippet', 'contentDetails'],
-    maxResults: 50,
-  })
+  url.searchParams.set("part", "snippet");
+  url.searchParams.set("channelId", channelId);
+  url.searchParams.set("type", "video");
+  url.searchParams.set("order", "date");
+  url.searchParams.set("maxResults", "25");
+  url.searchParams.set("key", apiKey);
 
-  const videos: VideoItem[] =
-    playlistRes.data.items?.map((item: any) => ({
-      id: item.contentDetails.videoId,
-      title: item.snippet.title,
-      status: 'public', // playlistItems tidak punya status, default public
-      thumbnail: item.snippet.thumbnails?.medium?.url,
-    })) || []
+  const response = await fetch(url.toString());
 
-  return videos
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Gagal mengambil video YouTube: ${errorText}`);
+  }
+
+  const data = await response.json();
+
+  const items = (data.items ?? []) as YouTubeSearchItem[];
+
+  return items
+    .filter((item) => item.id?.videoId)
+    .map((item) => ({
+      id: item.id?.videoId ?? "",
+      title: item.snippet?.title ?? "",
+      description: item.snippet?.description ?? "",
+      thumbnail:
+        item.snippet?.thumbnails?.high?.url ??
+        item.snippet?.thumbnails?.medium?.url ??
+        item.snippet?.thumbnails?.default?.url ??
+        "",
+      publishedAt: item.snippet?.publishedAt ?? "",
+      channelTitle: item.snippet?.channelTitle ?? "",
+    }));
 }
