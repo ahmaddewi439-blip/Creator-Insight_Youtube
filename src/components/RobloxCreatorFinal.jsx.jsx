@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-const RobloxCreatorFinal = () => {
+const RobloxCreatorFinalUI = () => {
   const [updateData, setUpdateData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("natural-news");
@@ -8,7 +8,6 @@ const RobloxCreatorFinal = () => {
   const [copiedIndex, setCopiedIndex] = useState(null);
   const [expandedIndex, setExpandedIndex] = useState(null);
 
-  // Fetch API
   const handleSearchUpdate = async () => {
     try {
       setLoading(true);
@@ -23,7 +22,7 @@ const RobloxCreatorFinal = () => {
         return;
       }
 
-      // Tambahkan 5 scenes default untuk setiap result
+      // Tambahkan 5 scenes default
       const dataWithScenes = data.sources.map((item) => ({
         ...item,
         scenes: [
@@ -52,7 +51,7 @@ const RobloxCreatorFinal = () => {
   };
 
   const handleGeneratePromptShort = (item) => {
-    const prompt = `Create a Roblox Short based on this data:
+    const prompt = `Create a Roblox Short:
 Title: ${item.title}
 Summary: ${item.summary}
 Keyword: ${searchKeyword}
@@ -70,16 +69,16 @@ ${item.scenes.join("\n")}
   };
 
   const handleCopyAllScenes = (item) => {
-    const allScenesPrompt = `${item.title}\n${item.summary}\nScenes:\n${item.scenes.join(
+    const allScenes = `${item.title}\n${item.summary}\nScenes:\n${item.scenes.join(
       "\n"
     )}\nSource: ${item.source}\nCategory: ${item.category}\nDate: ${item.dateFetched} ${item.timeFetched}\nQuery: ${item.queryUsed}`;
-    navigator.clipboard.writeText(allScenesPrompt);
+    navigator.clipboard.writeText(allScenes);
     alert("Semua Scenes berhasil disalin ke clipboard!");
   };
 
   return (
     <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
-      <h2>Roblox Shorts Creator - Final Version</h2>
+      <h2>Roblox Shorts Creator - UI Final</h2>
 
       {/* Input keyword */}
       <div style={{ marginBottom: "10px" }}>
@@ -177,13 +176,7 @@ ${item.scenes.join("\n")}
                 </p>
 
                 {/* Metadata lengkap */}
-                <div
-                  style={{
-                    fontSize: "12px",
-                    color: "#555",
-                    marginBottom: "5px",
-                  }}
-                >
+                <div style={{ fontSize: "12px", color: "#555", marginBottom: "5px" }}>
                   <div>Sumber: {item.source}</div>
                   <div>Kategori: {item.category}</div>
                   <div>Tanggal: {item.dateFetched}</div>
@@ -192,20 +185,12 @@ ${item.scenes.join("\n")}
                 </div>
 
                 {/* Tombol interaktif */}
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "8px",
-                    marginTop: "8px",
-                    flexWrap: "wrap",
-                  }}
-                >
+                <div style={{ display: "flex", gap: "8px", marginTop: "8px", flexWrap: "wrap" }}>
                   <button
                     onClick={() => handleCopyCaption(item, index)}
                     style={{
                       padding: "5px 8px",
-                      backgroundColor:
-                        copiedIndex === index ? "#ffc107" : "#17a2b8",
+                      backgroundColor: copiedIndex === index ? "#ffc107" : "#17a2b8",
                       color: "#fff",
                       border: "none",
                       borderRadius: "4px",
@@ -289,4 +274,4 @@ ${item.scenes.join("\n")}
   );
 };
 
-export default RobloxCreatorFinal;
+export default RobloxCreatorFinalUI;
