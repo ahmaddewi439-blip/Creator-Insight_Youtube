@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-const RobloxCreatorInteractive = () => {
+const RobloxCreatorFinal = () => {
   const [updateData, setUpdateData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("natural-news");
@@ -8,6 +8,7 @@ const RobloxCreatorInteractive = () => {
   const [copiedIndex, setCopiedIndex] = useState(null);
   const [expandedIndex, setExpandedIndex] = useState(null);
 
+  // Fetch API
   const handleSearchUpdate = async () => {
     try {
       setLoading(true);
@@ -22,7 +23,7 @@ const RobloxCreatorInteractive = () => {
         return;
       }
 
-      // Tambahkan mock 5 scenes preview untuk setiap result
+      // Tambahkan 5 scenes default untuk setiap result
       const dataWithScenes = data.sources.map((item) => ({
         ...item,
         scenes: [
@@ -43,7 +44,7 @@ const RobloxCreatorInteractive = () => {
   };
 
   const handleCopyCaption = (item, index) => {
-    const textToCopy = `${item.title}\n${item.summary}`;
+    const textToCopy = `${item.title}\n${item.summary}\nSource: ${item.source}\nCategory: ${item.category}\nDate: ${item.dateFetched} ${item.timeFetched}\nQuery: ${item.queryUsed}`;
     navigator.clipboard.writeText(textToCopy).then(() => {
       setCopiedIndex(index);
       setTimeout(() => setCopiedIndex(null), 1500);
@@ -52,16 +53,15 @@ const RobloxCreatorInteractive = () => {
 
   const handleGeneratePromptShort = (item) => {
     const prompt = `Create a Roblox Short based on this data:
-
 Title: ${item.title}
 Summary: ${item.summary}
 Keyword: ${searchKeyword}
 Category: ${selectedCategory}
-
+Scenes:
+${item.scenes.join("\n")}
 - Hook 0-3s
-- 5 scenes
 - VO natural
-- Gameplay directions
+- Gameplay direction
 - Caption + Hashtags
 - Strong CTA ending`;
 
@@ -72,14 +72,14 @@ Category: ${selectedCategory}
   const handleCopyAllScenes = (item) => {
     const allScenesPrompt = `${item.title}\n${item.summary}\nScenes:\n${item.scenes.join(
       "\n"
-    )}`;
+    )}\nSource: ${item.source}\nCategory: ${item.category}\nDate: ${item.dateFetched} ${item.timeFetched}\nQuery: ${item.queryUsed}`;
     navigator.clipboard.writeText(allScenesPrompt);
-    alert("Semua 5 Scenes berhasil disalin ke clipboard!");
+    alert("Semua Scenes berhasil disalin ke clipboard!");
   };
 
   return (
     <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
-      <h2>Roblox Shorts Creator - Interaktif</h2>
+      <h2>Roblox Shorts Creator - Final Version</h2>
 
       {/* Input keyword */}
       <div style={{ marginBottom: "10px" }}>
@@ -127,15 +127,15 @@ Category: ${selectedCategory}
         {loading ? "Loading..." : "Search Update"}
       </button>
 
-      {/* Area hasil */}
+      {/* Hasil interaktif */}
       {updateData && updateData.sources && updateData.sources.length > 0 && (
         <div style={{ marginTop: "25px" }}>
           <h3>
-            {updateData.categoryLabel} - {updateData.total} results
+            {updateData.categoryLabel} - {updateData.totalResults} results
           </h3>
           <div
             style={{
-              maxHeight: "450px",
+              maxHeight: "500px",
               overflowY: "auto",
               display: "grid",
               gridTemplateColumns: "repeat(auto-fill, minmax(350px, 1fr))",
@@ -151,6 +151,10 @@ Category: ${selectedCategory}
                   borderRadius: "8px",
                   padding: "12px",
                   backgroundColor: "#f9f9f9",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                  height: "100%",
                 }}
               >
                 <a
@@ -162,16 +166,30 @@ Category: ${selectedCategory}
                     color: "#007bff",
                     marginBottom: "8px",
                     textDecoration: "none",
-                    display: "block",
                   }}
                 >
                   {item.title}
                 </a>
-                <p style={{ fontSize: "14px", lineHeight: "1.4" }}>
+                <p style={{ fontSize: "14px", lineHeight: "1.4", flexGrow: 1 }}>
                   {item.summary.length > 150
                     ? item.summary.substring(0, 150) + "..."
                     : item.summary}
                 </p>
+
+                {/* Metadata lengkap */}
+                <div
+                  style={{
+                    fontSize: "12px",
+                    color: "#555",
+                    marginBottom: "5px",
+                  }}
+                >
+                  <div>Sumber: {item.source}</div>
+                  <div>Kategori: {item.category}</div>
+                  <div>Tanggal: {item.dateFetched}</div>
+                  <div>Jam: {item.timeFetched}</div>
+                  <div>Query: {item.queryUsed}</div>
+                </div>
 
                 {/* Tombol interaktif */}
                 <div
@@ -195,7 +213,7 @@ Category: ${selectedCategory}
                       flex: 1,
                     }}
                   >
-                    {copiedIndex === index ? "Copied!" : "Copy Caption"}
+                    {copiedIndex === index ? "Copied!" : "Copy Caption & Notif"}
                   </button>
 
                   <button
@@ -254,10 +272,6 @@ Category: ${selectedCategory}
                     ))}
                   </ul>
                 )}
-
-                <small style={{ fontSize: "12px", color: "#555" }}>
-                  Query used: {item.queryUsed}
-                </small>
               </div>
             ))}
           </div>
@@ -275,4 +289,4 @@ Category: ${selectedCategory}
   );
 };
 
-export default RobloxCreatorInteractive;
+export default RobloxCreatorFinal;
