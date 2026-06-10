@@ -7,40 +7,36 @@ export interface VideoItem {
   title: string
   status: 'public' | 'scheduled' | 'private'
   scheduledDate?: string
-  views: number
-  likes: number
-  thumbnail: string
+  views?: number
+  likes?: number
+  thumbnail?: string
 }
 
 export async function fetchChannelVideos(auth: any): Promise<VideoItem[]> {
-  const res = await youtube.videos.list({
+  const channelRes = await youtube.channels.list({
     auth,
-    part: ['snippet', 'status', 'statistics', 'contentDetails'],
+    part: ['contentDetails'],
     mine: true,
+  })
+
+  const uploadsPlaylistId =
+    channelRes.data.items?.[0]?.contentDetails?.relatedPlaylists?.uploads
+
+  if (!uploadsPlaylistId) return []
+
+  const playlistRes = await youtube.playlistItems.list({
+    auth,
+    playlistId: uploadsPlaylistId,
+    part: ['snippet', 'contentDetails'],
     maxResults: 50,
-    broadcastStatus: 'all', // ambil semua termasuk scheduled
   })
 
-  const items: VideoItem[] = []
+  const videos: VideoItem[] = playlistRes.data.items?.map((item: any) => ({
+    id: item.contentDetails.videoId,
+    title: item.snippet.title,
+    status: 'public', // default karena playlistItems tidak punya status
+    thumbnail: item.snippet.thumbnails?.medium?.url,
+  })) || []
 
-  res.data.items?.forEach((video) => {
-    const status = video.status?.privacyStatus as 'public' | 'private' | 'scheduled'
-    let scheduledDate: string | undefined = undefined
-
-    if (status === 'scheduled') {
-      scheduledDate = video.snippet?.scheduledStartTime || undefined
-    }
-
-    items.push({
-      id: video.id || '',
-      title: video.snippet?.title || '',
-      status,
-      scheduledDate,
-      views: Number(video.statistics?.viewCount || 0),
-      likes: Number(video.statistics?.likeCount || 0),
-      thumbnail: video.snippet?.thumbnails?.medium?.url || '',
-    })
-  })
-
-  return items
+  return videos
 }
