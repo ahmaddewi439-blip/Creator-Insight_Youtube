@@ -1,84 +1,72 @@
-export interface VideoItem {
-  id: string
-  title: string
-  status: 'public' | 'scheduled' | 'private' | 'unlisted'
-  scheduledDate?: string
-  views: number
-  likes: number
-  thumbnail: string
-}
+export type VideoItem = {
+  id: string;
+  title: string;
+  description: string;
+  thumbnail: string;
+  publishedAt: string;
+  channelTitle: string;
+};
 
-function getTokenValue(tokenResult: any): string {
-  if (typeof tokenResult === 'string') return tokenResult
-  if (tokenResult?.token) return tokenResult.token
-  if (tokenResult?.res?.data?.access_token) return tokenResult.res.data.access_token
-  throw new Error('Google access token not found')
-}
+type YouTubeSearchItem = {
+  id?: {
+    videoId?: string;
+  };
+  snippet?: {
+    title?: string;
+    description?: string;
+    publishedAt?: string;
+    channelTitle?: string;
+    thumbnails?: {
+      high?: { url?: string };
+      medium?: { url?: string };
+      default?: { url?: string };
+    };
+  };
+};
 
-async function fetchJson(url: string, accessToken: string) {
-  const response = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      Accept: 'application/json',
-    },
-  })
+export async function fetchChannelVideos(_auth?: unknown): Promise<VideoItem[]> {
+  const apiKey = process.env.YOUTUBE_API_KEY;
+  const channelId = process.env.YOUTUBE_CHANNEL_ID;
 
-  const data = await response.json()
-
-  if (!response.ok) {
-    throw new Error(data?.error?.message || 'YouTube API request failed')
+  if (!apiKey) {
+    throw new Error("YOUTUBE_API_KEY belum diisi.");
   }
 
-  return data
-}
+  if (!channelId) {
+    throw new Error("YOUTUBE_CHANNEL_ID belum diisi.");
+  }
 
-export async function fetchChannelVideos(auth: any): Promise<VideoItem[]> {
-  const tokenResult = await auth.getAccessToken()
-  const accessToken = getTokenValue(tokenResult)
+  const url = new URL("https://www.googleapis.com/youtube/v3/search");
 
-  const searchUrl =
-    'https://www.googleapis.com/youtube/v3/search' +
-    '?part=snippet' +
-    '&forMine=true' +
-    '&type=video' +
-    '&order=date' +
-    '&maxResults=50'
+  url.searchParams.set("part", "snippet");
+  url.searchParams.set("channelId", channelId);
+  url.searchParams.set("type", "video");
+  url.searchParams.set("order", "date");
+  url.searchParams.set("maxResults", "25");
+  url.searchParams.set("key", apiKey);
 
-  const searchData = await fetchJson(searchUrl, accessToken)
+  const response = await fetch(url.toString());
 
-  const ids = (searchData.items || [])
-    .map((item: any) => item?.id?.videoId)
-    .filter(Boolean)
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Gagal mengambil video YouTube: ${errorText}`);
+  }
 
-  if (ids.length === 0) return []
+  const data = await response.json();
+  const items = (data.items ?? []) as YouTubeSearchItem[];
 
-  const videosUrl =
-    'https://www.googleapis.com/youtube/v3/videos' +
-    '?part=snippet,status,statistics,contentDetails' +
-    `&id=${ids.join(',')}`
-
-  const videosData = await fetchJson(videosUrl, accessToken)
-
-  return (videosData.items || []).map((video: any) => {
-    const privacyStatus = video?.status?.privacyStatus || 'private'
-    const publishAt = video?.status?.publishAt
-
-    const computedStatus =
-      privacyStatus === 'private' && publishAt
-        ? 'scheduled'
-        : privacyStatus
-
-    return {
-      id: video.id || '',
-      title: video?.snippet?.title || 'Untitled video',
-      status: computedStatus,
-      scheduledDate: publishAt || undefined,
-      views: Number(video?.statistics?.viewCount || 0),
-      likes: Number(video?.statistics?.likeCount || 0),
+  return items
+    .filter((item) => item.id?.videoId)
+    .map((item) => ({
+      id: item.id?.videoId ?? "",
+      title: item.snippet?.title ?? "",
+      description: item.snippet?.description ?? "",
       thumbnail:
-        video?.snippet?.thumbnails?.medium?.url ||
-        video?.snippet?.thumbnails?.default?.url ||
-        '',
-    }
-  })
+        item.snippet?.thumbnails?.high?.url ??
+        item.snippet?.thumbnails?.medium?.url ??
+        item.snippet?.thumbnails?.default?.url ??
+        "",
+      publishedAt: item.snippet?.publishedAt ?? "",
+      channelTitle: item.snippet?.channelTitle ?? "",
+    }));
 }
