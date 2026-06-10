@@ -14,6 +14,8 @@ export interface VideoItem {
 
 export async function fetchChannelVideos(auth: any): Promise<VideoItem[]> {
   const youtubeClient = youtube
+
+  // Ambil playlist uploads dari channel
   const channelRes = await youtubeClient.channels.list({
     auth,
     part: ['contentDetails'],
@@ -25,6 +27,7 @@ export async function fetchChannelVideos(auth: any): Promise<VideoItem[]> {
 
   if (!uploadsPlaylistId) return []
 
+  // Ambil video dari playlist
   const playlistRes = await youtubeClient.playlistItems.list({
     auth,
     playlistId: uploadsPlaylistId,
@@ -32,12 +35,13 @@ export async function fetchChannelVideos(auth: any): Promise<VideoItem[]> {
     maxResults: 50,
   })
 
-  const videos: VideoItem[] = playlistRes.data.items?.map((item: any) => ({
-    id: item.contentDetails.videoId,
-    title: item.snippet.title,
-    status: 'public', // default karena playlistItems tidak punya status
-    thumbnail: item.snippet.thumbnails?.medium?.url,
-  })) || []
+  const videos: VideoItem[] =
+    playlistRes.data.items?.map((item: any) => ({
+      id: item.contentDetails.videoId,
+      title: item.snippet.title,
+      status: 'public', // playlistItems tidak punya status, default public
+      thumbnail: item.snippet.thumbnails?.medium?.url,
+    })) || []
 
   return videos
 }
