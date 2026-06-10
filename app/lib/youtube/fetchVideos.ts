@@ -10,116 +10,141 @@ export type VideoItem = {
   status: string;
 };
 
-type SearchItem = {
-  id?: {
-    videoId?: string;
-  };
-};
-
-type VideoDetailItem = {
-  id?: string;
-  snippet?: {
-    title?: string;
-    description?: string;
-    publishedAt?: string;
-    channelTitle?: string;
-    thumbnails?: {
-      high?: { url?: string };
-      medium?: { url?: string };
-      default?: { url?: string };
+type ChannelResponse = {
+  items?: Array<{
+    contentDetails?: {
+      relatedPlaylists?: {
+        uploads?: string;
+      };
     };
-  };
-  statistics?: {
-    viewCount?: string;
-    likeCount?: string;
-  };
-  status?: {
-    privacyStatus?: string;
-    publishAt?: string;
-  };
+  }>;
 };
 
-function getAccessTokenFromAuth(auth: unknown): string {
-  if (typeof auth === "string") {
-    return auth;
+type PlaylistItemsResponse = {
+  items?: Array<{
+    contentDetails?: {
+      videoId?: string;
+    };
+  }>;
+};
+
+type VideoDetailsResponse = {
+  items?: Array<{
+    id?: string;
+    snippet?: {
+      title?: string;
+      description?: string;
+      publishedAt?: string;
+      channelTitle?: string;
+      thumbnails?: {
+        high?: { url?: string };
+        medium?: { url?: string };
+        default?: { url?: string };
+      };
+    };
+    statistics?: {
+      viewCount?: string;
+      likeCount?: string;
+    };
+    status?: {
+      privacyStatus?: string;
+      publishAt?: string;
+    };
+  }>;
+};
+
+async function youtubeFetch<T>(url: URL, accessToken: string): Promise<T> {
+  const response = await fetch(url.toString(), {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText);
   }
 
-  if (auth && typeof auth === "object" && "accessToken" in auth) {
-    return String((auth as { accessToken?: string }).accessToken ?? "");
-  }
-
-  return "";
+  return response.json() as Promise<T>;
 }
 
-export async function fetchChannelVideos(auth: unknown): Promise<VideoItem[]> {
-  const accessToken = getAccessTokenFromAuth(auth);
+function getVideoStatus(privacyStatus?: string, publishAt?: string) {
+  if (privacyStatus === "private" && publishAt) return "Scheduled";
+  if (privacyStatus === "public") return "Published";
+  if (privacyStatus === "unlisted") return "Unlisted";
+  if (privacyStatus === "private") return "Private";
+  return "-";
+}
 
+export async function fetchChannelVideos(accessToken: string): Promise<VideoItem[]> {
   if (!accessToken || accessToken.startsWith("AIza")) {
     throw new Error(
-      "Akses video publish dan scheduled butuh Google OAuth. Silakan logout lalu login Google lagi."
+      "Token Google OAuth tidak terbaca. Logout lalu login Google lagi dan izinkan akses YouTube."
     );
   }
 
-  const headers = {
-    Authorization: `Bearer ${accessToken}`,
-  };
+  const channelUrl = new URL("https://www.googleapis.com/youtube/v3/channels");
+  channelUrl.searchParams.set("part", "contentDetails");
+  channelUrl.searchParams.set("mine", "true");
 
-  const searchUrl = new URL("https://www.googleapis.com/youtube/v3/search");
-  searchUrl.searchParams.set("part", "id");
-  searchUrl.searchParams.set("forMine", "true");
-  searchUrl.searchParams.set("type", "video");
-  searchUrl.searchParams.set("order", "date");
-  searchUrl.searchParams.set("maxResults", "25");
+  const channelData = await youtubeFetch<ChannelResponse>(channelUrl, accessToken);
 
-  const searchResponse = await fetch(searchUrl.toString(), { headers });
+  const uploadsPlaylistId =
+    channelData.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
 
-  if (!searchResponse.ok) {
-    const errorText = await searchResponse.text();
-    throw new Error(`Gagal membaca daftar video YouTube: ${errorText}`);
+  if (!uploadsPlaylistId) {
+    return [];
   }
 
-  const searchData = await searchResponse.json();
-  const videoIds = ((searchData.items ?? []) as SearchItem[])
-    .map((item) => item.id?.videoId)
-    .filter(Boolean)
-    .join(",");
+  const playlistUrl = new URL("https://www.googleapis.com/youtube/v3/playlistItems");
+  playlistUrl.searchParams.set("part", "contentDetails");
+  playlistUrl.searchParams.set("playlistId", uploadsPlaylistId);
+  playlistUrl.searchParams.set("maxResults", "25");
+
+  const playlistData = await youtubeFetch<PlaylistItemsResponse>(
+    playlistUrl,
+    accessToken
+  );
+
+  const videoIds =
+    playlistData.items
+      ?.map((item) => item.contentDetails?.videoId)
+      .filter(Boolean)
+      .join(",") ?? "";
 
   if (!videoIds) {
     return [];
   }
 
-  const detailUrl = new URL("https://www.googleapis.com/youtube/v3/videos");
-  detailUrl.searchParams.set("part", "snippet,statistics,status");
-  detailUrl.searchParams.set("id", videoIds);
+  const videosUrl = new URL("https://www.googleapis.com/youtube/v3/videos");
+  videosUrl.searchParams.set("part", "snippet,statistics,status");
+  videosUrl.searchParams.set("id", videoIds);
 
-  const detailResponse = await fetch(detailUrl.toString(), { headers });
+  const videosData = await youtubeFetch<VideoDetailsResponse>(
+    videosUrl,
+    accessToken
+  );
 
-  if (!detailResponse.ok) {
-    const errorText = await detailResponse.text();
-    throw new Error(`Gagal membaca detail video YouTube: ${errorText}`);
-  }
+  return (
+    videosData.items?.map((video) => {
+      const publishAt = video.status?.publishAt;
+      const privacyStatus = video.status?.privacyStatus;
 
-  const detailData = await detailResponse.json();
-  const items = (detailData.items ?? []) as VideoDetailItem[];
-
-  return items.map((video) => {
-    const privacyStatus = video.status?.privacyStatus ?? "-";
-    const isScheduled = privacyStatus === "private" && Boolean(video.status?.publishAt);
-
-    return {
-      id: video.id ?? "",
-      title: video.snippet?.title ?? "",
-      description: video.snippet?.description ?? "",
-      thumbnail:
-        video.snippet?.thumbnails?.high?.url ??
-        video.snippet?.thumbnails?.medium?.url ??
-        video.snippet?.thumbnails?.default?.url ??
-        "",
-      publishedAt: video.status?.publishAt ?? video.snippet?.publishedAt ?? "",
-      channelTitle: video.snippet?.channelTitle ?? "",
-      views: Number(video.statistics?.viewCount ?? 0),
-      likes: Number(video.statistics?.likeCount ?? 0),
-      status: isScheduled ? "Scheduled" : privacyStatus,
-    };
-  });
+      return {
+        id: video.id ?? "",
+        title: video.snippet?.title ?? "",
+        description: video.snippet?.description ?? "",
+        thumbnail:
+          video.snippet?.thumbnails?.high?.url ??
+          video.snippet?.thumbnails?.medium?.url ??
+          video.snippet?.thumbnails?.default?.url ??
+          "",
+        publishedAt: publishAt ?? video.snippet?.publishedAt ?? "",
+        channelTitle: video.snippet?.channelTitle ?? "",
+        views: Number(video.statistics?.viewCount ?? 0),
+        likes: Number(video.statistics?.likeCount ?? 0),
+        status: getVideoStatus(privacyStatus, publishAt),
+      };
+    }) ?? []
+  );
 }

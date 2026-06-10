@@ -1,19 +1,42 @@
-import { getPublicChannelVideos } from "@/lib/youtube";
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { fetchChannelVideos } from "@/app/lib/youtube/fetchVideos";
 
 export const runtime = "nodejs";
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    const apiKey = process.env.YOUTUBE_API_KEY;
-    if (!apiKey) return Response.json({ error: "YOUTUBE_API_KEY belum diisi." }, { status: 500 });
+    const session = await getServerSession(authOptions);
+    const accessToken = (session as any)?.accessToken;
 
-    const { searchParams } = new URL(request.url);
-    const channelId = searchParams.get("channelId") || "";
-    if (!channelId) return Response.json({ error: "channelId wajib diisi." }, { status: 400 });
+    if (!accessToken) {
+      return NextResponse.json(
+        {
+          videos: [],
+          error:
+            "Token Google belum terbaca. Logout lalu login Google lagi dan izinkan akses YouTube.",
+        },
+        { status: 401 }
+      );
+    }
 
-    const data = await getPublicChannelVideos(channelId, apiKey, 8);
-    return Response.json(data);
-  } catch (err: any) {
-    return Response.json({ error: err?.message || "Gagal mengambil video kompetitor." }, { status: 500 });
+    const videos = await fetchChannelVideos(accessToken);
+
+    return NextResponse.json({
+      videos,
+      count: videos.length,
+    });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        videos: [],
+        error:
+          error instanceof Error
+            ? error.message
+            : "Gagal mengambil video YouTube.",
+      },
+      { status: 500 }
+    );
   }
 }
