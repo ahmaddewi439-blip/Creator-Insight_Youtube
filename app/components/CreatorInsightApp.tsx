@@ -75,8 +75,8 @@ function ScoreRing({ value, label }: { value: number; label: string }) {
 }
 
 function VideoRow({ video, index, onSelect }: { video: any; index: number; onSelect?: (video: any) => void }) {
-  const thumb = video?.snippet?.thumbnails?.medium?.url || video?.snippet?.thumbnails?.default?.url;
-  const privacy = video?.status?.privacyStatus || "public";
+  const thumb = video?.thumbnail || video?.snippet?.thumbnails?.medium?.url || video?.snippet?.thumbnails?.default?.url;
+  const privacy = video?.status || video?.privacyStatus || video?.status?.privacyStatus || "Published";
   return (
     <tr>
       <td>{index + 1}</td>
@@ -84,13 +84,13 @@ function VideoRow({ video, index, onSelect }: { video: any; index: number; onSel
         <div className="video-cell">
           {thumb && <img src={thumb} className="thumb" alt="thumbnail" />}
           <div>
-            <strong>{video?.snippet?.title || "Untitled"}</strong>
-            <div className="muted small">{dateText(video?.snippet?.publishedAt)}</div>
+            <strong>{video?.title || video?.snippet?.title || "Untitled"}</strong>
+            <div className="muted small">{dateText(video?.publishedAt || video?.publishAt || video?.snippet?.publishedAt)}</div>
           </div>
         </div>
       </td>
-      <td>{compact(video?.statistics?.viewCount)}</td>
-      <td>{compact(video?.statistics?.likeCount)}</td>
+      <td>{compact(video?.views ?? video?.statistics?.viewCount)}</td>
+      <td>{compact(video?.likes ?? video?.statistics?.likeCount)}</td>
       <td><span className={privacy === "public" ? "status-pill" : "status-pill yellow"}>{privacy}</span></td>
       {onSelect && <td><button className="btn" onClick={() => onSelect(video)}>Optimize</button></td>}
     </tr>
@@ -157,10 +157,10 @@ export default function CreatorInsightApp() {
     try {
       const [channelRes, videosRes] = await Promise.all([
         fetchJson("/api/youtube/channel"),
-        fetchJson("/api/youtube/videos?maxResults=15")
+        fetchJson("/api/youtube/channel-videos")
       ]);
-      setChannelState({ loading: false, error: "", data: channelRes.channel });
-      setVideosState({ loading: false, error: "", data: videosRes.videos || [] });
+      setChannelState({ loading: false, error: "", data: channelRes.channel || channelRes });
+      setVideosState({ loading: false, error: "", data: Array.isArray(videosRes) ? videosRes : videosRes.videos || [] });
     } catch (err: any) {
       setChannelState({ loading: false, error: err.message, data: null });
       setVideosState({ loading: false, error: err.message, data: [] });
@@ -303,13 +303,13 @@ export default function CreatorInsightApp() {
   );
 
   function renderChannelHeader() {
-    const avatar = channel?.snippet?.thumbnails?.high?.url || channel?.snippet?.thumbnails?.medium?.url;
+    const avatar = channel?.thumbnail || channel?.snippet?.thumbnails?.high?.url || channel?.snippet?.thumbnails?.medium?.url || channel?.snippet?.thumbnails?.default?.url;
     return (
       <section className="header-card">
         <div className="channel">
           {avatar ? <img className="avatar" src={avatar} alt="channel avatar" /> : <div className="avatar" />}
           <div>
-            <h1>{channel?.snippet?.title || "Your YouTube Channel"}</h1>
+            <h1>{channel?.title || channel?.snippet?.title || "Your YouTube Channel"}</h1>
             <p>{channel?.snippet?.customUrl || channel?.id || "Login berhasil. Data channel akan tampil di sini."}</p>
             <div className="badges">
               <span className="badge">YouTube</span>
@@ -319,10 +319,10 @@ export default function CreatorInsightApp() {
           </div>
         </div>
         <div className="stats">
-          <div className="stat"><b>{compact(channel?.statistics?.subscriberCount)}</b><span>Subscribers</span></div>
-          <div className="stat"><b>{compact(channel?.statistics?.viewCount)}</b><span>Total Views</span></div>
-          <div className="stat"><b>{compact(channel?.statistics?.videoCount)}</b><span>Total Videos</span></div>
-          <div className="stat"><b>{dateText(channel?.snippet?.publishedAt)}</b><span>Joined</span></div>
+          <div className="stat"><b>{compact(channel?.subscribers ?? channel?.statistics?.subscriberCount)}</b><span>Subscribers</span></div>
+          <div className="stat"><b>{compact(channel?.totalViews ?? channel?.statistics?.viewCount)}</b><span>Total Views</span></div>
+          <div className="stat"><b>{compact(channel?.totalVideos ?? channel?.statistics?.videoCount)}</b><span>Total Videos</span></div>
+          <div className="stat"><b>{dateText(channel?.publishedAt ?? channel?.snippet?.publishedAt)}</b><span>Joined</span></div>
         </div>
       </section>
     );
