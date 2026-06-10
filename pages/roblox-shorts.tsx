@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { fetchChannelVideos, VideoItem } from '../lib/youtube/fetchVideos'
-import { getAuth } from '../lib/youtube/auth' // path sudah diperbaiki
+import { getAuth } from '../lib/youtube/auth' // path sudah sesuai struktur
 
 export default function VideoOptimizerPage() {
   const [videos, setVideos] = useState<VideoItem[]>([])
