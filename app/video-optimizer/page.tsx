@@ -17,7 +17,7 @@ export default function VideoOptimizerPage() {
   async function loadVideos() {
     setLoading(true);
     try {
-      const res = await fetch("/api/youtube/channel-videos");
+      const res = await fetch("/api/youtube/channel-videos").then(r => r.json());
       const data: VideoItem[] = await res.json();
       setVideos(data);
     } catch (err) {

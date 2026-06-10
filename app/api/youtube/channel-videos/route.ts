@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    const accessToken = session?.accessToken;
+    const accessToken = (session as any)?.accessToken;
 
     let videos;
     if (accessToken) {
@@ -16,7 +16,7 @@ export async function GET() {
     } else {
       // fallback: pakai API key
       const apiKey = process.env.YOUTUBE_API_KEY!;
-      videos = await fetchChannelVideos(apiKey);
+      videos = await fetchChannelVideos(); // fallback pakai API key internal
     }
 
     const mapped = videos.map(v => ({
