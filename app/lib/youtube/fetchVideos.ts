@@ -5,12 +5,19 @@ export type VideoItem = {
   thumbnail: string;
   publishedAt: string;
   channelTitle: string;
+  views: number;
+  likes: number;
+  status: string;
 };
 
-type YouTubeSearchItem = {
+type SearchItem = {
   id?: {
     videoId?: string;
   };
+};
+
+type VideoDetailItem = {
+  id?: string;
   snippet?: {
     title?: string;
     description?: string;
@@ -22,51 +29,97 @@ type YouTubeSearchItem = {
       default?: { url?: string };
     };
   };
+  statistics?: {
+    viewCount?: string;
+    likeCount?: string;
+  };
+  status?: {
+    privacyStatus?: string;
+    publishAt?: string;
+  };
 };
 
-export async function fetchChannelVideos(_auth?: unknown): Promise<VideoItem[]> {
-  const apiKey = process.env.YOUTUBE_API_KEY;
-  const channelId = process.env.YOUTUBE_CHANNEL_ID;
-
-  if (!apiKey) {
-    throw new Error("YOUTUBE_API_KEY belum diisi.");
+function getAccessTokenFromAuth(auth: unknown): string {
+  if (typeof auth === "string") {
+    return auth;
   }
 
-  if (!channelId) {
-    throw new Error("YOUTUBE_CHANNEL_ID belum diisi.");
+  if (auth && typeof auth === "object" && "accessToken" in auth) {
+    return String((auth as { accessToken?: string }).accessToken ?? "");
   }
 
-  const url = new URL("https://www.googleapis.com/youtube/v3/search");
+  return "";
+}
 
-  url.searchParams.set("part", "snippet");
-  url.searchParams.set("channelId", channelId);
-  url.searchParams.set("type", "video");
-  url.searchParams.set("order", "date");
-  url.searchParams.set("maxResults", "25");
-  url.searchParams.set("key", apiKey);
+export async function fetchChannelVideos(auth: unknown): Promise<VideoItem[]> {
+  const accessToken = getAccessTokenFromAuth(auth);
 
-  const response = await fetch(url.toString());
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Gagal mengambil video YouTube: ${errorText}`);
+  if (!accessToken || accessToken.startsWith("AIza")) {
+    throw new Error(
+      "Akses video publish dan scheduled butuh Google OAuth. Silakan logout lalu login Google lagi."
+    );
   }
 
-  const data = await response.json();
-  const items = (data.items ?? []) as YouTubeSearchItem[];
+  const headers = {
+    Authorization: `Bearer ${accessToken}`,
+  };
 
-  return items
-    .filter((item) => item.id?.videoId)
-    .map((item) => ({
-      id: item.id?.videoId ?? "",
-      title: item.snippet?.title ?? "",
-      description: item.snippet?.description ?? "",
+  const searchUrl = new URL("https://www.googleapis.com/youtube/v3/search");
+  searchUrl.searchParams.set("part", "id");
+  searchUrl.searchParams.set("forMine", "true");
+  searchUrl.searchParams.set("type", "video");
+  searchUrl.searchParams.set("order", "date");
+  searchUrl.searchParams.set("maxResults", "25");
+
+  const searchResponse = await fetch(searchUrl.toString(), { headers });
+
+  if (!searchResponse.ok) {
+    const errorText = await searchResponse.text();
+    throw new Error(`Gagal membaca daftar video YouTube: ${errorText}`);
+  }
+
+  const searchData = await searchResponse.json();
+  const videoIds = ((searchData.items ?? []) as SearchItem[])
+    .map((item) => item.id?.videoId)
+    .filter(Boolean)
+    .join(",");
+
+  if (!videoIds) {
+    return [];
+  }
+
+  const detailUrl = new URL("https://www.googleapis.com/youtube/v3/videos");
+  detailUrl.searchParams.set("part", "snippet,statistics,status");
+  detailUrl.searchParams.set("id", videoIds);
+
+  const detailResponse = await fetch(detailUrl.toString(), { headers });
+
+  if (!detailResponse.ok) {
+    const errorText = await detailResponse.text();
+    throw new Error(`Gagal membaca detail video YouTube: ${errorText}`);
+  }
+
+  const detailData = await detailResponse.json();
+  const items = (detailData.items ?? []) as VideoDetailItem[];
+
+  return items.map((video) => {
+    const privacyStatus = video.status?.privacyStatus ?? "-";
+    const isScheduled = privacyStatus === "private" && Boolean(video.status?.publishAt);
+
+    return {
+      id: video.id ?? "",
+      title: video.snippet?.title ?? "",
+      description: video.snippet?.description ?? "",
       thumbnail:
-        item.snippet?.thumbnails?.high?.url ??
-        item.snippet?.thumbnails?.medium?.url ??
-        item.snippet?.thumbnails?.default?.url ??
+        video.snippet?.thumbnails?.high?.url ??
+        video.snippet?.thumbnails?.medium?.url ??
+        video.snippet?.thumbnails?.default?.url ??
         "",
-      publishedAt: item.snippet?.publishedAt ?? "",
-      channelTitle: item.snippet?.channelTitle ?? "",
-    }));
+      publishedAt: video.status?.publishAt ?? video.snippet?.publishedAt ?? "",
+      channelTitle: video.snippet?.channelTitle ?? "",
+      views: Number(video.statistics?.viewCount ?? 0),
+      likes: Number(video.statistics?.likeCount ?? 0),
+      status: isScheduled ? "Scheduled" : privacyStatus,
+    };
+  });
 }
