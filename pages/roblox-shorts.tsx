@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { fetchChannelVideos, VideoItem } from '../app/lib/youtube/fetchVideos'
-import { getAuth } from '../lib/youtube/auth''
+import { fetchChannelVideos, VideoItem } from '../lib/youtube/fetchVideos'
+import { getAuth } from '../lib/youtube/auth' // path sudah diperbaiki
 
 export default function VideoOptimizerPage() {
   const [videos, setVideos] = useState<VideoItem[]>([])
@@ -24,7 +24,7 @@ export default function VideoOptimizerPage() {
 
   function handleOptimize(videoId: string) {
     console.log('Optimize clicked for video', videoId)
-    // panggil API optimize atau logic optimasi
+    // Logic optimize bisa dipanggil di sini
   }
 
   return (
