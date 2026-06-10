@@ -1,7 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../../lib/auth";
-import { fetchChannelVideos, type VideoItem } from "../../../app/lib/youtube/fetchVideos";
+import {
+  fetchChannelVideos,
+  fetchPublicChannelVideos,
+  type VideoItem,
+} from "../../../app/lib/youtube/fetchVideos";
 
 type ApiResponse = VideoItem[] | { error: string };
 
@@ -11,18 +15,25 @@ export default async function handler(
 ) {
   try {
     const session = await getServerSession(req, res, authOptions);
-    const accessToken = (session as any)?.accessToken;
+    const accessToken = (session as any)?.accessToken as string | undefined;
 
-    if (!accessToken) {
-      return res.status(401).json({
-        error:
-          "Token Google belum terbaca. Silakan logout, login Google lagi, lalu izinkan akses YouTube.",
-      });
+    if (accessToken) {
+      try {
+        const oauthVideos = await fetchChannelVideos(accessToken);
+
+        if (oauthVideos.length > 0) {
+          res.setHeader("x-youtube-source", "oauth");
+          return res.status(200).json(oauthVideos);
+        }
+      } catch (error) {
+        console.error("OAuth pages YouTube fetch failed:", error);
+      }
     }
 
-    const videos = await fetchChannelVideos(accessToken);
+    const publicVideos = await fetchPublicChannelVideos();
 
-    return res.status(200).json(videos);
+    res.setHeader("x-youtube-source", "api-key-public");
+    return res.status(200).json(publicVideos);
   } catch (error) {
     console.error("Failed to fetch YouTube videos:", error);
 
