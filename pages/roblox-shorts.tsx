@@ -1,6 +1,14 @@
 import { useEffect, useState } from 'react'
-import { fetchChannelVideos, VideoItem } from '../lib/youtube/fetchVideos'
-import { getAuth } from '../lib/youtube/auth' // path sudah sesuai struktur
+
+interface VideoItem {
+  id: string
+  title: string
+  status: 'public' | 'scheduled' | 'private'
+  scheduledDate?: string
+  views: number
+  likes: number
+  thumbnail: string
+}
 
 export default function VideoOptimizerPage() {
   const [videos, setVideos] = useState<VideoItem[]>([])
@@ -9,11 +17,11 @@ export default function VideoOptimizerPage() {
   async function loadVideos() {
     setLoading(true)
     try {
-      const auth = await getAuth()
-      const data = await fetchChannelVideos(auth)
+      const res = await fetch('/api/youtube/videos')
+      const data: VideoItem[] = await res.json()
       setVideos(data)
     } catch (err) {
-      console.error('Error fetching videos', err)
+      console.error(err)
     }
     setLoading(false)
   }
@@ -21,11 +29,6 @@ export default function VideoOptimizerPage() {
   useEffect(() => {
     loadVideos()
   }, [])
-
-  function handleOptimize(videoId: string) {
-    console.log('Optimize clicked for video', videoId)
-    // Logic optimize bisa dipanggil di sini
-  }
 
   return (
     <div className="p-4">
@@ -65,7 +68,7 @@ export default function VideoOptimizerPage() {
                 <td className="border px-2 py-1">
                   <button
                     className="bg-green-500 text-white px-2 py-1 rounded"
-                    onClick={() => handleOptimize(video.id)}
+                    onClick={() => console.log('Optimize', video.id)}
                   >
                     Optimize
                   </button>
