@@ -1,127 +1,110 @@
-"use client";
-
 import { useEffect, useState } from "react";
 
-export type VideoItem = {
-  id: string;
+type VideoItem = {
+  videoId: string;
   title: string;
   description?: string;
   thumbnail: string;
-  publishedAt: string;
-  channelTitle: string;
+  publishedAt?: string;
   views?: number;
   likes?: number;
-  status?: "Published" | "Scheduled" | "Private";
 };
 
 export default function VideoOptimizerPage() {
   const [videos, setVideos] = useState<VideoItem[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  async function loadVideos() {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/youtube/channel-videos");
-      const data = await res.json();
-      if (res.ok) {
+  useEffect(() => {
+    async function fetchVideos() {
+      setLoading(true);
+      try {
+        const res = await fetch("/api/youtube/channel-videos");
+        if (!res.ok) throw new Error("Failed to fetch videos");
+        const data = await res.json();
         setVideos(data);
-      } else {
-        setError(data.error || "Failed to fetch videos");
+      } catch (err: any) {
+        setError(err.message || "Unknown error");
       }
-    } catch (err: any) {
-      setError(err.message || "Failed to fetch videos");
-    } finally {
       setLoading(false);
     }
-  }
 
-  useEffect(() => {
-    loadVideos();
+    fetchVideos();
   }, []);
 
   return (
     <div style={{ padding: "20px" }}>
-      <h1 style={{ fontSize: "2rem", fontWeight: "bold" }}>Video Optimizer</h1>
-      <button
-        onClick={loadVideos}
-        style={{
-          padding: "10px 20px",
-          backgroundColor: "#2563EB",
-          color: "#fff",
-          borderRadius: "5px",
-          marginBottom: "15px",
-        }}
-      >
-        Refresh Data
-      </button>
+      <h1>Video Optimizer</h1>
+      <p>
+        Pilih video publish/terjadwal dari channel, lalu AI akan memberi saran
+        caption, deskripsi, hashtag, keyword, CTA, pinned comment, dan
+        thumbnail text.
+      </p>
 
       {loading && <p>Loading videos...</p>}
-      {error && (
-        <p style={{ color: "red", fontWeight: "bold" }}>Error: {error}</p>
-      )}
+      {error && <p style={{ color: "red" }}>{error}</p>}
 
-      {!loading && !error && videos.length === 0 && (
-        <p>No videos found</p>
-      )}
-
-      {videos.length > 0 && (
+      {!loading && !error && videos.length > 0 && (
         <table
           style={{
             width: "100%",
             borderCollapse: "collapse",
-            textAlign: "left",
+            marginTop: "20px",
           }}
         >
           <thead>
             <tr>
-              <th>#</th>
-              <th>Video</th>
-              <th>Views</th>
-              <th>Likes</th>
-              <th>Status</th>
-              <th>Action</th>
+              <th style={{ border: "1px solid #ddd", padding: "8px" }}>
+                Thumbnail
+              </th>
+              <th style={{ border: "1px solid #ddd", padding: "8px" }}>Title</th>
+              <th style={{ border: "1px solid #ddd", padding: "8px" }}>Views</th>
+              <th style={{ border: "1px solid #ddd", padding: "8px" }}>Likes</th>
+              <th style={{ border: "1px solid #ddd", padding: "8px" }}>Status</th>
+              <th style={{ border: "1px solid #ddd", padding: "8px" }}>Action</th>
             </tr>
           </thead>
           <tbody>
-            {videos.map((v, idx) => (
-              <tr key={v.id} style={{ borderBottom: "1px solid #ddd" }}>
-                <td>{idx + 1}</td>
-                <td style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <img
-                    src={v.thumbnail}
-                    alt={v.title}
-                    width={120}
-                    style={{ borderRadius: "5px" }}
-                  />
-                  <div>
-                    <strong>{v.title}</strong>
-                    <p style={{ fontSize: "0.8rem", color: "#555" }}>
-                      {v.description?.slice(0, 80)}...
-                    </p>
-                  </div>
+            {videos.map((v) => (
+              <tr key={v.videoId}>
+                <td style={{ border: "1px solid #ddd", padding: "8px" }}>
+                  <img src={v.thumbnail} alt={v.title} width={120} />
                 </td>
-                <td>{v.views ?? "-"}</td>
-                <td>{v.likes ?? "-"}</td>
-                <td>{v.status ?? "Unknown"}</td>
-                <td>
+                <td style={{ border: "1px solid #ddd", padding: "8px" }}>
+                  {v.title}
+                </td>
+                <td style={{ border: "1px solid #ddd", padding: "8px" }}>
+                  {v.views ?? "-"}
+                </td>
+                <td style={{ border: "1px solid #ddd", padding: "8px" }}>
+                  {v.likes ?? "-"}
+                </td>
+                <td style={{ border: "1px solid #ddd", padding: "8px" }}>
+                  {v.publishedAt ? "Published" : "Scheduled"}
+                </td>
+                <td style={{ border: "1px solid #ddd", padding: "8px" }}>
                   <button
-                    onClick={() => window.open(`https://youtu.be/${v.id}`, "_blank")}
+                    onClick={() => alert(`Optimizing video: ${v.title}`)}
                     style={{
                       padding: "5px 10px",
-                      backgroundColor: "#10B981",
-                      color: "#fff",
-                      borderRadius: "5px",
+                      backgroundColor: "#4CAF50",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "4px",
+                      cursor: "pointer",
                     }}
                   >
-                    View
+                    Optimize
                   </button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+      )}
+
+      {!loading && !error && videos.length === 0 && (
+        <p>Tidak ada video yang tersedia.</p>
       )}
     </div>
   );
