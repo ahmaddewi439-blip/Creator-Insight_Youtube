@@ -5,11 +5,10 @@ const RobloxCreatorFinalUI = () => {
   const [loading, setLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("natural-news");
   const [searchKeyword, setSearchKeyword] = useState("Roblox");
-  const [language, setLanguage] = useState("id"); // Default Indonesia
+  const [language, setLanguage] = useState("id");
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  // Fungsi Copy Universal dengan feedback visual
   const handleCopy = (text: string, id: string) => {
     navigator.clipboard.writeText(text).then(() => {
       setCopiedId(id);
@@ -20,7 +19,6 @@ const RobloxCreatorFinalUI = () => {
   const handleSearchUpdate = async () => {
     try {
       setLoading(true);
-      // Memanggil API bawaan Anda (Tetap tersambung ke backend Anda)
       const response = await fetch(
         `/api/search-roblox-update?keyword=${encodeURIComponent(
           searchKeyword
@@ -33,9 +31,8 @@ const RobloxCreatorFinalUI = () => {
         return;
       }
 
-      // Generator Konten Super Detail (Hook, CTA, Timestamp, 2 Prompts, Multi-bahasa)
       const isEn = language === "en";
-      const dataWithScenes = data.sources.map((item: any, itemIdx: number) => ({
+      const dataWithScenes = data.sources.map((item: any) => ({
         ...item,
         gameplayRecommendation: isEn 
           ? "Record yourself playing highly visual games like 'Brookhaven' (driving fast cars) or 'Tower of Hell' (doing parkour jumps). Fast on-screen movement retains viewer attention while they listen to the VO. Avoid static screens!"
@@ -65,8 +62,8 @@ const RobloxCreatorFinalUI = () => {
             sceneNumber: "Scene 3 – Deep Dive",
             timestamp: "0:15 – 0:30",
             voiceOver: isEn 
-              ? `Here is the crazy part: ${item.summary.substring(0, 80)}... This means you might lose your limited items if you're not careful!` 
-              : `Yang lebih gilanya lagi: ${item.summary.substring(0, 80)}... Artinya kalian bisa kehilangan item limited kalau nggak hati-hati!`,
+              ? `Here is the crazy part: ${item.summary?.substring(0, 80) || "this new secret feature"}... This means you might lose your limited items if you're not careful!` 
+              : `Yang lebih gilanya lagi: ${item.summary?.substring(0, 80) || "fitur rahasia ini"}... Artinya kalian bisa kehilangan item limited kalau nggak hati-hati!`,
             visual: "Gameplay continues. Add a pop-up animation of a rare Roblox item (Dominus/Valkyrie) shattering or getting locked.",
             prompt1: "A rare valuable Roblox Dominus hat trapped inside a glowing energy cage, dark dramatic background, 3D render, vertical 9:16.",
             prompt2: "A Roblox avatar desperately reaching out for a floating golden crown that is fading away into pixels, sad emotion, cinematic lighting, vertical 9:16.",
@@ -152,15 +149,29 @@ const RobloxCreatorFinalUI = () => {
           {updateData.sources.map((item: any, index: number) => (
             <div key={index} style={{ backgroundColor: '#f0f4f9', borderRadius: '24px', padding: '24px' }}>
               
+              {/* JUDUL BERITA */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <span style={{ fontWeight: '700', fontSize: '18px', color: '#111' }}>{item.title}</span>
+                <span style={{ fontWeight: '800', fontSize: '20px', color: '#111', lineHeight: '1.4' }}>📰 {item.title}</span>
               </div>
 
-              {/* Data Meta */}
-              <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: '13px', color: '#555', marginBottom: '20px', lineHeight: '1.6' }}>
-                - Source: {item.source} <br/>
-                - Target Language: {language === 'en' ? 'English' : 'Indonesian'} <br/>
-                - Query: {item.queryUsed || searchKeyword}
+              {/* DATA INFO LENGKAP (Tanggal, Jam, Bahasa, dll) */}
+              <div style={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', padding: '16px', borderRadius: '12px', marginBottom: '20px' }}>
+                <strong style={{ fontSize: '14px', color: '#111', marginBottom: '8px', display: 'block' }}>ℹ️ Detail Informasi:</strong>
+                <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: '13px', color: '#555', lineHeight: '1.8' }}>
+                  - <strong>Tanggal Update:</strong> {item.dateFetched || "-"}<br/>
+                  - <strong>Jam Update:</strong> {item.timeFetched || "-"}<br/>
+                  - <strong>Sumber Data:</strong> {item.source || "unknown"}<br/>
+                  - <strong>Target Voice Over:</strong> {language === 'en' ? 'English' : 'Indonesian'}<br/>
+                  - <strong>Query Dipakai:</strong> {item.queryUsed || searchKeyword}
+                </div>
+              </div>
+
+              {/* RINGKASAN BERITA ASLI */}
+              <div style={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', padding: '16px', borderRadius: '12px', marginBottom: '24px' }}>
+                <strong style={{ color: '#111', fontSize: '14px', marginBottom: '8px', display: 'block' }}>📝 Ringkasan Berita Asli:</strong>
+                <p style={{ margin: 0, fontSize: '14px', color: '#444', lineHeight: '1.6' }}>
+                  {item.summary || "Ringkasan berita tidak tersedia dari sumber."}
+                </p>
               </div>
 
               {/* Rekomendasi Gameplay */}
@@ -210,7 +221,6 @@ const RobloxCreatorFinalUI = () => {
                       {/* Gemini Prompts */}
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         
-                        {/* Prompt 1 */}
                         <div style={{ border: '1px solid #e5e7eb', padding: '10px', borderRadius: '8px', position: 'relative' }}>
                           <strong style={{ color: '#10b981', fontSize: '12px' }}>✨ Image Prompt 1:</strong>
                           <p style={{ margin: '4px 0 0 0', fontSize: '13px', fontFamily: 'monospace' }}>{scene.prompt1}</p>
@@ -221,7 +231,6 @@ const RobloxCreatorFinalUI = () => {
                           </button>
                         </div>
 
-                        {/* Prompt 2 */}
                         <div style={{ border: '1px solid #e5e7eb', padding: '10px', borderRadius: '8px', position: 'relative' }}>
                           <strong style={{ color: '#8b5cf6', fontSize: '12px' }}>✨ Image Prompt 2:</strong>
                           <p style={{ margin: '4px 0 0 0', fontSize: '13px', fontFamily: 'monospace' }}>{scene.prompt2}</p>
