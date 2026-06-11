@@ -2,7 +2,7 @@
 
 import { signIn, signOut, useSession } from "next-auth/react";
 import { useEffect, useMemo, useState } from "react";
-
+import RobloxCreatorFinalUI from "./RobloxCreatorFinalUI";
 type TabId = "overview" | "optimizer" | "competitors" | "roblox" | "reports" | "settings";
 
 type ApiState<T> = {
@@ -487,60 +487,9 @@ export default function CreatorInsightApp() {
   }
 
   function renderRobloxCreator() {
-    const topicList = topics.data?.topics || [];
     return (
       <div className="grid">
-        <div className="card">
-          <h2>Roblox Shorts Creator</h2>
-          <p className="muted">Workflow: search berita/update Roblox → pilih 1 topik → generate 5 scene Shorts 45-60 detik lengkap dengan hook kuat, VO natural, 2 prompt gambar per scene, arahan gameplay, caption, deskripsi, hashtag, dan CTA ending kuat.</p>
-          <div className="form-row">
-            <input className="input" value={robloxQuery} onChange={(e) => setRobloxQuery(e.target.value)} placeholder="Roblox update, Roblox event, free limited item..." />
-            <select className="select" value={robloxLanguage} onChange={(e) => setRobloxLanguage(e.target.value)}>
-              <option>English</option>
-              <option>Indonesia</option>
-            </select>
-            <select className="select" value={robloxDuration} onChange={(e) => setRobloxDuration(e.target.value)}>
-              <option>45 seconds</option>
-              <option>60 seconds</option>
-            </select>
-            <select className="select" value={robloxStyle} onChange={(e) => setRobloxStyle(e.target.value)}>
-              <option>Natural News</option>
-              <option>Excited Gaming</option>
-              <option>Mystery</option>
-              <option>Fun Facts</option>
-            </select>
-            <button className="btn primary" onClick={searchRobloxTopics}>Search Update</button>
-          </div>
-        </div>
-
-        <div className="alert">
-          Wajib: Scene 1 harus langsung kuat di 0-3 detik agar penonton tidak scroll. Scene 5 harus memakai pertanyaan + komentar + like + subscribe/follow agar engagement naik.
-        </div>
-
-        {topics.loading && <div className="skeleton" />}
-        {topics.error && <div className="alert error">{topics.error}</div>}
-        {!!topicList.length && (
-          <div className="option-grid">
-            {topicList.map((t: any, index: number) => (
-              <div className="topic-card" key={t.id || index}>
-                <div className="copy-row">
-                  <h3>{t.title}</h3>
-                  <span className="status-pill">{t.viralScore || "-"}/100</span>
-                </div>
-                <p className="muted small">{t.summary}</p>
-                <div className="kv"><b>Kenapa ramai</b><span>{t.whyTrending}</span></div>
-                <div className="kv"><b>Potensi views</b><span>{t.potentialViews}</span></div>
-                <div className="kv"><b>Cocok Shorts</b><span>{t.shortsFit}</span></div>
-                <div className="kv"><b>Gameplay cocok</b><span>{t.gameplayDirection}</span></div>
-                <button className="btn primary" onClick={() => generateRobloxScript(t)}>Pilih & Generate Script</button>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {script.loading && <div className="skeleton" />}
-        {script.error && <div className="alert error">{script.error}</div>}
-        {script.data && renderScriptResult(script.data)}
+        <RobloxCreatorFinalUI />
       </div>
     );
   }
