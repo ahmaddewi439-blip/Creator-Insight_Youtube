@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 // 1. IMPORT KOMPONEN BARU ANDA DI SINI
-import RobloxCreatorFinalUI from '@/components/RobloxCreatorFinalUI' 
+import RobloxCreatorFinalUI from "@/src/components/RobloxCreatorFinalUI"; 
 
 export default function VideoOptimizerPage() {
   // ... (kode logic bawaan halaman Anda yang sudah aman biarkan saja tetap di sini)
