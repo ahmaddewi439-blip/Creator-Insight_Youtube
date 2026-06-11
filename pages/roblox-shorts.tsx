@@ -4,75 +4,87 @@ export default function RobloxCreatorFinal() {
   const [keyword, setKeyword] = useState('');
   const [kategori, setKategori] = useState('');
 
-  // Fungsi sementara untuk tombol search
   const handleSearchUpdate = () => {
     alert(`Mencari data untuk: ${keyword || 'Kosong'} di kategori: ${kategori || 'Kosong'}`);
   };
 
   return (
-    <div style={{ padding: '30px', maxWidth: '800px', margin: '0 auto', fontFamily: 'sans-serif' }}>
-      <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '20px' }}>
+    <div style={{ padding: '40px 20px', maxWidth: '850px', margin: '0 auto', fontFamily: 'system-ui, -apple-system, sans-serif', color: '#1f2937' }}>
+      
+      <h1 style={{ fontSize: '28px', fontWeight: 'bold', marginBottom: '24px' }}>
         Roblox Creator Final
       </h1>
 
       {/* --- BAGIAN INPUT --- */}
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '30px' }}>
+      <div style={{ display: 'flex', gap: '12px', marginBottom: '32px', flexWrap: 'wrap' }}>
         <input 
           type="text" 
-          placeholder="Input keyword" 
-          style={{ padding: '10px', border: '1px solid #ccc', borderRadius: '5px', flex: 1 }}
+          placeholder="Input keyword..." 
+          style={{ flex: 1, minWidth: '200px', padding: '14px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', outline: 'none', fontSize: '15px' }}
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}
         />
         <select 
-          style={{ padding: '10px', border: '1px solid #ccc', borderRadius: '5px' }}
+          style={{ padding: '14px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', outline: 'none', fontSize: '15px', backgroundColor: '#fff', cursor: 'pointer' }}
           value={kategori}
           onChange={(e) => setKategori(e.target.value)}
         >
-          <option value="">Kategori</option>
+          <option value="">Pilih Kategori</option>
           <option value="gaming">Gaming</option>
           <option value="tutorial">Tutorial</option>
           <option value="news">News</option>
         </select>
         <button 
           onClick={handleSearchUpdate}
-          style={{ padding: '10px 20px', backgroundColor: '#000', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
+          style={{ padding: '14px 24px', borderRadius: '12px', backgroundColor: '#1a73e8', color: '#fff', border: 'none', fontWeight: '600', cursor: 'pointer', fontSize: '15px', transition: '0.2s' }}
         >
           Search Update
         </button>
       </div>
 
-      {/* --- BAGIAN CARD HASIL DATA --- */}
-      <div style={{ border: '1px solid #eee', padding: '20px', borderRadius: '10px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
-        <div style={{ fontSize: '14px', color: '#555', marginBottom: '20px', lineHeight: '1.6' }}>
-          <p><strong>Sumber data:</strong> YouTube API</p>
-          <p><strong>Tanggal update:</strong> 11 Juni 2026</p>
-          <p><strong>Jam update:</strong> 21:00 WIB</p>
-          <p><strong>Query yang dipakai:</strong> {keyword || "-"}</p>
+      {/* --- BAGIAN CARD UTAMA (Desain ala gambar referensi) --- */}
+      <div style={{ backgroundColor: '#f0f4f9', borderRadius: '24px', padding: '24px' }}>
+        
+        {/* Header "Plain text" dengan Ikon */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <span style={{ fontWeight: '600', fontSize: '15px', color: '#444' }}>Plain text</span>
+          <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px' }} title="Copy All">
+            📋
+          </button>
         </div>
 
-        {/* --- TOMBOL AKSI --- */}
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '20px' }}>
-          <button style={{ padding: '8px 12px', borderRadius: '5px', border: '1px solid #ccc', cursor: 'pointer' }}>Copy Caption</button>
-          <button style={{ padding: '8px 12px', borderRadius: '5px', border: '1px solid #ccc', cursor: 'pointer' }}>Generate Prompt Short</button>
-          <button style={{ padding: '8px 12px', borderRadius: '5px', border: '1px solid #ccc', cursor: 'pointer' }}>Show Scenes</button>
-          <button style={{ padding: '8px 12px', borderRadius: '5px', border: '1px solid #ccc', cursor: 'pointer' }}>Copy All Scenes</button>
+        {/* Data Meta (Font Monospace) */}
+        <div style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace', fontSize: '14px', color: '#111', marginBottom: '24px', lineHeight: '1.8' }}>
+          - Sumber data: YouTube API<br/>
+          - Tanggal update: 11 Juni 2026<br/>
+          - Jam update: 21:00 WIB<br/>
+          - Query yang dipakai: {keyword || '-'}
         </div>
 
-        {/* AREA TAMPILAN SCENE */}
-        <div style={{ backgroundColor: '#f9f9f9', padding: '15px', borderRadius: '8px', border: '1px solid #ddd' }}>
-          <h3 style={{ margin: '0 0 10px 0', fontSize: '16px' }}>Scene 1 – Hook</h3>
-          <p style={{ margin: '5px 0' }}><strong>Duration:</strong> 0–3 seconds</p>
-          <p style={{ margin: '5px 0' }}><strong>Voice Over:</strong> "Roblox just dropped something players didn't expect..."</p>
-          <p style={{ margin: '5px 0' }}><strong>Visual:</strong> A shocked Roblox avatar looking at a glowing announcement screen.</p>
-          
-          <div style={{ marginTop: '15px', backgroundColor: '#fff', padding: '10px', borderRadius: '5px', border: '1px dashed #ccc' }}>
-            <p style={{ margin: '0 0 5px 0', fontSize: '14px' }}><strong>Gemini Image Prompt:</strong></p>
-            <p style={{ margin: 0, fontSize: '14px', color: '#444' }}>
-              Create a cinematic Roblox-style 3D image of a surprised Roblox avatar standing in a futuristic game lobby, glowing announcement screen in the background, dramatic blue and purple lighting, strong facial expression, dynamic camera angle, vertical 9:16 format, high detail, clean composition, YouTube Shorts style.
-            </p>
+        {/* Tombol Aksi */}
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '24px' }}>
+          {['Copy Caption', 'Generate Prompt Short', 'Show Scenes', 'Copy All Scenes'].map(btnName => (
+            <button key={btnName} style={{ padding: '8px 16px', borderRadius: '20px', backgroundColor: '#fff', border: '1px solid #ddd', fontSize: '13px', fontWeight: '500', cursor: 'pointer', color: '#444' }}>
+              {btnName}
+            </button>
+          ))}
+        </div>
+
+        {/* Area Tampilan Scene */}
+        <div style={{ backgroundColor: '#fff', borderRadius: '16px', padding: '24px', border: '1px solid #e5e7eb' }}>
+          <div style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace', fontSize: '14px', lineHeight: '1.8', color: '#111' }}>
+            Scene 1 – Hook<br/>
+            Duration: 0–3 seconds<br/>
+            Voice Over: "Roblox just dropped something players didn't expect..."<br/>
+            <br/>
+            Visual:<br/>
+            A shocked Roblox avatar looking at a glowing announcement screen.<br/>
+            <br/>
+            Gemini Image Prompt:<br/>
+            Create a cinematic Roblox-style 3D image of a surprised Roblox avatar standing in a futuristic game lobby, glowing announcement screen in the background, dramatic blue and purple lighting, strong facial expression, dynamic camera angle, vertical 9:16 format, high detail, clean composition, YouTube Shorts style.
           </div>
         </div>
+
       </div>
     </div>
   );
