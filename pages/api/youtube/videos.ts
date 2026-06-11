@@ -3,9 +3,8 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../../lib/auth";
 import {
   fetchChannelVideos,
-  fetchPublicChannelVideos,
   type VideoItem,
-} from "../../../app/lib/youtube/fetchVideos";
+} from "@/lib/youtube/fetchVideos";
 
 type ApiResponse = VideoItem[] | { error: string };
 
@@ -30,7 +29,7 @@ export default async function handler(
       }
     }
 
-    const publicVideos = await fetchPublicChannelVideos();
+   const publicVideos = await fetchChannelVideos();
 
     res.setHeader("x-youtube-source", "api-key-public");
     return res.status(200).json(publicVideos);
