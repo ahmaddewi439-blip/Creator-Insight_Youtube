@@ -2,7 +2,9 @@
 
 import { signIn, signOut, useSession } from "next-auth/react";
 import { useEffect, useMemo, useState } from "react";
-import RobloxCreatorFinalUI from "@/src/components/RobloxCreatorFinalUI";
+// JALUR IMPORT SUDAH DIPERBAIKI MENYESUAIKAN FOLDER ANDA
+import RobloxCreatorFinalUI from "../../src/components/RobloxCreatorFinalUI";
+
 type TabId = "overview" | "optimizer" | "competitors" | "roblox" | "reports" | "settings";
 
 type ApiState<T> = {
@@ -114,12 +116,6 @@ function LoginScreen() {
             <button className="btn primary" onClick={() => signIn("google")}>Login Channel YouTube</button>
           </div>
         </div>
-        <div className="feature-list">
-          <div className="feature"><b>1. Channel Login</b><br />Baca channel dan video milikmu dengan YouTube readonly.</div>
-          <div className="feature"><b>2. Video Optimizer</b><br />Generate title, deskripsi, caption, hashtags, keyword, CTA.</div>
-          <div className="feature"><b>3. Competitor Research</b><br />Search channel kompetitor dan lihat pola video mereka.</div>
-          <div className="feature"><b>4. Roblox Shorts Creator</b><br />Search update Roblox, pilih topik, generate script 45-60 detik lengkap dengan gameplay direction.</div>
-        </div>
       </section>
     </main>
   );
@@ -130,8 +126,10 @@ export default function CreatorInsightApp() {
   const [active, setActive] = useState<TabId>("overview");
   const [channelState, setChannelState] = useState<ApiState<any>>({ loading: false, error: "", data: null });
   const [videosState, setVideosState] = useState<ApiState<any[]>>({ loading: false, error: "", data: [] });
+  
   const [selectedVideo, setSelectedVideo] = useState<any>(null);
   const [optimizer, setOptimizer] = useState<ApiState<any>>({ loading: false, error: "", data: null });
+  const [selectedVideoFormat, setSelectedVideoFormat] = useState("Shorts");
 
   const [competitorQuery, setCompetitorQuery] = useState("");
   const [competitors, setCompetitors] = useState<ApiState<any[]>>({ loading: false, error: "", data: [] });
@@ -145,6 +143,10 @@ export default function CreatorInsightApp() {
   const [selectedTopic, setSelectedTopic] = useState<any>(null);
   const [script, setScript] = useState<ApiState<any>>({ loading: false, error: "", data: null });
   const [scriptTab, setScriptTab] = useState("scenes");
+
+  // State Baru untuk Target Harian
+  const [dailyTarget, setDailyTarget] = useState<ApiState<any>>({ loading: false, error: "", data: null });
+  const [activeDailyTab, setActiveDailyTab] = useState<number>(0);
 
   useEffect(() => {
     if (status !== "authenticated") return;
@@ -179,6 +181,61 @@ export default function CreatorInsightApp() {
     return raw;
   }, [channel]);
 
+  // --- FUNGSI BARU: GENERATE TARGET HARIAN GLOBAL ---
+  async function generateDailyTarget() {
+    setDailyTarget({ loading: true, error: "", data: null });
+    setActiveDailyTab(0);
+    try {
+      const promptStyle = `WAJIB kembalikan response murni dalam format JSON.
+      Bertindaklah sebagai Pakar Algoritma YouTube Shorts Global.
+      1. Analisis algoritma YouTube saat ini untuk channel Roblox. Tentukan jumlah upload video Shorts paling aman dan optimal KHUSUS HARI INI agar views tidak drop / mencegah shadowban (misalnya 2, 3, atau 4 video). Jangan berikan angka asal, berikan yang paling optimal.
+      2. Buat konsep video persis sebanyak angka optimal tersebut.
+      3. TARGET PENONTON ADALAH GLOBAL (Mancanegara). Jadi VO (Voice Over) WAJIB menggunakan bahasa Inggris yang sangat natural, clickbait, punya hook 3 detik, dan CTA (Call to Action) di akhir.
+      
+      Gunakan struktur JSON berikut:
+      {
+        "optimalUploadCount": 3,
+        "strategyReason": "Alasan logis mengapa angka ini paling optimal untuk algoritma YouTube hari ini agar tidak drop...",
+        "videos": [
+          {
+            "id": 1,
+            "title": "Judul Clickbait Global (Maks 60 Karakter)",
+            "topic": "Topik spesifik Roblox",
+            "voEnglish": "Teks lengkap Voice Over dalam bahasa Inggris (0-60 detik)",
+            "gameplayPrompt": "Instruksi visual/nama game spesifik yang harus direkam untuk layar background"
+          }
+        ]
+      }`;
+
+      const data = await fetchJson("/api/roblox/script", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          topic: { title: "Global Roblox Algorithmic Daily Strategy", summary: "Determine optimal daily upload count and exact videos." }, 
+          language: "English", 
+          duration: "60 seconds", 
+          style: promptStyle 
+        })
+      });
+
+      let parsedData = data.result || data.raw || data;
+      
+      // Pembersihan JSON yang 100% AMAN (Tanpa Regex Backtick)
+      if (typeof parsedData === 'string') {
+        try {
+          parsedData = parsedData.split('```json').join('').split('```').join('');
+          parsedData = JSON.parse(parsedData);
+        } catch (e) {
+          // fallback jika gagal parse
+        }
+      }
+
+      setDailyTarget({ loading: false, error: "", data: parsedData });
+    } catch (error: any) {
+      setDailyTarget({ loading: false, error: error.message, data: null });
+    }
+  }
+
   async function optimizeVideo(video: any) {
     setSelectedVideo(video);
     setOptimizer({ loading: true, error: "", data: null });
@@ -186,7 +243,7 @@ export default function CreatorInsightApp() {
       const data = await fetchJson("/api/ai/optimize-video", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ video })
+        body: JSON.stringify({ video, videoFormat: selectedVideoFormat })
       });
       setOptimizer({ loading: false, error: "", data: data.result || data.raw });
     } catch (err: any) {
@@ -247,6 +304,7 @@ export default function CreatorInsightApp() {
     }
   }
 
+  // --- RENDER AREA ---
   if (status === "loading") return <div className="login-wrap"><div className="skeleton" style={{ width: 380 }} /></div>;
   if (!session) return <LoginScreen />;
 
@@ -266,8 +324,8 @@ export default function CreatorInsightApp() {
         </nav>
         <div className="side-card">
           <strong>AI Report Status ●</strong>
-          Koboi/OpenAI-compatible gateway aktif jika env AI sudah benar.
-          <div style={{ marginTop: 12 }}><button className="btn block" onClick={() => setActive("roblox")}>Create Roblox Shorts</button></div>
+          Koboi/OpenAI-compatible gateway aktif.
+          <div style={{ marginTop: 12 }}><button className="btn block primary" onClick={() => setActive("roblox")}>Create Roblox Shorts</button></div>
         </div>
       </aside>
 
@@ -312,9 +370,8 @@ export default function CreatorInsightApp() {
             <h1>{channel?.title || channel?.snippet?.title || "Your YouTube Channel"}</h1>
             <p>{channel?.snippet?.customUrl || channel?.id || "Login berhasil. Data channel akan tampil di sini."}</p>
             <div className="badges">
-              <span className="badge">YouTube</span>
+              <span className="badge">Global Target</span>
               <span className="badge">Roblox Shorts</span>
-              <span className="badge">Read-only</span>
             </div>
           </div>
         </div>
@@ -339,8 +396,8 @@ export default function CreatorInsightApp() {
             <div className="score-row">
               <ScoreRing value={channelScore} label={channelScore >= 85 ? "Excellent" : "Bagus"} />
               <div>
-                <h3>Channel kamu sudah siap dioptimasi.</h3>
-                <p className="muted">Pertahankan konsistensi upload, perkuat hook 3 detik pertama, dan optimalkan SEO judul/deskripsi/hashtag.</p>
+                <h3>Channel kamu sudah siap meledak.</h3>
+                <p className="muted">Pertahankan pacing upload harian, gunakan VO English untuk mengejar CPM/RPM global, dan selalu cek Optimizer.</p>
                 <button className="btn primary" onClick={() => setActive("optimizer")}>Lihat Rekomendasi →</button>
               </div>
             </div>
@@ -352,32 +409,79 @@ export default function CreatorInsightApp() {
           </div>
         </section>
 
-        <section className="grid grid-2">
-          <div className="card">
-            <h2>Performance Overview</h2>
-            <div className="grid grid-4">
-              <div className="mini-score"><span className="muted">Views</span><br /><b>{compact(channel?.statistics?.viewCount)}</b><div className="status-pill">▲ Organic</div></div>
-              <div className="mini-score"><span className="muted">Subscribers</span><br /><b>{compact(channel?.statistics?.subscriberCount)}</b><div className="status-pill">▲ Audience</div></div>
-              <div className="mini-score"><span className="muted">Videos</span><br /><b>{fullNumber(channel?.statistics?.videoCount)}</b><div className="status-pill">Library</div></div>
-              <div className="mini-score"><span className="muted">Content Focus</span><br /><b>Roblox</b><div className="status-pill">Shorts</div></div>
-            </div>
-            <p className="footer-note">Grafik detail bisa ditambahkan nanti dari YouTube Analytics API. Versi ini memakai YouTube Data API untuk channel/video.</p>
-          </div>
-          <div className="card">
-            <h2>Top Videos</h2>
-            <div className="table-wrapper">
-              <table className="table">
-                <thead><tr><th>#</th><th>Video</th><th>Views</th><th>Likes</th><th>Status</th></tr></thead>
-                <tbody>{sortedVideos.slice(0, 5).map((v, i) => <VideoRow key={v.id} video={v} index={i} />)}</tbody>
-              </table>
-            </div>
+        {/* --- BAGIAN TARGET HARIAN SEKARANG --- */}
+        <section className="grid" style={{ gridTemplateColumns: "1fr" }}>
+          <div className="card" style={{ border: '2px solid #3b82f6' }}>
+            <h2 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>🎯 TARGET HARIAN SEKARANG</h2>
+            <p className="muted" style={{ marginBottom: 20 }}>
+              AI akan memperhitungkan frekuensi upload optimal hari ini untuk channel Anda agar views stabil & mencegah shadowban. AI juga akan langsung menyiapkan konsep video berskala Global (VO English) sesuai jumlah tersebut.
+            </p>
+
+            {!dailyTarget.data && (
+              <button 
+                className="btn primary" 
+                onClick={generateDailyTarget} 
+                disabled={dailyTarget.loading}
+                style={{ width: '100%', padding: 16, fontSize: 16 }}
+              >
+                {dailyTarget.loading ? "⏳ Menganalisis Algoritma & Membuat Strategi..." : "Generate Target Hari Ini"}
+              </button>
+            )}
+
+            {dailyTarget.error && <div className="alert error">{dailyTarget.error}</div>}
+
+            {dailyTarget.data && dailyTarget.data.optimalUploadCount && (
+              <div style={{ marginTop: 20 }}>
+                {/* Info Jumlah Optimal */}
+                <div style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', padding: 16, borderRadius: 12, marginBottom: 20 }}>
+                  <strong style={{ color: '#1d4ed8', fontSize: 18, display: 'block', marginBottom: 8 }}>
+                    ✅ Upload Optimal Hari Ini: {dailyTarget.data.optimalUploadCount} Video
+                  </strong>
+                  <p style={{ margin: 0, color: '#1e3a8a', lineHeight: 1.5 }}>{dailyTarget.data.strategyReason}</p>
+                </div>
+
+                {/* Tab Video Terpisah */}
+                <div className="tabs" style={{ marginBottom: 20 }}>
+                  {dailyTarget.data.videos.map((vid: any, idx: number) => (
+                    <button
+                      key={idx}
+                      className={activeDailyTab === idx ? "active" : ""}
+                      onClick={() => setActiveDailyTab(idx)}
+                      style={{ padding: '10px 24px', fontWeight: 'bold' }}
+                    >
+                      🎥 Video {idx + 1}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Konten Video Aktif */}
+                {dailyTarget.data.videos[activeDailyTab] && (() => {
+                  const v = dailyTarget.data.videos[activeDailyTab];
+                  return (
+                    <div style={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', padding: 24, borderRadius: 16 }}>
+                      <div className="copy-row" style={{ marginBottom: 20, borderBottom: '1px solid #f3f4f6', paddingBottom: 16 }}>
+                        <h3 style={{ margin: 0, color: '#111', fontSize: 20 }}>{v.title}</h3>
+                        <CopyButton text={JSON.stringify(v, null, 2)} label="Copy Struktur" />
+                      </div>
+                      
+                      <div style={{ marginBottom: 20 }}>
+                        <strong style={{ color: '#6b7280', fontSize: 13, display: 'block', marginBottom: 4 }}>📌 Topik Utama:</strong>
+                        <span style={{ fontSize: 16, color: '#111', fontWeight: 500 }}>{v.topic}</span>
+                      </div>
+
+                      <OutputBlock title="🗣️ Voice Over Script (Global English Target)" value={v.voEnglish} />
+                      <OutputBlock title="🎮 Gameplay / Visual Prompt" value={v.gameplayPrompt} />
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
           </div>
         </section>
 
-        <section className="grid grid-3">
-          <div className="card"><h3>Ide Konten Berikutnya</h3><p className="muted">Roblox update terbaru, limited/free item, avatar marketplace, event official, viral Roblox game.</p><button className="btn primary" onClick={() => setActive("roblox")}>Generate Ide</button></div>
+        <section className="grid grid-2">
+          <div className="card"><h3>Ide Konten Cadangan</h3><p className="muted">Roblox update terbaru, limited/free item, avatar marketplace, event official, viral Roblox game.</p><button className="btn primary" onClick={() => setActive("roblox")}>Generate Ide</button></div>
           <div className="card"><h3>SEO Cepat</h3><p className="muted">Gunakan keyword utama di judul, 2 baris pertama deskripsi, hashtag, dan pinned comment.</p><button className="btn" onClick={() => setActive("optimizer")}>Optimize Video</button></div>
-          <div className="card"><h3>Action Plan 7 Hari</h3><p className="muted">Hari 1 audit video lama, hari 2 riset keyword, hari 3 upload 1-2 Shorts, hari 4 promosi, hari 5 cek retention.</p></div>
         </section>
       </div>
     );
@@ -389,6 +493,22 @@ export default function CreatorInsightApp() {
         <div className="card">
           <h2>Video Optimizer</h2>
           <p className="muted">Pilih video publish/terjadwal yang terbaca dari channel, lalu AI akan memberi saran caption, deskripsi, hashtag, keyword, CTA, pinned comment, dan thumbnail text.</p>
+          
+          <div className="form-row" style={{ marginTop: 18, marginBottom: 18, backgroundColor: '#f0f4f9', padding: 16, borderRadius: 12 }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+              Format Target Optimasi AI:
+              <select 
+                className="select" 
+                style={{ padding: '12px 18px', fontSize: '15px', borderRadius: '8px', backgroundColor: '#fff', cursor: 'pointer', border: '1px solid #ccc' }}
+                value={selectedVideoFormat} 
+                onChange={(e) => setSelectedVideoFormat(e.target.value)}
+              >
+                <option value="Shorts">YouTube Shorts (Vertikal, Hook Cepat, CTA)</option>
+                <option value="Long">Video Panjang (Durasi Normal, Horizontal, SEO Lengkap)</option>
+              </select>
+            </label>
+          </div>
+
           {videosState.loading ? <div className="skeleton" /> : (
             <div className="table-wrapper">
               <table className="table">
@@ -416,7 +536,7 @@ export default function CreatorInsightApp() {
     const copyText = JSON.stringify(result, null, 2);
     return (
       <div className="grid">
-        <div className="copy-row"><h3>Rekomendasi AI</h3><CopyButton text={copyText} label="Copy Semua" /></div>
+        <div className="copy-row"><h3>Rekomendasi AI ({selectedVideoFormat})</h3><CopyButton text={copyText} label="Copy Semua" /></div>
         <div className="grid grid-4">
           {result.score && Object.entries(result.score).map(([k, v]: any) => <div className="mini-score" key={k}><span className="muted">{k}</span><br /><b>{v}</b></div>)}
         </div>
@@ -487,95 +607,11 @@ export default function CreatorInsightApp() {
   }
 
   function renderRobloxCreator() {
-    return (
-      <div className="grid">
-        <RobloxCreatorFinalUI />
-      </div>
-    );
-  }
-
-  function renderScriptResult(result: any) {
-    if (typeof result === "string") return <div className="card"><div className="output">{result}</div></div>;
-    const fullText = JSON.stringify(result, null, 2);
-    const sceneText = (result.scenes || []).map((s: any) => `Scene ${s.scene} - ${s.name}\nDurasi: ${s.duration}\nOverlay: ${s.overlayText}\nVO: ${s.vo}\nGameplay: ${s.gameplayDirection}\nEditing: ${s.editingDirection}\nSFX: ${s.sfx}\nPrompt 1: ${s.imagePrompts?.[0]}\nPrompt 2: ${s.imagePrompts?.[1]}`).join("\n\n");
-    return (
-      <div className="card">
-        <div className="copy-row">
-          <div>
-            <h2>{result.videoTitle || "Roblox Shorts Script"}</h2>
-            <p className="muted small">Topik dipilih: {selectedTopic?.title}</p>
-          </div>
-          <CopyButton text={fullText} label="Copy Semua JSON" />
-        </div>
-        {result.topicScore && (
-          <div className="grid grid-4" style={{ marginBottom: 16 }}>
-            <div className="mini-score"><span className="muted">Total Score</span><br /><b>{result.topicScore.totalOutOf50}/50</b><div className="status-pill">{result.topicScore.category}</div></div>
-            <div className="mini-score"><span className="muted">Trend</span><br /><b>{result.topicScore.trendRelevance}</b></div>
-            <div className="mini-score"><span className="muted">Visual</span><br /><b>{result.topicScore.visualizability}</b></div>
-            <div className="mini-score"><span className="muted">Engagement</span><br /><b>{result.topicScore.engagementPotential}</b></div>
-          </div>
-        )}
-        <div className="tabs">
-          {[
-            ["scenes", "Scene Script"],
-            ["vo", "Full VO"],
-            ["gameplay", "Gameplay Direction"],
-            ["prompts", "Image Prompts"],
-            ["metadata", "Caption & SEO"],
-            ["checklist", "Checklist"]
-          ].map(([id, label]) => <button key={id} className={scriptTab === id ? "active" : ""} onClick={() => setScriptTab(id)}>{label}</button>)}
-        </div>
-
-        {scriptTab === "scenes" && (
-          <div>
-            <div className="copy-row"><h3>Scene 1-5</h3><CopyButton text={sceneText} /></div>
-            {(result.scenes || []).map((scene: any) => (
-              <div className="scene" key={scene.scene}>
-                <div className="scene-head"><h3>Scene {scene.scene}: {scene.name}</h3><span className="status-pill">{scene.duration}</span></div>
-                <div className="kv"><b>Goal</b><span>{scene.goal}</span></div>
-                <div className="kv"><b>Overlay</b><span>{scene.overlayText}</span></div>
-                <div className="kv"><b>VO</b><span>{scene.vo}</span></div>
-                <div className="kv"><b>Gameplay</b><span>{scene.gameplayDirection}</span></div>
-                <div className="kv"><b>Editing</b><span>{scene.editingDirection}</span></div>
-                <div className="kv"><b>SFX</b><span>{scene.sfx}</span></div>
-                <OutputBlock title="Prompt Gambar 1" value={scene.imagePrompts?.[0]} compactBlock />
-                <OutputBlock title="Prompt Gambar 2" value={scene.imagePrompts?.[1]} compactBlock />
-              </div>
-            ))}
-          </div>
-        )}
-
-        {scriptTab === "vo" && <OutputBlock title="Full VO Copy Ready" value={result.fullVO} />}
-        {scriptTab === "gameplay" && (
-          <div className="grid">
-            <OutputBlock title="Main Gameplay Type" value={result.gameplayPlan?.mainGameplayType} />
-            <OutputBlock title="Recommended Roblox Games / Maps" value={(result.gameplayPlan?.recommendedRobloxGamesOrMaps || []).join("\n")} />
-            <OutputBlock title="Clips To Record" value={(result.gameplayPlan?.clipsToRecord || []).join("\n")} />
-            <OutputBlock title="Recording Tips" value={(result.gameplayPlan?.recordingTips || []).join("\n")} />
-          </div>
-        )}
-        {scriptTab === "prompts" && <OutputBlock title="All Image Prompts" value={(result.scenes || []).flatMap((s: any) => s.imagePrompts || []).map((p: string, i: number) => `${i + 1}. ${p}`).join("\n\n")} />}
-        {scriptTab === "metadata" && (
-          <div className="grid grid-2">
-            <OutputBlock title="Caption" value={result.caption} />
-            <OutputBlock title="Description" value={result.description} />
-            <OutputBlock title="Hashtags" value={(result.hashtags || []).join(" ")} />
-            <OutputBlock title="Pinned Comment" value={result.pinnedComment} />
-            <OutputBlock title="Thumbnail Text" value={(result.thumbnailTexts || []).join("\n")} />
-          </div>
-        )}
-        {scriptTab === "checklist" && (
-          <div className="grid grid-2">
-            <OutputBlock title="Asset Checklist" value={(result.assetChecklist || []).join("\n")} />
-            <OutputBlock title="Final Quality Checklist" value={(result.finalQualityChecklist || []).join("\n")} />
-          </div>
-        )}
-      </div>
-    );
+    return <RobloxCreatorFinalUI />;
   }
 
   function renderReports() {
-    const report = `Creator Insight Report\n\nChannel: ${channel?.snippet?.title || "-"}\nSubscribers: ${fullNumber(channel?.statistics?.subscriberCount)}\nTotal Views: ${fullNumber(channel?.statistics?.viewCount)}\nTotal Videos: ${fullNumber(channel?.statistics?.videoCount)}\n\nAction Plan:\n1. Optimasi 3 video lama dengan SEO title dan description.\n2. Riset topik Roblox terbaru.\n3. Buat 1-2 Shorts per hari dengan hook 3 detik kuat.\n4. Gunakan CTA ending: pertanyaan + komen + like + subscribe/follow.\n5. Cek video dengan retention paling tinggi dan ulangi polanya.`;
+    const report = `Creator Insight Report\n\nChannel: ${channel?.snippet?.title || "-"}\nSubscribers: ${fullNumber(channel?.statistics?.subscriberCount)}\nTotal Views: ${fullNumber(channel?.statistics?.viewCount)}\nTotal Videos: ${fullNumber(channel?.statistics?.videoCount)}\n\nAction Plan:\n1. Pastikan selalu cek Target Harian di Overview.\n2. Pakai prompt English untuk target penonton global.\n3. Jangan rekam layar statis, ikuti saran gameplay spesifik.`;
     return (
       <div className="grid grid-2">
         <div className="card">
@@ -601,15 +637,15 @@ export default function CreatorInsightApp() {
             <div className="feature">NEXTAUTH_SECRET: random secret minimal 32 karakter</div>
             <div className="feature">GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET: OAuth web client</div>
             <div className="feature">YOUTUBE_API_KEY: YouTube Data API v3</div>
-            <div className="feature">AI_BASE_URL: https://lite.koboillm.com/v1</div>
+            <div className="feature">AI_BASE_URL: [https://lite.koboillm.com/v1](https://lite.koboillm.com/v1)</div>
             <div className="feature">AI_MODEL: openai/gpt-4o-mini atau model Koboi aktif</div>
             <div className="feature">AI_API_KEYS: virtual key Koboi, pisah koma jika banyak</div>
           </div>
         </div>
         <div className="card">
           <h2>OAuth Redirect</h2>
-          <OutputBlock title="Authorized JavaScript origins" value="https://domain-vercel-kamu.vercel.app" />
-          <OutputBlock title="Authorized redirect URIs" value="https://domain-vercel-kamu.vercel.app/api/auth/callback/google" />
+          <OutputBlock title="Authorized JavaScript origins" value="[https://domain-vercel-kamu.vercel.app](https://domain-vercel-kamu.vercel.app)" />
+          <OutputBlock title="Authorized redirect URIs" value="[https://domain-vercel-kamu.vercel.app/api/auth/callback/google](https://domain-vercel-kamu.vercel.app/api/auth/callback/google)" />
           <p className="footer-note">Setelah env atau OAuth diubah, lakukan redeploy di Vercel.</p>
         </div>
       </div>
@@ -617,15 +653,16 @@ export default function CreatorInsightApp() {
   }
 }
 
+// Fungsi OutputBlock Diletakkan Paling Luar agar Tidak Memicu Error Red Line
 function OutputBlock({ title, value, compactBlock = false }: { title: string; value: any; compactBlock?: boolean }) {
   const text = Array.isArray(value) ? value.join("\n") : String(value || "-");
   return (
-    <div style={{ marginTop: compactBlock ? 10 : 0 }}>
-      <div className="copy-row">
-        <h3>{title}</h3>
+    <div style={{ marginTop: compactBlock ? 10 : 0, position: 'relative', background: '#f9fafb', border: '1px solid #e5e7eb', padding: '16px', borderRadius: '12px', marginBottom: '16px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+        <h3 style={{ margin: 0, fontSize: '15px', color: '#374151' }}>{title}</h3>
         <CopyButton text={text} />
       </div>
-      <div className="output">{text}</div>
+      <div style={{ fontSize: '14px', color: '#111', whiteSpace: 'pre-wrap', lineHeight: '1.6', fontFamily: 'system-ui' }}>{text}</div>
     </div>
   );
 }

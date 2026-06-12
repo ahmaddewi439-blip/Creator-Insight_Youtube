@@ -49,12 +49,13 @@ const RobloxCreatorFinalUI = () => {
       setGeneratingScriptIds((prev) => ({ ...prev, [index]: true }));
       setExpandedIndex(index);
       
-      // Instruksi Super Ketat untuk AI (Script + Algoritma YouTube)
+      // Instruksi Super Ketat untuk AI (Script + Algoritma + Thumbnail)
       const strictStyle = `${selectedCategory}. WAJIB: Buat 5 scene. Scene 1 harus punya Hook kuat di 0-3 detik pertama. Scene 5 harus ada Call To Action (komen, like, subscribe). Setiap scene wajib punya 2 imagePrompts yang berbeda. Beri timestamp di tiap scene. 
       SELAIN ITU, bertindaklah sebagai Pakar Algoritma YouTube Shorts. Tambahkan metadata SEO-friendly di JSON dengan key: 
       1. "youtubeTitle": Judul sangat clickbait, memancing rasa penasaran ekstrim, maksimal 60 karakter. 
       2. "youtubeDescription": Deskripsi singkat 2 baris yang mengandung keyword pencarian tinggi terkait topik. 
       3. "youtubeHashtags": Array berisi 5-7 hashtag paling viral dan relevan (contoh: #roblox #robloxshorts dll). 
+      4. "thumbnailPrompt": SATU Prompt gambar super viral, clickbait, profesional 3D render style UNTUK THUMBNAIL YouTube Shorts, WAJIB rasio 9:16, visual harus sangat kontras dan memancing rasa penasaran.
       Target bahasa: ${language === 'en' ? 'English' : 'Indonesian'}.`;
 
       const response = await fetch("/api/roblox/script", {
@@ -166,7 +167,7 @@ const RobloxCreatorFinalUI = () => {
                     disabled={isGenerating}
                     style={{ width: '100%', padding: '16px', borderRadius: '12px', backgroundColor: isGenerating ? '#e5e7eb' : '#dc2626', color: isGenerating ? '#6b7280' : '#fff', border: 'none', fontSize: '15px', fontWeight: 'bold', cursor: isGenerating ? 'wait' : 'pointer', transition: 'all 0.2s' }}
                   >
-                    {isGenerating ? "⏳ AI sedang meracik Script & SEO..." : "✨ Generate Script + SEO via AI"}
+                    {isGenerating ? "⏳ AI sedang meracik Script + Thumbnail SEO..." : "✨ Generate Script + SEO + Thumbnail via AI"}
                   </button>
                 )}
 
@@ -180,6 +181,19 @@ const RobloxCreatorFinalUI = () => {
                         🚀 YouTube Shorts SEO Metadata
                       </strong>
                       
+                      {/* Thumbnail Prompt - BARU DITAMBAHKAN */}
+                      <div style={{ marginBottom: '16px', position: 'relative', padding: '12px', backgroundColor: '#fffbeb', borderRadius: '8px', border: '1px solid #fcd34d' }}>
+                        <strong style={{ color: '#b45309', fontSize: '13px', display: 'block', marginBottom: '4px' }}>🖼️ Prompt Thumbnail (9:16 Clickbait):</strong>
+                        <p style={{ margin: 0, fontSize: '13px', fontFamily: 'monospace', color: '#111', lineHeight: '1.5', paddingRight: '100px' }}>
+                          {aiScript.thumbnailPrompt || aiScript.thumbnail_prompt || "Gagal membuat prompt thumbnail khusus."}
+                        </p>
+                        <button 
+                          onClick={() => handleCopy(aiScript.thumbnailPrompt || aiScript.thumbnail_prompt || "", `yt-thumb-${index}`)}
+                          style={{ position: 'absolute', top: '12px', right: '12px', background: copiedId === `yt-thumb-${index}` ? '#34d399' : '#f59e0b', border: 'none', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', cursor: 'pointer', fontWeight: 'bold', color: copiedId === `yt-thumb-${index}` ? '#065f46' : '#fff' }}>
+                          {copiedId === `yt-thumb-${index}` ? "Copied!" : "Copy Thumb"}
+                        </button>
+                      </div>
+
                       {/* Title */}
                       <div style={{ marginBottom: '16px', position: 'relative', padding: '12px', backgroundColor: '#fef3c7', borderRadius: '8px' }}>
                         <strong style={{ color: '#92400e', fontSize: '13px', display: 'block', marginBottom: '4px' }}>Judul Video (Clickbait & Algoritma):</strong>
