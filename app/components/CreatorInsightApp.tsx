@@ -183,7 +183,53 @@ export default function CreatorInsightApp() {
     const raw = Math.min(92, Math.max(45, Math.round(55 + Math.log10(Math.max(avg, 10)) * 7 + Math.log10(Math.max(subs, 10)) * 3)));
     return raw;
   }, [channel]);
+// 1. Growth Score (Realistis)
+  const growthScore = useMemo(() => {
+    if (!channel || !videos || videos.length === 0) return 0;
+    const totalChannelViews = Number(channel?.statistics?.viewCount || 0);
+    const totalChannelVideos = Number(channel?.statistics?.videoCount || 0);
+    const historicalAvg = totalChannelVideos > 0 ? totalChannelViews / totalChannelVideos : 0;
 
+    let recentViews = 0;
+    videos.forEach(v => { recentViews += Number(v?.statistics?.viewCount || v?.views || 0); });
+    const recentAvg = recentViews / videos.length;
+
+    if (historicalAvg === 0) return 75; 
+    const ratio = recentAvg / historicalAvg;
+    let score = Math.round(50 + (ratio * 20));
+    return Math.min(99, Math.max(45, score));
+  }, [channel, videos]);
+
+  // 2. SEO Score (Realistis)
+  const seoScore = useMemo(() => {
+    if (!videos || videos.length === 0) return 0;
+    let totalScore = 0;
+    videos.forEach(v => {
+      let vScore = 50; // Base score
+      const title = v?.snippet?.title || "";
+      const desc = v?.snippet?.description || "";
+      if (title.length > 20 && title.length < 75) vScore += 15;
+      if (desc.length > 100) vScore += 20;
+      if (desc.includes("#")) vScore += 15;
+      totalScore += vScore;
+    });
+    return Math.min(99, Math.round(totalScore / videos.length));
+  }, [videos]);
+
+  // 3. Viral Potential (Realistis)
+  const viralScore = useMemo(() => {
+    if (!videos || videos.length === 0) return 0;
+    let totalViews = 0;
+    let totalLikes = 0;
+    videos.forEach(v => {
+      totalViews += Number(v?.statistics?.viewCount || v?.views || 0);
+      totalLikes += Number(v?.statistics?.likeCount || v?.likes || 0);
+    });
+    if (totalViews === 0) return 50;
+    const likeRatio = totalLikes / totalViews; 
+    let score = Math.round(40 + (likeRatio * 1000)); 
+    return Math.min(99, Math.max(45, score));
+  }, [videos]);
   async function generateDailyTarget() {
     setDailyTarget({ loading: true, error: "", data: null });
     setDailyScripts({});
@@ -439,9 +485,9 @@ export default function CreatorInsightApp() {
             </div>
           </div>
           <div className="grid grid-3">
-            <div className="mini-score"><span className="muted">Growth Score</span><br /><b>86</b><div className="status-pill">Bagus</div></div>
-            <div className="mini-score"><span className="muted">SEO Score</span><br /><b>90</b><div className="status-pill">Sangat Bagus</div></div>
-            <div className="mini-score"><span className="muted">Viral Potential</span><br /><b>88</b><div className="status-pill">Tinggi</div></div>
+            <div className="mini-score"><span className="muted">Growth Score</span><br /><b>{growthScore || 0}</b><div className="status-pill">{growthScore >= 80 ? "Sangat Cepat" : "Stabil"}</div></div>
+            <div className="mini-score"><span className="muted">SEO Score</span><br /><b>{seoScore || 0}</b><div className="status-pill">{seoScore >= 80 ? "Sangat Bagus" : "Kurang"}</div></div>
+            <div className="mini-score"><span className="muted">Viral Potential</span><br /><b>{viralScore || 0}</b><div className="status-pill">{viralScore >= 80 ? "Tinggi (Good ER)" : "Sedang"}</div></div>
           </div>
         </section>
 
