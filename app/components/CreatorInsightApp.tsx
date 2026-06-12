@@ -322,15 +322,23 @@ async function optimizeVideo(video: any) {
     setSelectedVideo(video);
     setOptimizer({ loading: true, error: "", data: null });
     try {
-      const originalTitle = video?.snippet?.title || "";
+      const originalTitle = video?.snippet?.title || video?.title || "Untitled";
+      const originalDesc = video?.snippet?.description || video?.description || "";
+      
       const data = await fetchJson("/api/ai/optimize-video", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           video, 
           videoFormat: selectedVideoFormat,
-          // INSTRUKSI MUTLAK UNTUK MEMAKSA AI MENGIKUTI BAHASA ASLI
-          instruction: `CRITICAL RULE: Analyze the EXACT language of this original video title: "${originalTitle}". You MUST generate ALL JSON responses (recommendedTitles, caption, description, hashtags, etc) in that EXACT SAME LANGUAGE. If the title is English, output 100% English. If Indonesian, output Indonesian. DO NOT translate English to Indonesian!`
+          // INSTRUKSI MUTLAK: PAKSA AI FOKUS PADA KONTEKS & BAHASA ASLI
+          instruction: `CRITICAL RULE: You are optimizing THIS exact video. 
+          Original Title: "${originalTitle}" 
+          Original Description: "${originalDesc}" 
+          
+          1. Analyze the exact topic from this original metadata. DO NOT hallucinate or change the topic.
+          2. Detect the EXACT language of the Original Title. You MUST generate ALL JSON responses (recommendedTitles, caption, description, hashtags) in that EXACT SAME LANGUAGE.
+          3. Make the output highly relevant ONLY to this specific video's context.`
         })
       });
       setOptimizer({ loading: false, error: "", data: data.result || data.raw });
@@ -662,14 +670,14 @@ async function optimizeVideo(video: any) {
     );
   }
 
- function renderOptimizer() {
-    // Fungsi untuk Live Update (mengubah judul di tabel secara real-time)
-    const handleLivePreview = (videoId: string, newTitle: string) => {
+function renderOptimizer() {
+    // Fungsi untuk mengubah judul di tabel secara langsung (Live Preview)
+    const handleLivePreview = (videoObj: any, newTitle: string) => {
       setVideosState(prev => ({
         ...prev,
         data: prev.data?.map(v => {
-          const currentId = v.id?.videoId || v.id;
-          if (currentId === videoId) {
+          // Pencocokan objek mutlak
+          if (v === videoObj) {
             return { ...v, snippet: { ...v.snippet, title: newTitle } };
           }
           return v;
@@ -703,14 +711,14 @@ async function optimizeVideo(video: any) {
               <table className="table">
                 <thead><tr><th>#</th><th>Video</th><th>Views</th><th>Likes</th><th>Status</th><th>Action</th></tr></thead>
                 {videos.map((v, i) => {
-                  const vId = v.id?.videoId || v.id;
-                  const isSelected = selectedVideo && (selectedVideo.id?.videoId || selectedVideo.id) === vId;
+                  // SOLUSI MUTLAK: Pencocokan referensi objek (100% akurat, panel tidak akan terbuka ganda)
+                  const isSelected = selectedVideo === v;
                   
                   return (
-                    <tbody key={vId || i}>
+                    <tbody key={i}>
                       <VideoRow video={v} index={i} onSelect={optimizeVideo} />
                       
-                      {/* PANEL MUNCUL TEPAT DI BAWAH VIDEO YANG DIKLIK */}
+                      {/* PANEL HANYA MUNCUL TEPAT DI BAWAH 1 VIDEO YANG DIKLIK */}
                       {isSelected && (
                         <tr>
                           <td colSpan={6} style={{ padding: 0, borderBottom: '2px solid #3182ce', backgroundColor: '#f8fafc' }}>
@@ -726,7 +734,7 @@ async function optimizeVideo(video: any) {
                                   result={optimizer.data} 
                                   format={selectedVideoFormat} 
                                   video={v}
-                                  onLivePreview={(newTitle) => handleLivePreview(vId, newTitle)}
+                                  onLivePreview={(newTitle) => handleLivePreview(v, newTitle)}
                                 />
                               )}
                             </div>
