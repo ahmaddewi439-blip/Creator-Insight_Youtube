@@ -144,9 +144,13 @@ export default function CreatorInsightApp() {
   const [script, setScript] = useState<ApiState<any>>({ loading: false, error: "", data: null });
   const [scriptTab, setScriptTab] = useState("scenes");
 
-  // State untuk Target Harian
+  // --- STATE BARU: TARGET HARIAN MULTI-FETCH ---
   const [dailyTarget, setDailyTarget] = useState<ApiState<any>>({ loading: false, error: "", data: null });
+  const [dailyScripts, setDailyScripts] = useState<Record<number, any>>({});
+  const [loadingDailyScript, setLoadingDailyScript] = useState<Record<number, boolean>>({});
   const [activeDailyTab, setActiveDailyTab] = useState<number>(0);
+
+  const uploadTimes = ["08:00 WIB", "13:00 WIB", "18:00 WIB", "20:00 WIB"];
 
   useEffect(() => {
     if (status !== "authenticated") return;
@@ -181,79 +185,90 @@ export default function CreatorInsightApp() {
     return raw;
   }, [channel]);
 
-  // --- REVISI FUNGSI HACKER: DATA MATANG, SEO, JAM UPLOAD, FULL VO, & THUMBNAIL 9:16 ---
+  // --- LOGIKA BARU: Ambil Topik Asli Dulu, Lalu Generate Masing-Masing ---
   async function generateDailyTarget() {
     setDailyTarget({ loading: true, error: "", data: null });
+    setDailyScripts({});
     setActiveDailyTab(0);
+    
     try {
-      const promptStyle = `PENTING: Backend sistem mengunci output ke format 'scenes' array. 
-      KITA AKAN MERETASNYA. ANGGAP 1 'scene' = 1 IDE VIDEO SHORTS YANG BERBEDA.
-      Buat tepat 4 'scenes' (artinya 4 video harian) yang MATANG, KOMPLIT, & SEO OPTIMAL. Target audiens GLOBAL (English).
-      
-      Isi field ini dengan aturan MUTLAK:
-      1. 'name' -> Isi dengan Judul Clickbait (English).
-      2. 'duration' -> Isi dengan JAM UPLOAD TERBAIK dalam WIB (misal: "08:00 - 09:00 WIB"). Sesuaikan agar 4 video ini tersebar merata.
-      3. 'goal' -> Isi dengan SEO DATA MATANG (Tuliskan: "Description: [Deskripsi SEO] | Hashtags: #roblox... | Tags: roblox, ...").
-      4. 'overlayText' -> WAJIB ISI dengan SATU Prompt Gambar Super Viral untuk Thumbnail YouTube Shorts. WAJIB rasio 9:16, 3D Render Style, kontras tinggi.
-      5. 'vo' -> Isi dengan SCRIPT VOICE OVER FULL & PANJANG (English) dari detik 0 sampai CTA akhir (jangan terpotong).
-      6. 'gameplayDirection' -> Isi dengan NAMA GAME ROBLOX SPESIFIK (misal Tower of Hell) & aksi detail yang direkam.
-      7. 'description' -> Isi dengan strategi logis kenapa 4 video dan jam upload tersebut optimal hari ini untuk audiens global.`;
-
-      const data = await fetchJson("/api/roblox/script", {
+      // Ambil 4 Topik Trending Asli
+      const data = await fetchJson("/api/roblox/topics", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          topic: { title: "Global Roblox Algorithmic Daily Strategy", summary: "Generate 4 complete mature viral video ideas with SEO, upload times, and 9:16 thumbnail prompts." }, 
-          language: "English", 
-          duration: "60 seconds", 
-          style: promptStyle 
-        })
+        body: JSON.stringify({ query: "Roblox trending updates", language: "English" })
       });
 
-      let parsedData = data.result || data.raw || data;
-      if (typeof parsedData === 'string') {
-        try {
-          const jsonMatch = parsedData.match(/\{[\s\S]*\}/);
-          if (jsonMatch) parsedData = JSON.parse(jsonMatch[0]);
-        } catch (e) {}
+      let fetchedTopics = data.topics || [];
+      if (!Array.isArray(fetchedTopics) || fetchedTopics.length === 0) {
+        // Fallback jika tidak ada topik
+        fetchedTopics = [
+          { title: "Roblox UGC Update", summary: "New UGC limiteds strategy" },
+          { title: "Viral Anime Game", summary: "New secret codes and updates" },
+          { title: "Roblox Dev News", summary: "Studio changes for creators" },
+          { title: "Roblox Event", summary: "Free items and how to get them" }
+        ];
       }
 
-      if (parsedData && parsedData.scenes && Array.isArray(parsedData.scenes)) {
-        
-        // Memecah "Scenes" menjadi "Video" dengan Data Matang & Thumbnail Prompt
-        const videos = parsedData.scenes.slice(0, 4).map((s: any, idx: number) => ({
-          id: idx + 1,
-          title: s.name || `Viral Idea ${idx + 1}`,
-          uploadTime: s.duration || "12:00 WIB", 
-          seoData: s.goal || "SEO Optimization Data missing.", 
-          thumbnailPrompt: s.overlayText || s.thumbnailPrompt || "Create a vertical 9:16 Roblox 3D render image with high contrast and clickbait gaming news style.",
-          voEnglish: s.vo || s.voiceOver || "Voice over script missing.",
-          gameplayPrompt: s.gameplayDirection || s.visual || "Record specific Roblox gameplay."
-        }));
+      const selectedTopics = fetchedTopics.slice(0, 4);
 
-        let strategyReason = "Berdasarkan algoritma terbaru, spacing 4 video pada jam-jam WIB ini akan memaksimalkan paparan ke audiens Global (US & Eropa) secara optimal.";
-        if (parsedData.description && parsedData.description.length > 20) {
-            strategyReason = parsedData.description;
+      setDailyTarget({
+        loading: false,
+        error: "",
+        data: {
+          strategyReason: "Berdasarkan algoritma terbaru, memposting 4 video pada jam-jam WIB (08:00, 13:00, 18:00, 20:00) ini akan mendongkrak visibilitas FYP Global secara merata.",
+          videos: selectedTopics
         }
+      });
 
-        setDailyTarget({
-          loading: false,
-          error: "",
-          data: {
-            optimalUploadCount: videos.length,
-            strategyReason: strategyReason,
-            videos: videos
-          }
-        });
-
-      } else {
-        throw new Error("Gagal membaca struktur AI. Coba tekan tombol Generate lagi.");
-      }
+      // Langsung generate script untuk tab pertama
+      fetchScriptForTab(0, selectedTopics[0]);
 
     } catch (error: any) {
       setDailyTarget({ loading: false, error: error.message, data: null });
     }
   }
+
+  async function fetchScriptForTab(index: number, topic: any) {
+    if (dailyScripts[index] || loadingDailyScript[index]) return;
+
+    setLoadingDailyScript(prev => ({ ...prev, [index]: true }));
+    try {
+      const data = await fetchJson("/api/roblox/script", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          topic: topic, 
+          language: "English", 
+          duration: "60 seconds", 
+          style: "Buatkan Script Clickbait Global. Pastikan field fullVO, description, hashtags, dan imagePrompts terisi dengan sangat matang." 
+        })
+      });
+
+      let result = data.result || data.raw || data;
+      // Jika AI membalas dengan string, coba parsing
+      if (typeof result === 'string') {
+        try {
+          const jsonMatch = result.match(/\{[\s\S]*\}/);
+          if (jsonMatch) result = JSON.parse(jsonMatch[0]);
+        } catch (e) {}
+      }
+
+      setDailyScripts(prev => ({ ...prev, [index]: result }));
+    } catch (e) {
+      console.error("Gagal load script:", e);
+    } finally {
+      setLoadingDailyScript(prev => ({ ...prev, [index]: false }));
+    }
+  }
+
+  // Trigger otomatis saat user klik Tab lain
+  useEffect(() => {
+    if (dailyTarget?.data?.videos && dailyTarget.data.videos[activeDailyTab]) {
+      fetchScriptForTab(activeDailyTab, dailyTarget.data.videos[activeDailyTab]);
+    }
+  }, [activeDailyTab, dailyTarget]);
+
 
   async function optimizeVideo(video: any) {
     setSelectedVideo(video);
@@ -428,12 +443,12 @@ export default function CreatorInsightApp() {
           </div>
         </section>
 
-        {/* --- BAGIAN TARGET HARIAN SEKARANG (REVISI MATANG, KOMPLIT, & THUMBNAIL) --- */}
+        {/* --- BAGIAN TARGET HARIAN UI --- */}
         <section className="grid" style={{ gridTemplateColumns: "1fr" }}>
           <div className="card" style={{ border: '2px solid #3b82f6' }}>
             <h2 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>🎯 TARGET HARIAN SEKARANG</h2>
             <p className="muted" style={{ marginBottom: 20 }}>
-              AI akan memproduksi konsep matang untuk video Anda hari ini. Lengkap dengan Judul Clickbait, Jam Upload terbaik (WIB), SEO komplit, Thumbnail Prompt 9:16, dan Full Script VO untuk target Global.
+              Sistem akan meriset 4 Topik Trending hari ini dan secara otomatis memproduksi Data Matang (SEO, Jam Upload, Thumbnail 9:16, & VO Full) untuk setiap videonya.
             </p>
 
             {!dailyTarget.data && (
@@ -443,18 +458,18 @@ export default function CreatorInsightApp() {
                 disabled={dailyTarget.loading}
                 style={{ width: '100%', padding: 16, fontSize: 16 }}
               >
-                {dailyTarget.loading ? "⏳ Meracik SEO, Script, & Menghitung Jam Upload..." : "Generate 4 Video Matang Hari Ini"}
+                {dailyTarget.loading ? "⏳ Mencari Topik Trending & Meracik Data..." : "Generate 4 Video Matang Hari Ini"}
               </button>
             )}
 
             {dailyTarget.error && <div className="alert error">{dailyTarget.error}</div>}
 
-            {dailyTarget.data && dailyTarget.data.optimalUploadCount && (
+            {dailyTarget.data && dailyTarget.data.videos && (
               <div style={{ marginTop: 20 }}>
-                {/* Info Strategi Algoritma */}
+                {/* Info Strategi */}
                 <div style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', padding: 16, borderRadius: 12, marginBottom: 20 }}>
                   <strong style={{ color: '#1d4ed8', fontSize: 18, display: 'block', marginBottom: 8 }}>
-                    ✅ Strategi {dailyTarget.data.optimalUploadCount} Video Hari Ini
+                    ✅ Strategi {dailyTarget.data.videos.length} Video Hari Ini
                   </strong>
                   <p style={{ margin: 0, color: '#1e3a8a', lineHeight: 1.5 }}>{dailyTarget.data.strategyReason}</p>
                 </div>
@@ -473,36 +488,51 @@ export default function CreatorInsightApp() {
                   ))}
                 </div>
 
-                {/* Konten Video Aktif (Layout Baru Lebih Komplit + THUMBNAIL) */}
-                {dailyTarget.data.videos[activeDailyTab] && (() => {
-                  const v = dailyTarget.data.videos[activeDailyTab];
-                  return (
-                    <div style={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', padding: 24, borderRadius: 16 }}>
-                      
-                      {/* Judul & Copy Semua */}
-                      <div className="copy-row" style={{ marginBottom: 20, borderBottom: '1px solid #f3f4f6', paddingBottom: 16 }}>
-                        <h3 style={{ margin: 0, color: '#111', fontSize: 20 }}>{v.title}</h3>
-                        <CopyButton text={JSON.stringify(v, null, 2)} label="Copy Semua Data" />
-                      </div>
-                      
-                      {/* Jam Upload & Target */}
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 24 }}>
-                        <div style={{ backgroundColor: '#fffbeb', padding: '16px', borderRadius: '12px', border: '1px solid #fde68a' }}>
-                          <strong style={{ color: '#d97706', fontSize: 14, display: 'block', marginBottom: 6 }}>⏰ Jam Upload Optimal:</strong>
-                          <span style={{ fontSize: 20, color: '#92400e', fontWeight: 'bold' }}>{v.uploadTime}</span>
-                        </div>
-                        <div style={{ backgroundColor: '#f0fdf4', padding: '16px', borderRadius: '12px', border: '1px solid #bbf7d0' }}>
-                          <strong style={{ color: '#166534', fontSize: 14, display: 'block', marginBottom: 6 }}>🔥 Target Audiens:</strong>
-                          <span style={{ fontSize: 20, color: '#15803d', fontWeight: 'bold' }}>Global (English)</span>
-                        </div>
-                      </div>
+                {/* Konten Video Aktif */}
+                {(() => {
+                  const topicData = dailyTarget.data.videos[activeDailyTab];
+                  const scriptData = dailyScripts[activeDailyTab];
+                  const isGenerating = loadingDailyScript[activeDailyTab];
+                  const timeWIB = uploadTimes[activeDailyTab] || "12:00 WIB";
 
-                      {/* OUTPUT BLOCKS */}
-                      <OutputBlock title="🚀 Optimasi SEO (Deskripsi & Hashtags)" value={v.seoData} />
-                      <OutputBlock title="🖼️ Prompt Thumbnail (9:16 Clickbait)" value={v.thumbnailPrompt} />
-                      <OutputBlock title="🎙️ Full Voice Over Script (Siap Record)" value={v.voEnglish} />
-                      <OutputBlock title="🎮 Gameplay & Visual Prompt" value={v.gameplayPrompt} />
+                  return (
+                    <div style={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', padding: 24, borderRadius: 16, minHeight: '300px' }}>
                       
+                      {isGenerating ? (
+                        <div style={{ textAlign: 'center', color: '#6b7280', padding: '50px 0' }}>
+                          <span style={{ fontSize: '30px', display: 'block', marginBottom: '10px' }}>⏳</span>
+                          <strong>Sedang memproduksi Full VO, SEO & Thumbnail untuk topik ini...</strong>
+                        </div>
+                      ) : scriptData ? (
+                        <>
+                          <div className="copy-row" style={{ marginBottom: 20, borderBottom: '1px solid #f3f4f6', paddingBottom: 16 }}>
+                            <h3 style={{ margin: 0, color: '#111', fontSize: 20 }}>{scriptData.videoTitle || topicData.title}</h3>
+                            <CopyButton text={JSON.stringify(scriptData, null, 2)} label="Copy Semua Data JSON" />
+                          </div>
+                          
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 24 }}>
+                            <div style={{ backgroundColor: '#fffbeb', padding: '16px', borderRadius: '12px', border: '1px solid #fde68a' }}>
+                              <strong style={{ color: '#d97706', fontSize: 14, display: 'block', marginBottom: 6 }}>⏰ Jam Upload Optimal:</strong>
+                              <span style={{ fontSize: 20, color: '#92400e', fontWeight: 'bold' }}>{timeWIB}</span>
+                            </div>
+                            <div style={{ backgroundColor: '#f0fdf4', padding: '16px', borderRadius: '12px', border: '1px solid #bbf7d0' }}>
+                              <strong style={{ color: '#166534', fontSize: 14, display: 'block', marginBottom: 6 }}>🔥 Target Audiens:</strong>
+                              <span style={{ fontSize: 20, color: '#15803d', fontWeight: 'bold' }}>Global (English)</span>
+                            </div>
+                          </div>
+
+                          <OutputBlock title="🚀 Optimasi SEO (Deskripsi & Hashtags)" value={`${scriptData.description || ""}\n\n${(scriptData.hashtags || []).join(" ")}`} />
+                          
+                          {/* Mengambil Prompt Gambar dari Scene 1 (yang di-generate Gemini) */}
+                          <OutputBlock title="🖼️ Prompt Thumbnail (9:16 Clickbait)" value={scriptData.scenes?.[0]?.imagePrompts?.[0] || "Create a vertical 9:16 Roblox 3D render image with high contrast and clickbait gaming style."} />
+                          
+                          <OutputBlock title="🎙️ Full Voice Over Script (Siap Record)" value={scriptData.fullVO || "Voice over is missing."} />
+                          
+                          <OutputBlock title="🎮 Gameplay & Visual Prompt" value={`🎮 Tipe Gameplay: ${scriptData.gameplayPlan?.mainGameplayType || "-"}\n\n🕹️ Game Spesifik: ${(scriptData.gameplayPlan?.recommendedRobloxGamesOrMaps || []).join(", ")}\n\n🎬 Arahan Rekaman: ${(scriptData.gameplayPlan?.recordingTips || []).join(" ")}`} />
+                        </>
+                      ) : (
+                         <div style={{ color: 'red', textAlign: 'center', padding: '20px' }}>Gagal memuat data script.</div>
+                      )}
                     </div>
                   );
                 })()}
