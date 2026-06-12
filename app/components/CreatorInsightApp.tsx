@@ -144,7 +144,6 @@ export default function CreatorInsightApp() {
   const [script, setScript] = useState<ApiState<any>>({ loading: false, error: "", data: null });
   const [scriptTab, setScriptTab] = useState("scenes");
 
-  // --- STATE BARU: TARGET HARIAN MULTI-FETCH ---
   const [dailyTarget, setDailyTarget] = useState<ApiState<any>>({ loading: false, error: "", data: null });
   const [dailyScripts, setDailyScripts] = useState<Record<number, any>>({});
   const [loadingDailyScript, setLoadingDailyScript] = useState<Record<number, boolean>>({});
@@ -185,7 +184,6 @@ export default function CreatorInsightApp() {
     return raw;
   }, [channel]);
 
-  // --- LOGIKA MENGAMBIL TOPIK (TIDAK MEMOTONG SCRIPT) ---
   async function generateDailyTarget() {
     setDailyTarget({ loading: true, error: "", data: null });
     setDailyScripts({});
@@ -219,7 +217,6 @@ export default function CreatorInsightApp() {
         }
       });
 
-      // Fetch Script Utuh untuk Video 1
       fetchScriptForTab(0, selectedTopics[0]);
 
     } catch (error: any) {
@@ -227,13 +224,11 @@ export default function CreatorInsightApp() {
     }
   }
 
-  // --- FUNGSI MENGAMBIL SCRIPT UTUH DAN SUPER DETAIL UNTUK 1 TAB ---
   async function fetchScriptForTab(index: number, topic: any) {
     if (dailyScripts[index] || loadingDailyScript[index]) return;
 
     setLoadingDailyScript(prev => ({ ...prev, [index]: true }));
     try {
-      // Instruksi Super Ketat agar AI Mengeluarkan Data yang Diinginkan
       const strictInstruction = `TARGET AUDIENCE: GLOBAL (English).
       WAJIB HASILKAN 5 SCENES. Setiap scene WAJIB punya 2 imagePrompts yang berbeda.
       SELAIN ITU, wajib sertakan key tambahan di root JSON:
@@ -241,7 +236,7 @@ export default function CreatorInsightApp() {
       2. "youtubeDescription": Deskripsi spesifik untuk SEO.
       3. "youtubeHashtags": Array berisi 5-7 hashtag viral (contoh: ["#roblox", "#robloxedit"]).
       4. "thumbnailPrompt": SATU Prompt gambar 3D clickbait untuk Thumbnail YouTube Shorts rasio 9:16.
-      5. "specificGameplay": WAJIB sebutkan NAMA GAME ROBLOX ASLI & SPESIFIK (misal "Tower of Hell", "Blade Ball", "Adopt Me") yang visualnya bergerak sangat cepat untuk dijadikan background video. Jangan jawab generik!`;
+      5. "specificGameplay": WAJIB TULISKAN NAMA GAME ROBLOX ASLI YANG SPESIFIK (Contoh: "Tower of Hell", "Blade Ball", "Death Ball", "Anime Defenders"). JANGAN TULIS KATA GENERIK SEPERTI "relevant gameplay"!`;
 
       const data = await fetchJson("/api/roblox/script", {
         method: "POST",
@@ -450,7 +445,6 @@ export default function CreatorInsightApp() {
           </div>
         </section>
 
-        {/* --- BAGIAN TARGET HARIAN UI (SUPER LENGKAP & SPESIFIK) --- */}
         <section className="grid" style={{ gridTemplateColumns: "1fr" }}>
           <div className="card" style={{ border: '2px solid #3b82f6' }}>
             <h2 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>🎯 TARGET HARIAN SEKARANG</h2>
@@ -493,12 +487,22 @@ export default function CreatorInsightApp() {
                   ))}
                 </div>
 
-                {/* KONTEN VIDEO AKTIF YANG SUPER DETAIL */}
+                {/* KONTEN VIDEO AKTIF YANG SUPER DETAIL & ANTI-GENERIK */}
                 {(() => {
                   const topicData = dailyTarget.data.videos[activeDailyTab];
                   const scriptData = dailyScripts[activeDailyTab];
                   const isGenerating = loadingDailyScript[activeDailyTab];
                   const timeWIB = uploadTimes[activeDailyTab] || "12:00 WIB";
+
+                  // FILTER CERDAS: Jika AI ngeyel kasih bahasa generik, ganti dengan High Retention Games
+                  const getSpecificGames = (data: any) => {
+                    const raw = data?.specificGameplay || data?.gameplayPlan?.recommendedRobloxGamesOrMaps?.join(", ") || "";
+                    const lowerRaw = raw.toLowerCase();
+                    if (!raw || lowerRaw.includes("relevant") || lowerRaw.includes("background") || lowerRaw.includes("showcase") || lowerRaw.includes("footage")) {
+                        return "Tower of Hell, Blade Ball, Anime Defenders, atau Death Ball (Pilih yang gerakannya paling memanjakan mata).";
+                    }
+                    return raw;
+                  };
 
                   return (
                     <div style={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', padding: 24, borderRadius: 16, minHeight: '300px' }}>
@@ -510,7 +514,6 @@ export default function CreatorInsightApp() {
                         </div>
                       ) : scriptData ? (
                         <>
-                          {/* JUDUL VIDEO */}
                           <div className="copy-row" style={{ marginBottom: 20, borderBottom: '1px solid #f3f4f6', paddingBottom: 16 }}>
                             <div>
                               <strong style={{ display: 'block', fontSize: 13, color: '#6b7280', marginBottom: 4 }}>📌 Judul Video (Clickbait Global):</strong>
@@ -519,7 +522,6 @@ export default function CreatorInsightApp() {
                             <CopyButton text={scriptData.youtubeTitle || scriptData.videoTitle || topicData.title} label="Copy Judul" />
                           </div>
                           
-                          {/* JAM UPLOAD & TARGET */}
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 24 }}>
                             <div style={{ backgroundColor: '#fffbeb', padding: '16px', borderRadius: '12px', border: '1px solid #fde68a' }}>
                               <strong style={{ color: '#d97706', fontSize: 14, display: 'block', marginBottom: 6 }}>⏰ Jam Upload Optimal:</strong>
@@ -531,7 +533,6 @@ export default function CreatorInsightApp() {
                             </div>
                           </div>
 
-                          {/* SEO: DESKRIPSI & HASHTAG DIPISAH */}
                           <div className="grid grid-2" style={{ marginBottom: 16 }}>
                             <OutputBlock 
                                 title="📝 Deskripsi Video" 
@@ -543,23 +544,25 @@ export default function CreatorInsightApp() {
                             />
                           </div>
                           
-                          {/* REKOMENDASI GAMEPLAY SPESIFIK */}
-                          <div style={{ backgroundColor: '#e0e7ff', borderLeft: '4px solid #4f46e5', padding: '16px', borderRadius: '0 12px 12px 0', marginBottom: '24px' }}>
-                             <div className="copy-row" style={{ marginBottom: '8px' }}>
-                               <strong style={{ color: '#3730a3', fontSize: '16px', margin: 0 }}>🎮 Judul Game Roblox Asli (Untuk Background):</strong>
-                               <CopyButton text={scriptData.specificGameplay || scriptData.gameplayPlan?.recommendedRobloxGamesOrMaps?.join(", ") || "Gunakan game Roblox obby/parkour yang viral."} label="Copy Game" />
+                          {/* KOTAK GAMEPLAY SPESIFIK & ANTI-GENERIK */}
+                          <div style={{ backgroundColor: '#e0e7ff', borderLeft: '4px solid #4f46e5', padding: '20px', borderRadius: '12px', marginBottom: '24px' }}>
+                             <div className="copy-row" style={{ marginBottom: '12px', borderBottom: '1px solid #c7d2fe', paddingBottom: '8px' }}>
+                               <strong style={{ color: '#3730a3', fontSize: '16px', margin: 0 }}>🎮 Judul Game Roblox Asli (Untuk Rekaman Background):</strong>
+                               <CopyButton text={getSpecificGames(scriptData)} label="Copy Game" />
                              </div>
-                             <p style={{ margin: 0, fontSize: '15px', color: '#312e81', lineHeight: '1.6', fontWeight: '500' }}>
-                               {scriptData.specificGameplay || scriptData.gameplayPlan?.recommendedRobloxGamesOrMaps?.join(", ") || "Mainkan game obby cepat seperti Tower of Hell untuk menahan retensi visual penonton."}
+                             <p style={{ margin: 0, fontSize: '15px', color: '#312e81', lineHeight: '1.6', fontWeight: '600' }}>
+                               {getSpecificGames(scriptData)}
+                             </p>
+                             <p style={{ margin: '10px 0 0 0', fontSize: '13px', color: '#4338ca', lineHeight: '1.5' }}>
+                               <em>💡 Tips: Cari nama game di atas di Roblox. Rekam layar Anda bermain selama 15-30 detik dengan rasio 9:16. Jangan rekam karakter diam, penonton Shorts butuh visual aksi yang sangat cepat!</em>
                              </p>
                           </div>
 
-                          {/* THUMBNAIL & VO FULL */}
                           <OutputBlock title="🖼️ Prompt Thumbnail (9:16 Clickbait)" value={scriptData.thumbnailPrompt || scriptData.thumbnail_prompt || "Create a vertical 9:16 Roblox 3D render image with high contrast, big surprised blocky avatar, bright colorful background, suitable for a viral YouTube Shorts gaming thumbnail."} />
                           
                           <OutputBlock title="🎙️ Full Voice Over Script (Siap Record)" value={scriptData.fullVO || "Voice over is missing."} />
                           
-                          {/* BREAKDOWN SCENE & 2 PROMPT GAMBAR PER SCENE */}
+                          {/* SCENES BREAKDOWN DENGAN PROMPT GAMBAR */}
                           {scriptData.scenes && scriptData.scenes.length > 0 && (
                             <div style={{ marginTop: '32px', borderTop: '2px solid #e5e7eb', paddingTop: '24px' }}>
                               <h3 style={{ fontSize: '18px', color: '#111', marginBottom: '16px' }}>🎬 Breakdown 5 Scene & Image Prompts</h3>
@@ -572,7 +575,6 @@ export default function CreatorInsightApp() {
                                     </div>
                                     <p style={{ fontSize: '14px', color: '#4b5563', marginBottom: '16px' }}><strong>VO:</strong> "{scene.vo || scene.voiceOver}"</p>
                                     
-                                    {/* Looping 2 Prompt Gambar per scene */}
                                     {scene.imagePrompts && scene.imagePrompts.length > 0 ? (
                                       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                                         {scene.imagePrompts.map((prompt: string, pIdx: number) => (
@@ -580,7 +582,7 @@ export default function CreatorInsightApp() {
                                         ))}
                                       </div>
                                     ) : (
-                                      <p style={{ fontSize: '13px', color: '#dc2626' }}>Prompt gambar tidak tersedia untuk scene ini.</p>
+                                      <p style={{ fontSize: '13px', color: '#dc2626' }}>Prompt gambar sedang diolah, refresh AI jika perlu.</p>
                                     )}
                                   </div>
                                 ))}
@@ -590,7 +592,7 @@ export default function CreatorInsightApp() {
 
                         </>
                       ) : (
-                         <div style={{ color: 'red', textAlign: 'center', padding: '20px' }}>Gagal memuat data script.</div>
+                         <div style={{ color: 'red', textAlign: 'center', padding: '20px' }}>Gagal memuat data script. Coba klik tab video lain lalu kembali ke sini.</div>
                       )}
                     </div>
                   );
