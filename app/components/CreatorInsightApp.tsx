@@ -322,23 +322,20 @@ async function optimizeVideo(video: any) {
     setSelectedVideo(video);
     setOptimizer({ loading: true, error: "", data: null });
     try {
-      const originalTitle = video?.snippet?.title || video?.title || "Untitled";
-      const originalDesc = video?.snippet?.description || video?.description || "";
+      const originalTitle = video?.snippet?.title || video?.title || "";
       
       const data = await fetchJson("/api/ai/optimize-video", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           video, 
-          videoFormat: selectedVideoFormat,
-          // INSTRUKSI MUTLAK: PAKSA AI FOKUS PADA KONTEKS & BAHASA ASLI
-          instruction: `CRITICAL RULE: You are optimizing THIS exact video. 
-          Original Title: "${originalTitle}" 
-          Original Description: "${originalDesc}" 
-          
-          1. Analyze the exact topic from this original metadata. DO NOT hallucinate or change the topic.
-          2. Detect the EXACT language of the Original Title. You MUST generate ALL JSON responses (recommendedTitles, caption, description, hashtags) in that EXACT SAME LANGUAGE.
-          3. Make the output highly relevant ONLY to this specific video's context.`
+          // Menyusupkan instruksi bahasa ke dalam format agar backend pasti membacanya
+          videoFormat: selectedVideoFormat + ". RULE: MATCH THE EXACT LANGUAGE OF THE ORIGINAL TITLE!",
+          instruction: `CRITICAL SYSTEM OVERRIDE: Judul asli video ini adalah "${originalTitle}". 
+          1. DETEKSI BAHASA JUDUL TERSEBUT! 
+          2. Jika judul itu Bahasa Inggris, SELURUH HASIL JSON (recommendedTitles, caption, description) WAJIB 100% BAHASA INGGRIS.
+          3. Jika judul itu Bahasa Indonesia, gunakan Bahasa Indonesia.
+          4. DILARANG KERAS menerjemahkan dari Inggris ke Indonesia! Jaga bahasa aslinya!`
         })
       });
       setOptimizer({ loading: false, error: "", data: data.result || data.raw });
@@ -671,32 +668,35 @@ async function optimizeVideo(video: any) {
   }
 
 function renderOptimizer() {
-    // Fungsi untuk mengubah judul di tabel secara langsung (Live Preview)
-    const handleLivePreview = (videoObj: any, newTitle: string) => {
+    const handleLivePreview = (videoId: string, newTitle: string) => {
       setVideosState(prev => ({
         ...prev,
         data: prev.data?.map(v => {
-          // Pencocokan objek mutlak
-          if (v === videoObj) {
+          const currentId = v.id?.videoId || v.id;
+          if (currentId === videoId) {
             return { ...v, snippet: { ...v.snippet, title: newTitle } };
           }
           return v;
         }) || []
       }));
+      setSelectedVideo((prev: any) => {
+        if (!prev) return prev;
+        return { ...prev, snippet: { ...prev.snippet, title: newTitle } };
+      });
     };
 
     return (
       <div className="grid">
         <div className="card">
           <h2>Video Optimizer</h2>
-          <p className="muted">Pilih video publish/terjadwal yang terbaca dari channel, lalu AI akan memberi saran caption, deskripsi, hashtag, keyword, CTA, pinned comment, dan thumbnail text.</p>
+          <p className="muted">Pilih video publish/terjadwal yang terbaca dari channel, lalu AI akan memberi saran optimasi.</p>
           
           <div className="form-row" style={{ marginTop: 18, marginBottom: 18, backgroundColor: '#f0f4f9', padding: 16, borderRadius: 12 }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
-              Format Target Optimasi AI:
+            <label style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: '15px', fontWeight: 'bold', cursor: 'pointer', flexWrap: 'wrap' }}>
+              Format Target AI:
               <select 
                 className="select" 
-                style={{ padding: '12px 18px', fontSize: '15px', borderRadius: '8px', backgroundColor: '#fff', cursor: 'pointer', border: '1px solid #ccc' }}
+                style={{ padding: '12px 18px', fontSize: '14px', borderRadius: '8px', backgroundColor: '#fff', cursor: 'pointer', border: '1px solid #ccc', flex: 1, minWidth: '200px' }}
                 value={selectedVideoFormat} 
                 onChange={(e) => setSelectedVideoFormat(e.target.value)}
               >
@@ -706,44 +706,44 @@ function renderOptimizer() {
             </label>
           </div>
 
+          {selectedVideo && (
+            <div style={{ marginBottom: '24px', backgroundColor: '#f8fafc', border: '2px solid #3182ce', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}>
+              <div style={{ padding: '16px', backgroundColor: '#ebf8ff', borderBottom: '1px solid #bee3f8', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                <h2 style={{ margin: 0, color: '#2b6cb0', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  ⚙️ Panel Optimasi AI 
+                </h2>
+                <button className="btn ghost" style={{ backgroundColor: '#fff', border: '1px solid #cbd5e0', fontSize: '13px', padding: '6px 12px' }} onClick={() => setSelectedVideo(null)}>Tutup Panel</button>
+              </div>
+              
+              <div style={{ padding: '16px' }}>
+                <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
+                  <strong style={{ fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '4px' }}>MENGOPTIMASI VIDEO:</strong>
+                  <span style={{ fontSize: '14px', color: '#1e293b', fontWeight: 'bold' }}>{selectedVideo.snippet?.title || selectedVideo.title}</span>
+                </div>
+
+                {optimizer.loading && <div className="skeleton" style={{ height: '300px', width: '100%', borderRadius: '12px' }} />}
+                {optimizer.error && <div className="alert error">{optimizer.error}</div>}
+                {optimizer.data && !optimizer.loading && (
+                  <OptimizerResultView 
+                    result={optimizer.data} 
+                    format={selectedVideoFormat} 
+                    video={selectedVideo}
+                    onLivePreview={(newTitle) => handleLivePreview(selectedVideo.id?.videoId || selectedVideo.id, newTitle)}
+                  />
+                )}
+              </div>
+            </div>
+          )}
+
           {videosState.loading ? <div className="skeleton" /> : (
-            <div className="table-wrapper">
-              <table className="table">
+            <div className="table-wrapper" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+              <table className="table" style={{ minWidth: '600px' }}>
                 <thead><tr><th>#</th><th>Video</th><th>Views</th><th>Likes</th><th>Status</th><th>Action</th></tr></thead>
-                {videos.map((v, i) => {
-                  // SOLUSI MUTLAK: Pencocokan referensi objek (100% akurat, panel tidak akan terbuka ganda)
-                  const isSelected = selectedVideo === v;
-                  
-                  return (
-                    <tbody key={i}>
-                      <VideoRow video={v} index={i} onSelect={optimizeVideo} />
-                      
-                      {/* PANEL HANYA MUNCUL TEPAT DI BAWAH 1 VIDEO YANG DIKLIK */}
-                      {isSelected && (
-                        <tr>
-                          <td colSpan={6} style={{ padding: 0, borderBottom: '2px solid #3182ce', backgroundColor: '#f8fafc' }}>
-                            <div style={{ padding: '24px', boxShadow: 'inset 0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
-                              <h2 style={{ marginTop: 0, color: '#2b6cb0', display: 'flex', justifyContent: 'space-between' }}>
-                                <span>⚙️ Panel Optimasi AI</span>
-                                <button className="btn ghost" onClick={() => setSelectedVideo(null)}>Tutup Panel</button>
-                              </h2>
-                              {optimizer.loading && <div className="skeleton" style={{ height: '200px', width: '100%' }} />}
-                              {optimizer.error && <div className="alert error">{optimizer.error}</div>}
-                              {optimizer.data && !optimizer.loading && (
-                                <OptimizerResultView 
-                                  result={optimizer.data} 
-                                  format={selectedVideoFormat} 
-                                  video={v}
-                                  onLivePreview={(newTitle) => handleLivePreview(v, newTitle)}
-                                />
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  );
-                })}
+                <tbody>
+                  {videos.map((v, i) => (
+                    <VideoRow key={v.id?.videoId || v.id || i} video={v} index={i} onSelect={optimizeVideo} />
+                  ))}
+                </tbody>
               </table>
             </div>
           )}
@@ -753,40 +753,41 @@ function renderOptimizer() {
   }
 
 function OptimizerResultView({ result, format, video, onLivePreview }: { result: any; format: string; video: any; onLivePreview: (title: string) => void }) {
-  const [selectedTitle, setSelectedTitle] = useState(result.recommendedTitles?.[0] || "");
-  const [selectedDesc, setSelectedDesc] = useState(result.caption || "");
+  // Menggunakan Index agar terhindar dari bug string yang kembar
+  const [selectedTitleIdx, setSelectedTitleIdx] = useState(0);
+  const [selectedDescIdx, setSelectedDescIdx] = useState(0); // 0 = caption, 1 = description
   const [isUpdating, setIsUpdating] = useState(false);
 
   if (typeof result === "string") return <div className="output">{result}</div>;
 
-  // MESIN KALKULASI SKOR REALISTIS BERDASARKAN DATA METADATA NYATA
+  const titles = result.recommendedTitles || [];
+  const actualSelectedTitle = titles[selectedTitleIdx] || titles[0] || "";
+  const actualSelectedDesc = selectedDescIdx === 0 ? result.caption : result.description;
+
   const calculateRealScore = (title: string, desc: string, tags: string[]) => {
     let score = 40; 
     if (!title) return score;
-    // Faktor Judul (Optimal 20-70 Karakter, mengandung angka, mengandung simbol emosi)
     if (title.length > 20 && title.length < 70) score += 15; 
     if (/\d/.test(title)) score += 10; 
     if (/[!?]/.test(title)) score += 10; 
-    // Faktor Deskripsi & Tags
     if (desc && desc.length > 100) score += 10;
     if (desc && /#\w+/.test(desc)) score += 5; 
     if (tags && tags.length > 3) score += 10;
-    return Math.min(99, score); // Maksimal 99
+    return Math.min(99, score);
   };
 
   const originalTitle = video?.snippet?.title || "";
   const originalDesc = video?.snippet?.description || "";
   const oldScore = calculateRealScore(originalTitle, originalDesc, []);
-  const currentNewScore = calculateRealScore(selectedTitle, selectedDesc, result.keywords || []);
+  const currentNewScore = calculateRealScore(actualSelectedTitle, actualSelectedDesc, result.keywords || []);
 
-  // Fix Bug Klik: Menggunakan pembungkus onClick agar state terupdate mutlak
-  const handleTitleSelect = (title: string) => {
-    setSelectedTitle(title);
-    onLivePreview(title);
+  const handleTitleSelect = (idx: number) => {
+    setSelectedTitleIdx(idx);
+    onLivePreview(titles[idx]); // Update tabel atas secara live
   };
 
   async function applyChangesToYouTube() {
-    if (!selectedTitle && !selectedDesc) return;
+    if (!actualSelectedTitle && !actualSelectedDesc) return;
     setIsUpdating(true);
     try {
       await fetchJson("/api/youtube/update-video", {
@@ -794,8 +795,8 @@ function OptimizerResultView({ result, format, video, onLivePreview }: { result:
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           videoId: video?.id?.videoId || video?.id,
-          title: selectedTitle,
-          description: selectedDesc,
+          title: actualSelectedTitle,
+          description: actualSelectedDesc,
           tags: result.keywords || []
         })
       });
@@ -808,107 +809,102 @@ function OptimizerResultView({ result, format, video, onLivePreview }: { result:
   }
 
   return (
-    <div className="grid">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       
-      {/* PANEL ANALITIK CEO: LAMA VS BARU */}
-      <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', padding: '16px', background: '#1e293b', borderRadius: '12px', color: '#fff' }}>
-        <div style={{ flex: 1 }}>
-          <span style={{ fontSize: '13px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>Skor Video Saat Ini</span>
-          <div style={{ fontSize: '32px', fontWeight: 'bold', color: oldScore < 60 ? '#f87171' : '#fbbf24' }}>{oldScore}<span style={{ fontSize: '16px', color: '#64748b' }}>/100</span></div>
-          <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#cbd5e1' }}>Metadata asli video Anda.</p>
+      {/* PANEL ANALITIK CEO */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '12px', padding: '16px', background: '#1e293b', borderRadius: '12px', color: '#fff' }}>
+        <div>
+          <span style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>Skor Saat Ini</span>
+          <div style={{ fontSize: '28px', fontWeight: 'bold', color: oldScore < 60 ? '#f87171' : '#fbbf24' }}>{oldScore}<span style={{ fontSize: '13px', color: '#64748b' }}>/100</span></div>
         </div>
-        <div style={{ width: '2px', background: '#334155' }}></div>
-        <div style={{ flex: 1 }}>
-          <span style={{ fontSize: '13px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>Skor Prediksi Baru</span>
-          <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#4ade80' }}>{currentNewScore}<span style={{ fontSize: '16px', color: '#64748b' }}>/100</span></div>
-          <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#cbd5e1' }}>Potensi setelah optimasi diterapkan.</p>
+        <div>
+          <span style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>Prediksi Baru</span>
+          <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#4ade80' }}>{currentNewScore}<span style={{ fontSize: '13px', color: '#64748b' }}>/100</span></div>
         </div>
       </div>
 
-      <div style={{ background: '#f0f4f8', padding: '20px', borderRadius: '12px', border: '1px solid #d1d9e6', marginTop: '12px' }}>
-        <h3 style={{ margin: '0 0 12px 0', fontSize: '16px', color: '#1a202c' }}>✨ Pilihan Judul Alternatif (Klik untuk Merubah Tabel Live)</h3>
+      <div style={{ background: '#f0f4f8', padding: '16px', borderRadius: '12px', border: '1px solid #d1d9e6' }}>
+        <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#1a202c' }}>✨ Judul Alternatif (Pilih untuk Merubah Live)</h3>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {(result.recommendedTitles || []).map((title: string, idx: number) => {
-            const isSelected = selectedTitle === title;
-            const itemScore = calculateRealScore(title, selectedDesc, result.keywords || []);
+          {titles.map((title: string, idx: number) => {
+            const isSelected = selectedTitleIdx === idx;
+            const itemScore = calculateRealScore(title, actualSelectedDesc, result.keywords || []);
             return (
-              <div 
+              <label 
                 key={idx} 
-                onClick={() => handleTitleSelect(title)}
                 style={{ 
-                  display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
+                  display: 'flex', flexDirection: 'column', gap: '8px', 
                   background: isSelected ? '#ebf8ff' : '#fff', 
                   border: `1px solid ${isSelected ? '#3182ce' : '#e2e8f0'}`, 
-                  padding: '12px 16px', borderRadius: '8px', cursor: 'pointer',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+                  padding: '12px', borderRadius: '8px', cursor: 'pointer',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <input type="radio" checked={isSelected} readOnly style={{ width: '18px', height: '18px', cursor: 'pointer' }} />
-                  <span style={{ fontSize: '15px', color: '#2d3748', fontWeight: 500 }}>{title}</span>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                  <input 
+                    type="radio" 
+                    name="titleOption"
+                    checked={isSelected} 
+                    onChange={() => handleTitleSelect(idx)} 
+                    style={{ width: '18px', height: '18px', marginTop: '2px', cursor: 'pointer', flexShrink: 0 }} 
+                  />
+                  <span style={{ fontSize: '14px', color: '#2d3748', fontWeight: 500, lineHeight: '1.4' }}>{title}</span>
                 </div>
-                <span style={{ background: '#e2e8f0', padding: '4px 10px', borderRadius: '20px', fontSize: '13px', fontWeight: 'bold', color: '#4a5568' }}>
-                  Score: {itemScore}/100
-                </span>
-              </div>
+                <div style={{ alignSelf: 'flex-end', background: '#e2e8f0', padding: '2px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold', color: '#4a5568' }}>
+                  Score: {itemScore}
+                </div>
+              </label>
             );
           })}
         </div>
       </div>
 
-      <div style={{ background: '#f7fafc', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0', marginTop: '20px' }}>
-        <h3 style={{ margin: '0 0 12px 0', fontSize: '16px', color: '#1a202c' }}>📝 Pilihan Deskripsi & Optimasi SEO</h3>
+      <div style={{ background: '#f7fafc', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+        <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#1a202c' }}>📝 Pilihan Deskripsi SEO</h3>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           
-          <div 
-            onClick={() => setSelectedDesc(result.caption)}
-            style={{ 
-              background: selectedDesc === result.caption ? '#f0fff4' : '#fff', 
-              border: `1px solid ${selectedDesc === result.caption ? '#48bb78' : '#e2e8f0'}`, 
-              padding: '14px', borderRadius: '8px', cursor: 'pointer' 
-            }}
-          >
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-              <input type="radio" checked={selectedDesc === result.caption} readOnly style={{ width: '18px', height: '18px', marginTop: '2px' }} />
+          <label style={{ background: selectedDescIdx === 0 ? '#f0fff4' : '#fff', border: `1px solid ${selectedDescIdx === 0 ? '#48bb78' : '#e2e8f0'}`, padding: '12px', borderRadius: '8px', cursor: 'pointer' }}>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+              <input 
+                type="radio" 
+                name="descOption" 
+                checked={selectedDescIdx === 0} 
+                onChange={() => setSelectedDescIdx(0)} 
+                style={{ width: '18px', height: '18px', marginTop: '2px', flexShrink: 0, cursor: 'pointer' }} 
+              />
               <div>
-                <strong style={{ display: 'block', fontSize: '14px', marginBottom: '4px', color: '#2f855a' }}>Opsi 1 (Caption Singkat + Hashtag)</strong>
-                <span style={{ fontSize: '14px', color: '#4a5568', whiteSpace: 'pre-wrap' }}>{result.caption}</span>
+                <strong style={{ display: 'block', fontSize: '13px', marginBottom: '4px', color: '#2f855a' }}>Opsi 1 (Caption + Hashtag)</strong>
+                <span style={{ fontSize: '13px', color: '#4a5568', whiteSpace: 'pre-wrap', lineHeight: '1.4' }}>{result.caption}</span>
               </div>
             </div>
-          </div>
+          </label>
 
-          <div 
-            onClick={() => setSelectedDesc(result.description)}
-            style={{ 
-              background: selectedDesc === result.description ? '#f0fff4' : '#fff', 
-              border: `1px solid ${selectedDesc === result.description ? '#48bb78' : '#e2e8f0'}`, 
-              padding: '14px', borderRadius: '8px', cursor: 'pointer' 
-            }}
-          >
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-              <input type="radio" checked={selectedDesc === result.description} readOnly style={{ width: '18px', height: '18px', marginTop: '2px' }} />
+          <label style={{ background: selectedDescIdx === 1 ? '#f0fff4' : '#fff', border: `1px solid ${selectedDescIdx === 1 ? '#48bb78' : '#e2e8f0'}`, padding: '12px', borderRadius: '8px', cursor: 'pointer' }}>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+              <input 
+                type="radio" 
+                name="descOption" 
+                checked={selectedDescIdx === 1} 
+                onChange={() => setSelectedDescIdx(1)} 
+                style={{ width: '18px', height: '18px', marginTop: '2px', flexShrink: 0, cursor: 'pointer' }} 
+              />
               <div>
-                <strong style={{ display: 'block', fontSize: '14px', marginBottom: '4px', color: '#2f855a' }}>Opsi 2 (Deskripsi Organik Lengkap)</strong>
-                <span style={{ fontSize: '14px', color: '#4a5568', whiteSpace: 'pre-wrap' }}>{result.description}</span>
+                <strong style={{ display: 'block', fontSize: '13px', marginBottom: '4px', color: '#2f855a' }}>Opsi 2 (Deskripsi Lengkap)</strong>
+                <span style={{ fontSize: '13px', color: '#4a5568', whiteSpace: 'pre-wrap', lineHeight: '1.4' }}>{result.description}</span>
               </div>
             </div>
-          </div>
+          </label>
 
         </div>
       </div>
 
-      <div style={{ marginTop: '20px', background: '#fff', border: '1px solid #cbd5e0', padding: '16px', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
-        <button 
-          className="btn primary block" 
-          style={{ padding: '16px', fontSize: '16px', fontWeight: 'bold', background: '#3182ce' }}
-          onClick={applyChangesToYouTube}
-          disabled={isUpdating}
-        >
-          {isUpdating ? "⏳ Sedang Memperbarui ke YouTube..." : "⚡ Simpan Perubahan ke YouTube"}
+      <div style={{ background: '#fff', border: '1px solid #cbd5e0', padding: '16px', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
+        <button className="btn primary block" style={{ width: '100%', padding: '14px', fontSize: '15px', fontWeight: 'bold', background: '#3182ce', borderRadius: '8px' }} onClick={applyChangesToYouTube} disabled={isUpdating}>
+          {isUpdating ? "⏳ Menyimpan..." : "⚡ Simpan Perubahan ke YouTube"}
         </button>
       </div>
 
-      <div className="grid grid-2" style={{ marginTop: '20px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
         <OutputBlock title="✨ Thumbnail Text" value={(result.thumbnailTexts || []).join("\n")} />
         <OutputBlock title="🏷️ Semua Hashtags" value={(result.hashtags || []).join(" ")} />
         <OutputBlock title="🔎 Keywords / Tags" value={(result.keywords || []).join(", ")} />
