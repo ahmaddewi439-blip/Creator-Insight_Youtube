@@ -181,28 +181,28 @@ export default function CreatorInsightApp() {
     return raw;
   }, [channel]);
 
-  // --- FUNGSI BARU: GENERATE TARGET HARIAN GLOBAL ---
+  // --- FUNGSI BARU: GENERATE TARGET HARIAN GLOBAL DENGAN PARSER SUPER KUAT ---
   async function generateDailyTarget() {
     setDailyTarget({ loading: true, error: "", data: null });
     setActiveDailyTab(0);
     try {
-      const promptStyle = `WAJIB kembalikan response murni dalam format JSON.
+      const promptStyle = `WAJIB kembalikan response murni HANYA dalam format JSON tanpa teks pengantar apapun.
       Bertindaklah sebagai Pakar Algoritma YouTube Shorts Global.
-      1. Analisis algoritma YouTube saat ini untuk channel Roblox. Tentukan jumlah upload video Shorts paling aman dan optimal KHUSUS HARI INI agar views tidak drop / mencegah shadowban (misalnya 2, 3, atau 4 video). Jangan berikan angka asal, berikan yang paling optimal.
+      1. Tentukan jumlah upload video Shorts paling aman dan optimal KHUSUS HARI INI untuk channel Roblox (misalnya 2, 3, atau 4 video) agar views tidak drop.
       2. Buat konsep video persis sebanyak angka optimal tersebut.
-      3. TARGET PENONTON ADALAH GLOBAL (Mancanegara). Jadi VO (Voice Over) WAJIB menggunakan bahasa Inggris yang sangat natural, clickbait, punya hook 3 detik, dan CTA (Call to Action) di akhir.
+      3. TARGET PENONTON ADALAH GLOBAL (Mancanegara). VO (Voice Over) WAJIB menggunakan bahasa Inggris.
       
-      Gunakan struktur JSON berikut:
+      WAJIB GUNAKAN STRUKTUR JSON INI PERSIS, JANGAN DIUBAH:
       {
         "optimalUploadCount": 3,
-        "strategyReason": "Alasan logis mengapa angka ini paling optimal untuk algoritma YouTube hari ini agar tidak drop...",
+        "strategyReason": "Alasan algoritma...",
         "videos": [
           {
             "id": 1,
             "title": "Judul Clickbait Global (Maks 60 Karakter)",
             "topic": "Topik spesifik Roblox",
             "voEnglish": "Teks lengkap Voice Over dalam bahasa Inggris (0-60 detik)",
-            "gameplayPrompt": "Instruksi visual/nama game spesifik yang harus direkam untuk layar background"
+            "gameplayPrompt": "Instruksi visual/nama game spesifik yang direkam"
           }
         ]
       }`;
@@ -220,17 +220,31 @@ export default function CreatorInsightApp() {
 
       let parsedData = data.result || data.raw || data;
       
-      // Pembersihan JSON yang 100% AMAN (Tanpa Regex Backtick)
+      // PARSER BULLETPROOF: Memaksa mencari pola JSON di dalam string apapun
+      let finalJson = parsedData;
       if (typeof parsedData === 'string') {
         try {
-          parsedData = parsedData.split('```json').join('').split('```').join('');
-          parsedData = JSON.parse(parsedData);
+          const jsonMatch = parsedData.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            finalJson = JSON.parse(jsonMatch[0]);
+          }
         } catch (e) {
-          // fallback jika gagal parse
+          finalJson = parsedData; // Jika gagal total, tetap tampilkan teks mentahnya
+        }
+      } else if (parsedData && typeof parsedData.text === 'string') {
+        try {
+          const jsonMatch = parsedData.text.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            finalJson = JSON.parse(jsonMatch[0]);
+          } else {
+            finalJson = parsedData.text;
+          }
+        } catch (e) {
+           finalJson = parsedData.text;
         }
       }
 
-      setDailyTarget({ loading: false, error: "", data: parsedData });
+      setDailyTarget({ loading: false, error: "", data: finalJson });
     } catch (error: any) {
       setDailyTarget({ loading: false, error: error.message, data: null });
     }
@@ -409,7 +423,7 @@ export default function CreatorInsightApp() {
           </div>
         </section>
 
-        {/* --- BAGIAN TARGET HARIAN SEKARANG --- */}
+        {/* --- BAGIAN TARGET HARIAN SEKARANG (BULLETPROOF) --- */}
         <section className="grid" style={{ gridTemplateColumns: "1fr" }}>
           <div className="card" style={{ border: '2px solid #3b82f6' }}>
             <h2 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>🎯 TARGET HARIAN SEKARANG</h2>
@@ -430,50 +444,63 @@ export default function CreatorInsightApp() {
 
             {dailyTarget.error && <div className="alert error">{dailyTarget.error}</div>}
 
-            {dailyTarget.data && dailyTarget.data.optimalUploadCount && (
+            {dailyTarget.data && (
               <div style={{ marginTop: 20 }}>
-                {/* Info Jumlah Optimal */}
-                <div style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', padding: 16, borderRadius: 12, marginBottom: 20 }}>
-                  <strong style={{ color: '#1d4ed8', fontSize: 18, display: 'block', marginBottom: 8 }}>
-                    ✅ Upload Optimal Hari Ini: {dailyTarget.data.optimalUploadCount} Video
-                  </strong>
-                  <p style={{ margin: 0, color: '#1e3a8a', lineHeight: 1.5 }}>{dailyTarget.data.strategyReason}</p>
-                </div>
-
-                {/* Tab Video Terpisah */}
-                <div className="tabs" style={{ marginBottom: 20 }}>
-                  {dailyTarget.data.videos.map((vid: any, idx: number) => (
-                    <button
-                      key={idx}
-                      className={activeDailyTab === idx ? "active" : ""}
-                      onClick={() => setActiveDailyTab(idx)}
-                      style={{ padding: '10px 24px', fontWeight: 'bold' }}
-                    >
-                      🎥 Video {idx + 1}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Konten Video Aktif */}
-                {dailyTarget.data.videos[activeDailyTab] && (() => {
-                  const v = dailyTarget.data.videos[activeDailyTab];
-                  return (
-                    <div style={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', padding: 24, borderRadius: 16 }}>
-                      <div className="copy-row" style={{ marginBottom: 20, borderBottom: '1px solid #f3f4f6', paddingBottom: 16 }}>
-                        <h3 style={{ margin: 0, color: '#111', fontSize: 20 }}>{v.title}</h3>
-                        <CopyButton text={JSON.stringify(v, null, 2)} label="Copy Struktur" />
-                      </div>
-                      
-                      <div style={{ marginBottom: 20 }}>
-                        <strong style={{ color: '#6b7280', fontSize: 13, display: 'block', marginBottom: 4 }}>📌 Topik Utama:</strong>
-                        <span style={{ fontSize: 16, color: '#111', fontWeight: 500 }}>{v.topic}</span>
-                      </div>
-
-                      <OutputBlock title="🗣️ Voice Over Script (Global English Target)" value={v.voEnglish} />
-                      <OutputBlock title="🎮 Gameplay / Visual Prompt" value={v.gameplayPrompt} />
+                {dailyTarget.data.optimalUploadCount && Array.isArray(dailyTarget.data.videos) ? (
+                  /* RENDER NORMAL JIKA AI PATUH FORMAT */
+                  <>
+                    <div style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', padding: 16, borderRadius: 12, marginBottom: 20 }}>
+                      <strong style={{ color: '#1d4ed8', fontSize: 18, display: 'block', marginBottom: 8 }}>
+                        ✅ Upload Optimal Hari Ini: {dailyTarget.data.optimalUploadCount} Video
+                      </strong>
+                      <p style={{ margin: 0, color: '#1e3a8a', lineHeight: 1.5 }}>{dailyTarget.data.strategyReason}</p>
                     </div>
-                  );
-                })()}
+
+                    <div className="tabs" style={{ marginBottom: 20 }}>
+                      {dailyTarget.data.videos.map((vid: any, idx: number) => (
+                        <button
+                          key={idx}
+                          className={activeDailyTab === idx ? "active" : ""}
+                          onClick={() => setActiveDailyTab(idx)}
+                          style={{ padding: '10px 24px', fontWeight: 'bold' }}
+                        >
+                          🎥 Video {idx + 1}
+                        </button>
+                      ))}
+                    </div>
+
+                    {dailyTarget.data.videos[activeDailyTab] && (() => {
+                      const v = dailyTarget.data.videos[activeDailyTab];
+                      return (
+                        <div style={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', padding: 24, borderRadius: 16 }}>
+                          <div className="copy-row" style={{ marginBottom: 20, borderBottom: '1px solid #f3f4f6', paddingBottom: 16 }}>
+                            <h3 style={{ margin: 0, color: '#111', fontSize: 20 }}>{v.title}</h3>
+                            <CopyButton text={JSON.stringify(v, null, 2)} label="Copy Struktur" />
+                          </div>
+                          
+                          <div style={{ marginBottom: 20 }}>
+                            <strong style={{ color: '#6b7280', fontSize: 13, display: 'block', marginBottom: 4 }}>📌 Topik Utama:</strong>
+                            <span style={{ fontSize: 16, color: '#111', fontWeight: 500 }}>{v.topic}</span>
+                          </div>
+
+                          <OutputBlock title="🗣️ Voice Over Script (Global English Target)" value={v.voEnglish} />
+                          <OutputBlock title="🎮 Gameplay / Visual Prompt" value={v.gameplayPrompt} />
+                        </div>
+                      );
+                    })()}
+                  </>
+                ) : (
+                  /* RENDER FALLBACK JIKA AI NGAWUR FORMATNYA */
+                  <div style={{ backgroundColor: '#fef2f2', border: '1px solid #fecaca', padding: 20, borderRadius: 12 }}>
+                    <strong style={{ color: '#dc2626', fontSize: 16, display: 'block', marginBottom: 12 }}>
+                      ⚠️ Peringatan: AI merespons dengan format yang sedikit berbeda. Berikut teks aslinya:
+                    </strong>
+                    <OutputBlock 
+                      title="Hasil Script Mentah" 
+                      value={typeof dailyTarget.data === 'string' ? dailyTarget.data : JSON.stringify(dailyTarget.data, null, 2)} 
+                    />
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -637,15 +664,15 @@ export default function CreatorInsightApp() {
             <div className="feature">NEXTAUTH_SECRET: random secret minimal 32 karakter</div>
             <div className="feature">GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET: OAuth web client</div>
             <div className="feature">YOUTUBE_API_KEY: YouTube Data API v3</div>
-            <div className="feature">AI_BASE_URL: [https://lite.koboillm.com/v1](https://lite.koboillm.com/v1)</div>
+            <div className="feature">AI_BASE_URL: https://lite.koboillm.com/v1</div>
             <div className="feature">AI_MODEL: openai/gpt-4o-mini atau model Koboi aktif</div>
             <div className="feature">AI_API_KEYS: virtual key Koboi, pisah koma jika banyak</div>
           </div>
         </div>
         <div className="card">
           <h2>OAuth Redirect</h2>
-          <OutputBlock title="Authorized JavaScript origins" value="[https://domain-vercel-kamu.vercel.app](https://domain-vercel-kamu.vercel.app)" />
-          <OutputBlock title="Authorized redirect URIs" value="[https://domain-vercel-kamu.vercel.app/api/auth/callback/google](https://domain-vercel-kamu.vercel.app/api/auth/callback/google)" />
+          <OutputBlock title="Authorized JavaScript origins" value="https://domain-vercel-kamu.vercel.app" />
+          <OutputBlock title="Authorized redirect URIs" value="https://domain-vercel-kamu.vercel.app/api/auth/callback/google" />
           <p className="footer-note">Setelah env atau OAuth diubah, lakukan redeploy di Vercel.</p>
         </div>
       </div>
