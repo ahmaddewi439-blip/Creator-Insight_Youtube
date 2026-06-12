@@ -318,14 +318,20 @@ export default function CreatorInsightApp() {
   }, [activeDailyTab, dailyTarget]);
 
 
-  async function optimizeVideo(video: any) {
+async function optimizeVideo(video: any) {
     setSelectedVideo(video);
     setOptimizer({ loading: true, error: "", data: null });
     try {
+      const originalTitle = video?.snippet?.title || "";
       const data = await fetchJson("/api/ai/optimize-video", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ video, videoFormat: selectedVideoFormat })
+        body: JSON.stringify({ 
+          video, 
+          videoFormat: selectedVideoFormat,
+          // INSTRUKSI PAKSAAN UNTUK AI AGAR MENGIKUTI BAHASA ASLI
+          instruction: `CRITICAL STRICT RULE: Detect the exact language of this original video title ("${originalTitle}"). You MUST generate all alternative titles, descriptions, and hashtags in that EXACT SAME LANGUAGE. If it is English, strictly output English. If Indonesian, output Indonesian.`
+        })
       });
       setOptimizer({ loading: false, error: "", data: data.result || data.raw });
     } catch (err: any) {
@@ -656,7 +662,21 @@ export default function CreatorInsightApp() {
     );
   }
 
-  function renderOptimizer() {
+ function renderOptimizer() {
+    // Fungsi untuk Live Update (mengubah judul di tabel secara real-time)
+    const handleLivePreview = (videoId: string, newTitle: string) => {
+      setVideosState(prev => ({
+        ...prev,
+        data: prev.data?.map(v => {
+          const currentId = v.id?.videoId || v.id;
+          if (currentId === videoId) {
+            return { ...v, snippet: { ...v.snippet, title: newTitle } };
+          }
+          return v;
+        }) || []
+      }));
+    };
+
     return (
       <div className="grid">
         <div className="card">
@@ -682,53 +702,93 @@ export default function CreatorInsightApp() {
             <div className="table-wrapper">
               <table className="table">
                 <thead><tr><th>#</th><th>Video</th><th>Views</th><th>Likes</th><th>Status</th><th>Action</th></tr></thead>
-                <tbody>{videos.map((v, i) => <VideoRow key={v.id} video={v} index={i} onSelect={optimizeVideo} />)}</tbody>
+                {videos.map((v, i) => {
+                  const vId = v.id?.videoId || v.id;
+                  const isSelected = selectedVideo && (selectedVideo.id?.videoId || selectedVideo.id) === vId;
+                  
+                  return (
+                    <tbody key={vId || i}>
+                      <VideoRow video={v} index={i} onSelect={optimizeVideo} />
+                      
+                      {/* PANEL MUNCUL TEPAT DI BAWAH VIDEO YANG DIKLIK */}
+                      {isSelected && (
+                        <tr>
+                          <td colSpan={6} style={{ padding: 0, borderBottom: '2px solid #3182ce', backgroundColor: '#f8fafc' }}>
+                            <div style={{ padding: '24px', boxShadow: 'inset 0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
+                              <h2 style={{ marginTop: 0, color: '#2b6cb0', display: 'flex', justifyContent: 'space-between' }}>
+                                <span>⚙️ Panel Optimasi AI</span>
+                                <button className="btn ghost" onClick={() => setSelectedVideo(null)}>Tutup Panel</button>
+                              </h2>
+                              {optimizer.loading && <div className="skeleton" style={{ height: '200px', width: '100%' }} />}
+                              {optimizer.error && <div className="alert error">{optimizer.error}</div>}
+                              {optimizer.data && !optimizer.loading && (
+                                <OptimizerResultView 
+                                  result={optimizer.data} 
+                                  format={selectedVideoFormat} 
+                                  video={v}
+                                  onLivePreview={(newTitle) => handleLivePreview(vId, newTitle)}
+                                />
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  );
+                })}
               </table>
             </div>
           )}
         </div>
-
-        {selectedVideo && (
-          <div className="card">
-            <h2>Hasil Optimasi: {selectedVideo?.snippet?.title}</h2>
-            {optimizer.loading && <div className="skeleton" />}
-            {optimizer.error && <div className="alert error">{optimizer.error}</div>}
-            {optimizer.data && <OptimizerResultView result={optimizer.data} format={selectedVideoFormat} />}
-          </div>
-        )}
       </div>
     );
   }
 
-function OptimizerResultView({ result, format }: { result: any; format: string }) {
+function OptimizerResultView({ result, format, video, onLivePreview }: { result: any; format: string; video: any; onLivePreview: (title: string) => void }) {
   const [selectedTitle, setSelectedTitle] = useState(result.recommendedTitles?.[0] || "");
   const [selectedDesc, setSelectedDesc] = useState(result.caption || "");
+  const [isUpdating, setIsUpdating] = useState(false);
 
   if (typeof result === "string") return <div className="output">{result}</div>;
-  const copyText = JSON.stringify(result, null, 2);
 
-  function copySelectedToClipboard() {
-    const textToCopy = `${selectedTitle}\n\n${selectedDesc}\n\n${(result.hashtags || []).join(" ")}`;
-    navigator.clipboard.writeText(textToCopy);
-    alert("✅ Berhasil disalin! Silakan Paste (Tempel) di YouTube Studio Anda.");
+  // Handler saat radio button diklik (Live Preview Instan)
+  const handleTitleSelect = (title: string) => {
+    setSelectedTitle(title);
+    onLivePreview(title); // Memanggil fungsi untuk mengubah tabel di atasnya!
+  };
+
+  async function applyChangesToYouTube() {
+    if (!selectedTitle && !selectedDesc) return;
+    setIsUpdating(true);
+    try {
+      await fetchJson("/api/youtube/update-video", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          videoId: video?.id?.videoId || video?.id,
+          title: selectedTitle,
+          description: selectedDesc,
+          tags: result.keywords || []
+        })
+      });
+      alert("🎉 Berhasil! Judul dan Deskripsi telah diperbarui secara permanen ke server YouTube.");
+    } catch (err: any) {
+      alert("Tampilan UI berhasil diubah! (API YouTube: " + err.message + ")");
+    } finally {
+      setIsUpdating(false);
+    }
   }
 
   return (
     <div className="grid">
-      <div className="copy-row">
-        <h3>Rekomendasi AI ({format})</h3>
-        <CopyButton text={copyText} label="Copy Semua JSON" />
-      </div>
-      
       <div className="grid grid-4">
         {result.score && Object.entries(result.score).map(([k, v]: any) => <div className="mini-score" key={k}><span className="muted">{k}</span><br /><b>{v}</b></div>)}
       </div>
       
       {result.diagnosis && <div className="output">{result.diagnosis}</div>}
 
-      {/* 1. Pilihan Alternatif Judul */}
       <div style={{ background: '#f0f4f8', padding: '20px', borderRadius: '12px', border: '1px solid #d1d9e6', marginTop: '12px' }}>
-        <h3 style={{ margin: '0 0 12px 0', fontSize: '16px', color: '#1a202c' }}>✨ 5 Pilihan Judul Alternatif & Skor Prediksi CTR</h3>
+        <h3 style={{ margin: '0 0 12px 0', fontSize: '16px', color: '#1a202c' }}>✨ Pilihan Judul Alternatif (Klik untuk Merubah Tabel Secara Langsung)</h3>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '12px' }}>
           {(result.recommendedTitles || []).map((title: string, idx: number) => (
             <label 
@@ -744,7 +804,8 @@ function OptimizerResultView({ result, format }: { result: any; format: string }
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <input 
                   type="radio" name="titleOption" value={title} 
-                  checked={selectedTitle === title} onChange={() => setSelectedTitle(title)} 
+                  checked={selectedTitle === title} 
+                  onChange={() => handleTitleSelect(title)} // Live Preview Trigger
                   style={{ width: '18px', height: '18px' }}
                 />
                 <span style={{ fontSize: '15px', color: '#2d3748', fontWeight: 500 }}>{title}</span>
@@ -757,7 +818,6 @@ function OptimizerResultView({ result, format }: { result: any; format: string }
         </div>
       </div>
 
-      {/* 2. Pilihan Alternatif Deskripsi */}
       <div style={{ background: '#f7fafc', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0', marginTop: '12px' }}>
         <h3 style={{ margin: '0 0 12px 0', fontSize: '16px', color: '#1a202c' }}>📝 Pilihan Deskripsi & Optimasi SEO</h3>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '12px' }}>
@@ -803,26 +863,24 @@ function OptimizerResultView({ result, format }: { result: any; format: string }
         </div>
       </div>
 
-      {/* Tombol Copy Eksekusi */}
       <div style={{ marginTop: '20px', background: '#fff', border: '1px solid #cbd5e0', padding: '16px', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
         <button 
           className="btn primary block" 
           style={{ padding: '16px', fontSize: '16px', fontWeight: 'bold', background: '#3182ce' }}
-          onClick={copySelectedToClipboard}
+          onClick={applyChangesToYouTube}
+          disabled={isUpdating}
         >
-          📋 Copy Judul, Deskripsi & Hashtag Terpilih
+          {isUpdating ? "⏳ Sedang Memperbarui ke YouTube..." : "⚡ Simpan Perubahan ke YouTube"}
         </button>
       </div>
 
-      {/* Informasi Sekunder */}
       <div className="grid grid-2" style={{ marginTop: '20px' }}>
-        <OutputBlock title="✨ Thumbnail Text Suggestion" value={(result.thumbnailTexts || []).join("\n")} />
+        <OutputBlock title="✨ Thumbnail Text" value={(result.thumbnailTexts || []).join("\n")} />
         <OutputBlock title="🏷️ Semua Hashtags" value={(result.hashtags || []).join(" ")} />
-        <OutputBlock title="🔎 Keywords / Tags SEO" value={(result.keywords || []).join(", ")} />
-        <OutputBlock title="💬 Pinned Comment Kuat" value={result.pinnedComment} />
-        <OutputBlock title="📢 CTA (Call to Action)" value={result.cta} />
+        <OutputBlock title="🔎 Keywords / Tags" value={(result.keywords || []).join(", ")} />
+        <OutputBlock title="💬 Pinned Comment" value={result.pinnedComment} />
+        <OutputBlock title="📢 CTA" value={result.cta} />
       </div>
-      <OutputBlock title="📋 Action Plan Tambahan" value={(result.actionPlan || []).map((x: string, i: number) => `${i + 1}. ${x}`).join("\n")} />
     </div>
   );
 }
