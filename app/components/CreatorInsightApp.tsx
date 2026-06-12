@@ -693,175 +693,139 @@ export default function CreatorInsightApp() {
             <h2>Hasil Optimasi: {selectedVideo?.snippet?.title}</h2>
             {optimizer.loading && <div className="skeleton" />}
             {optimizer.error && <div className="alert error">{optimizer.error}</div>}
-            {optimizer.data && renderOptimizerResult(optimizer.data)}
+            {optimizer.data && <OptimizerResultView result={optimizer.data} format={selectedVideoFormat} />}
           </div>
         )}
       </div>
     );
   }
 
-function renderOptimizerResult(result: any) {
-    if (typeof result === "string") return <div className="output">{result}</div>;
-    const copyText = JSON.stringify(result, null, 2);
-    
-    // State lokal untuk menyimpan pilihan user sebelum dieksekusi
-    const [selectedTitle, setSelectedTitle] = useState(result.recommendedTitles?.[0] || "");
-    const [selectedDesc, setSelectedDesc] = useState(result.caption || "");
-    const [isUpdating, setIsUpdating] = useState(false);
+function OptimizerResultView({ result, format }: { result: any; format: string }) {
+  const [selectedTitle, setSelectedTitle] = useState(result.recommendedTitles?.[0] || "");
+  const [selectedDesc, setSelectedDesc] = useState(result.caption || "");
 
-    // Fungsi untuk memperbarui data video langsung ke YouTube API
-    async function applyChangesToYouTube() {
-      if (!selectedTitle && !selectedDesc) return;
-      setIsUpdating(true);
-      try {
-        await fetchJson("/api/youtube/update-video", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            videoId: selectedVideo?.id,
-            title: selectedTitle,
-            description: selectedDesc,
-            tags: result.keywords || []
-          })
-        });
-        alert("🎉 Berhasil! Judul dan Deskripsi lama telah ditimpa dengan data baru yang teroptimasi di channel YouTube Anda.");
-      } catch (err: any) {
-        alert("Gagal menerapkan perubahan: " + err.message);
-      } finally {
-        setIsUpdating(false);
-      }
-    }
+  if (typeof result === "string") return <div className="output">{result}</div>;
+  const copyText = JSON.stringify(result, null, 2);
 
-    return (
-      <div className="grid">
-        <div className="copy-row">
-          <h3>Rekomendasi AI ({selectedVideoFormat})</h3>
-          <CopyButton text={copyText} label="Copy Semua JSON" />
-        </div>
-        
-        <div className="grid grid-4">
-          {result.score && Object.entries(result.score).map(([k, v]: any) => <div className="mini-score" key={k}><span className="muted">{k}</span><br /><b>{v}</b></div>)}
-        </div>
-        
-        {result.diagnosis && <div className="output">{result.diagnosis}</div>}
-
-        {/* 1. Pilihan Alternatif Judul (5 Opsi) */}
-        <div style={{ background: '#f0f4f8', padding: '20px', borderRadius: '12px', border: '1px solid #d1d9e6', marginTop: '12px' }}>
-          <h3 style={{ margin: '0 0 12px 0', fontSize: '16px', color: '#1a202c' }}>✨ 5 Pilihan Judul Alternatif & Skor Prediksi CTR</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '12px' }}>
-            {(result.recommendedTitles || []).map((title: string, idx: number) => (
-              <label 
-                key={idx} 
-                style={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  alignItems: 'center', 
-                  background: selectedTitle === title ? '#ebf8ff' : '#fff', 
-                  border: `1px solid ${selectedTitle === title ? '#3182ce' : '#e2e8f0'}`, 
-                  padding: '12px 16px', 
-                  borderRadius: '8px', 
-                  cursor: 'pointer',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <input 
-                    type="radio" 
-                    name="titleOption" 
-                    value={title} 
-                    checked={selectedTitle === title} 
-                    onChange={() => setSelectedTitle(title)} 
-                    style={{ width: '18px', height: '18px' }}
-                  />
-                  <span style={{ fontSize: '15px', color: '#2d3748', fontWeight: 500 }}>{title}</span>
-                </div>
-                <span style={{ background: '#e2e8f0', padding: '4px 10px', borderRadius: '20px', fontSize: '13px', fontWeight: 'bold', color: '#4a5568' }}>
-                  Score: {95 - (idx * 3)}/100
-                </span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        {/* 2. Pilihan Alternatif Deskripsi */}
-        <div style={{ background: '#f7fafc', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0', marginTop: '12px' }}>
-          <h3 style={{ margin: '0 0 12px 0', fontSize: '16px', color: '#1a202c' }}>📝 Pilihan Deskripsi & Optimasi SEO</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '12px' }}>
-            <label 
-              style={{ 
-                background: selectedDesc === result.caption ? '#f0fff4' : '#fff', 
-                border: `1px solid ${selectedDesc === result.caption ? '#48bb78' : '#e2e8f0'}`, 
-                padding: '14px', 
-                borderRadius: '8px', 
-                cursor: 'pointer' 
-              }}
-            >
-              <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-                <input 
-                  type="radio" 
-                  name="descOption" 
-                  checked={selectedDesc === result.caption} 
-                  onChange={() => setSelectedDesc(result.caption)} 
-                  style={{ width: '18px', height: '18px', marginTop: '2px' }}
-                />
-                <div>
-                  <strong style={{ display: 'block', fontSize: '14px', marginBottom: '4px', color: '#2f855a' }}>Opsi 1 (Caption Singkat + Hashtag) - Score: 92/100</strong>
-                  <span style={{ fontSize: '14px', color: '#4a5568', whiteSpace: 'pre-wrap' }}>{result.caption}</span>
-                </div>
-              </div>
-            </label>
-
-            <label 
-              style={{ 
-                background: selectedDesc === result.description ? '#f0fff4' : '#fff', 
-                border: `1px solid ${selectedDesc === result.description ? '#48bb78' : '#e2e8f0'}`, 
-                padding: '14px', 
-                borderRadius: '8px', 
-                cursor: 'pointer' 
-              }}
-            >
-              <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-                <input 
-                  type="radio" 
-                  name="descOption" 
-                  checked={selectedDesc === result.description} 
-                  onChange={() => setSelectedDesc(result.description)} 
-                  style={{ width: '18px', height: '18px', marginTop: '2px' }}
-                />
-                <div>
-                  <strong style={{ display: 'block', fontSize: '14px', marginBottom: '4px', color: '#2f855a' }}>Opsi 2 (Deskripsi Organik Lengkap) - Score: 98/100</strong>
-                  <span style={{ fontSize: '14px', color: '#4a5568', whiteSpace: 'pre-wrap' }}>{result.description}</span>
-                </div>
-              </div>
-            </label>
-          </div>
-        </div>
-
-        {/* Tombol Eksekusi Mengganti Data */}
-        <div style={{ marginTop: '20px', background: '#fff', border: '1px solid #cbd5e0', padding: '16px', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
-          <strong style={{ display: 'block', color: '#2b6cb0', fontSize: '15px', marginBottom: '8px' }}>Pastikan Anda sudah memilih Judul dan Deskripsi di atas, lalu klik tombol ini untuk menerapkan perubahan secara permanen di YouTube:</strong>
-          <button 
-            className="btn primary block" 
-            style={{ padding: '16px', fontSize: '16px', fontWeight: 'bold', background: '#3182ce' }}
-            onClick={applyChangesToYouTube}
-            disabled={isUpdating}
-          >
-            {isUpdating ? "⏳ Sedang Memperbarui Data Video..." : "⚡ Terapkan Judul & Deskripsi Baru ke Video Ini"}
-          </button>
-        </div>
-
-        {/* Informasi Sekunder */}
-        <div className="grid grid-2" style={{ marginTop: '20px' }}>
-          <OutputBlock title="✨ Thumbnail Text Suggestion" value={(result.thumbnailTexts || []).join("\n")} />
-          <OutputBlock title="🏷️ Hashtags Tambahan" value={(result.hashtags || []).join(" ")} />
-          <OutputBlock title="🔎 Keywords / Tags SEO" value={(result.keywords || []).join(", ")} />
-          <OutputBlock title="💬 Pinned Comment Kuat" value={result.pinnedComment} />
-          <OutputBlock title="📢 CTA (Call to Action)" value={result.cta} />
-        </div>
-        <OutputBlock title="📋 Action Plan Tambahan" value={(result.actionPlan || []).map((x: string, i: number) => `${i + 1}. ${x}`).join("\n")} />
-      </div>
-    );
+  function copySelectedToClipboard() {
+    const textToCopy = `${selectedTitle}\n\n${selectedDesc}\n\n${(result.hashtags || []).join(" ")}`;
+    navigator.clipboard.writeText(textToCopy);
+    alert("✅ Berhasil disalin! Silakan Paste (Tempel) di YouTube Studio Anda.");
   }
+
+  return (
+    <div className="grid">
+      <div className="copy-row">
+        <h3>Rekomendasi AI ({format})</h3>
+        <CopyButton text={copyText} label="Copy Semua JSON" />
+      </div>
+      
+      <div className="grid grid-4">
+        {result.score && Object.entries(result.score).map(([k, v]: any) => <div className="mini-score" key={k}><span className="muted">{k}</span><br /><b>{v}</b></div>)}
+      </div>
+      
+      {result.diagnosis && <div className="output">{result.diagnosis}</div>}
+
+      {/* 1. Pilihan Alternatif Judul */}
+      <div style={{ background: '#f0f4f8', padding: '20px', borderRadius: '12px', border: '1px solid #d1d9e6', marginTop: '12px' }}>
+        <h3 style={{ margin: '0 0 12px 0', fontSize: '16px', color: '#1a202c' }}>✨ 5 Pilihan Judul Alternatif & Skor Prediksi CTR</h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '12px' }}>
+          {(result.recommendedTitles || []).map((title: string, idx: number) => (
+            <label 
+              key={idx} 
+              style={{ 
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
+                background: selectedTitle === title ? '#ebf8ff' : '#fff', 
+                border: `1px solid ${selectedTitle === title ? '#3182ce' : '#e2e8f0'}`, 
+                padding: '12px 16px', borderRadius: '8px', cursor: 'pointer',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <input 
+                  type="radio" name="titleOption" value={title} 
+                  checked={selectedTitle === title} onChange={() => setSelectedTitle(title)} 
+                  style={{ width: '18px', height: '18px' }}
+                />
+                <span style={{ fontSize: '15px', color: '#2d3748', fontWeight: 500 }}>{title}</span>
+              </div>
+              <span style={{ background: '#e2e8f0', padding: '4px 10px', borderRadius: '20px', fontSize: '13px', fontWeight: 'bold', color: '#4a5568' }}>
+                Score: {95 - (idx * 3)}/100
+              </span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* 2. Pilihan Alternatif Deskripsi */}
+      <div style={{ background: '#f7fafc', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0', marginTop: '12px' }}>
+        <h3 style={{ margin: '0 0 12px 0', fontSize: '16px', color: '#1a202c' }}>📝 Pilihan Deskripsi & Optimasi SEO</h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '12px' }}>
+          <label 
+            style={{ 
+              background: selectedDesc === result.caption ? '#f0fff4' : '#fff', 
+              border: `1px solid ${selectedDesc === result.caption ? '#48bb78' : '#e2e8f0'}`, 
+              padding: '14px', borderRadius: '8px', cursor: 'pointer' 
+            }}
+          >
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+              <input 
+                type="radio" name="descOption" 
+                checked={selectedDesc === result.caption} onChange={() => setSelectedDesc(result.caption)} 
+                style={{ width: '18px', height: '18px', marginTop: '2px' }}
+              />
+              <div>
+                <strong style={{ display: 'block', fontSize: '14px', marginBottom: '4px', color: '#2f855a' }}>Opsi 1 (Caption Singkat + Hashtag) - Score: 92/100</strong>
+                <span style={{ fontSize: '14px', color: '#4a5568', whiteSpace: 'pre-wrap' }}>{result.caption}</span>
+              </div>
+            </div>
+          </label>
+
+          <label 
+            style={{ 
+              background: selectedDesc === result.description ? '#f0fff4' : '#fff', 
+              border: `1px solid ${selectedDesc === result.description ? '#48bb78' : '#e2e8f0'}`, 
+              padding: '14px', borderRadius: '8px', cursor: 'pointer' 
+            }}
+          >
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+              <input 
+                type="radio" name="descOption" 
+                checked={selectedDesc === result.description} onChange={() => setSelectedDesc(result.description)} 
+                style={{ width: '18px', height: '18px', marginTop: '2px' }}
+              />
+              <div>
+                <strong style={{ display: 'block', fontSize: '14px', marginBottom: '4px', color: '#2f855a' }}>Opsi 2 (Deskripsi Organik Lengkap) - Score: 98/100</strong>
+                <span style={{ fontSize: '14px', color: '#4a5568', whiteSpace: 'pre-wrap' }}>{result.description}</span>
+              </div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      {/* Tombol Copy Eksekusi */}
+      <div style={{ marginTop: '20px', background: '#fff', border: '1px solid #cbd5e0', padding: '16px', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
+        <button 
+          className="btn primary block" 
+          style={{ padding: '16px', fontSize: '16px', fontWeight: 'bold', background: '#3182ce' }}
+          onClick={copySelectedToClipboard}
+        >
+          📋 Copy Judul, Deskripsi & Hashtag Terpilih
+        </button>
+      </div>
+
+      {/* Informasi Sekunder */}
+      <div className="grid grid-2" style={{ marginTop: '20px' }}>
+        <OutputBlock title="✨ Thumbnail Text Suggestion" value={(result.thumbnailTexts || []).join("\n")} />
+        <OutputBlock title="🏷️ Semua Hashtags" value={(result.hashtags || []).join(" ")} />
+        <OutputBlock title="🔎 Keywords / Tags SEO" value={(result.keywords || []).join(", ")} />
+        <OutputBlock title="💬 Pinned Comment Kuat" value={result.pinnedComment} />
+        <OutputBlock title="📢 CTA (Call to Action)" value={result.cta} />
+      </div>
+      <OutputBlock title="📋 Action Plan Tambahan" value={(result.actionPlan || []).map((x: string, i: number) => `${i + 1}. ${x}`).join("\n")} />
+    </div>
+  );
+}
 
   function renderCompetitors() {
     return (
