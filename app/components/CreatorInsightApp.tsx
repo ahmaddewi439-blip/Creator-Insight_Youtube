@@ -880,8 +880,8 @@ async function applyChangesToYouTube() {
     setIsUpdating(true);
     try {
       // Mengambil ID Video dengan sangat spesifik agar tidak salah sasaran
-      const targetVideoId = video?.id?.videoId || (typeof video?.id === 'string' ? video.id : null) || video?.snippet?.resourceId?.videoId;
       
+      const targetVideoId = video?.id?.videoId || video?.id || video?.snippet?.resourceId?.videoId;
       await fetchJson("/api/youtube/update-video", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

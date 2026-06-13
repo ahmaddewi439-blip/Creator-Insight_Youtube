@@ -1,30 +1,36 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth"; // Memanggil pengaturan login Anda
+import { authOptions } from "@/lib/auth";
 
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    // Mengambil gembok akses (Access Token) dari sesi login
     const accessToken = (session as any)?.accessToken;
 
     if (!accessToken) {
-      return NextResponse.json({ error: "Sesi habis atau token tidak ditemukan. Silakan relogin." }, { status: 401 });
+      return NextResponse.json({ error: "Sesi habis." }, { status: 401 });
     }
 
-    const body = await req.json();
-    const { videoId, title, description, tags } = body;
+    const { videoId, title, description, tags } = await req.json();
 
-    // 1. Tarik data lama video terlebih dahulu (YouTube wajib tahu categoryId saat update)
-    const getRes = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}`, {
+    // LOGIKA PENCARIAN SUPER: Mengatasi perbedaan format ID
+    // Jika videoId berbentuk objek (misal: {videoId: 'xyz'}), kita ambil string-nya
+    const cleanId = (typeof videoId === 'object' && videoId?.videoId) ? videoId.videoId : videoId;
+
+    // 1. Ambil data video
+    const getRes = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id=${cleanId}`, {
       headers: { Authorization: `Bearer ${accessToken}` }
     });
+    
     const getData = await getRes.json();
     const video = getData.items?.[0];
 
-    if (!video) throw new Error("Video tidak ditemukan di channel ini.");
+    // Jika video tetap tidak ketemu, kita berikan petunjuk spesifik apa yang salah
+    if (!video) {
+      throw new Error(`Video ID '${cleanId}' tidak ditemukan. Pastikan akses channel benar.`);
+    }
 
-    // 2. Tembakkan judul dan deskripsi baru ke Server YouTube
+    // 2. Update Video
     const updateRes = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet`, {
       method: 'PUT',
       headers: {
@@ -32,23 +38,21 @@ export async function POST(req: Request) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        id: videoId,
+        id: cleanId,
         snippet: {
-          ...video.snippet, // Pertahankan data lain seperti categoryId
+          ...video.snippet,
           title: title,
           description: description,
-          tags: tags || video.snippet.tags,
+          tags: tags || video.snippet.tags || [],
+          categoryId: video.snippet.categoryId || "20" // Kategori Gaming
         }
       })
     });
 
     const updateData = await updateRes.json();
-    
-    if (!updateRes.ok) {
-      throw new Error(updateData.error?.message || "Gagal menyimpan ke YouTube");
-    }
+    if (!updateRes.ok) throw new Error(updateData.error?.message || "Gagal update ke YouTube");
 
-    return NextResponse.json({ success: true, data: updateData });
+    return NextResponse.json({ success: true });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
