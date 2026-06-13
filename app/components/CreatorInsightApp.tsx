@@ -708,38 +708,39 @@ function renderOptimizer() {
               <table className="table" style={{ minWidth: '600px' }}>
                 <thead><tr><th>#</th><th>Video</th><th>Views</th><th>Likes</th><th>Status</th><th>Action</th></tr></thead>
                 {videos.map((v, i) => {
-              // FIX BUG MUTLAK: Deteksi ID Paling Akurat (Membongkar Format YouTube)
-              const getVidId = (vid: any) => vid?.id?.videoId || (typeof vid?.id === 'string' ? vid.id : null) || vid?.snippet?.resourceId?.videoId || vid?.etag || vid?.snippet?.title;
-              const isSelected = !!selectedVideo && getVidId(v) === getVidId(selectedVideo);
-                  return (
-                    <tbody key={i}>
-                      <VideoRow video={v} index={i} onSelect={optimizeVideo} />
-                      
-                      {isSelected && (
-                        <tr>
-                          <td colSpan={6} style={{ padding: 0, backgroundColor: '#f8fafc', whiteSpace: 'normal' }}>
-                            <div style={{ width: '100%', maxWidth: '100vw', boxSizing: 'border-box', borderTop: '2px solid #3182ce', borderBottom: '2px solid #3182ce', padding: '16px' }}>
-                              <h2 style={{ marginTop: 0, color: '#2b6cb0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '16px' }}>
-                                <span>⚙️ Panel Optimasi AI</span>
-                                <button className="btn ghost" onClick={() => setSelectedVideo(null)} style={{ padding: '6px 12px', fontSize: '12px', backgroundColor: '#e2e8f0' }}>Tutup</button>
-                              </h2>
-                              {optimizer.loading && <div className="skeleton" style={{ height: '300px', width: '100%', borderRadius: '12px' }} />}
-                              {optimizer.error && <div className="alert error">{optimizer.error}</div>}
-                              {optimizer.data && !optimizer.loading && (
-                                // Di dalam renderOptimizer, temukan bagian ini:
-<OptimizerResultView 
-  result={optimizer.data} 
-  format={selectedVideoFormat} 
-  video={v} // <--- PASTIKAN 'v' ADA DI SINI
-  onLivePreview={(newTitle) => handleLivePreview(v.id?.videoId || v.id, newTitle)}
-/>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
+      // FIX UI BUG: Gunakan Judul sebagai pencocok karena Judul pasti unik!
+          const isSelected = selectedVideo && selectedVideo.title === v.title;
+
+          return (
+            <tbody key={i}>
+              <VideoRow video={v} index={i} onSelect={optimizeVideo} />
+
+              {isSelected && (
+                <tr>
+                  <td colSpan={6} style={{ padding: 0, backgroundColor: '#f8fafc', whiteSpace: 'normal' }}>
+                    <div style={{ width: '100%', maxWidth: '100vw', boxSizing: 'border-box', borderTop: '2px solid #3182ce', borderBottom: '2px solid #3182ce', padding: '16px', margin: '16px 0', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}>
+                      <h2 style={{ marginTop: 0, color: '#2b6cb0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span>⚙️ Panel Optimasi AI</span>
+                        <button className="btn ghost" onClick={() => setSelectedVideo(null)} style={{ padding: '6px 12px', fontSize: '12px', backgroundColor: '#e2e8f0', color: '#4a5568', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Tutup</button>
+                      </h2>
+
+                      {optimizer.loading && <div className="skeleton" style={{ height: '300px', width: '100%', borderRadius: '12px' }} />}
+                      {optimizer.error && <div className="alert error">{optimizer.error}</div>}
+
+                      {optimizer.data && !optimizer.loading && (
+                        <OptimizerResultView
+                          result={optimizer.data}
+                          format={selectedVideoFormat}
+                          video={v}
+                          onLivePreview={(newTitle) => handleLivePreview(v.id?.videoId || v.id, newTitle)}
+                        />
                       )}
-                    </tbody>
-                  );
+                    </div>
+                  </td>
+                </tr>
+              )}
+           </tbody>
+          );
                 })}
               </table>
             </div>
