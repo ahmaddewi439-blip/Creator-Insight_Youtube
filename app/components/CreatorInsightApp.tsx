@@ -706,11 +706,9 @@ function renderOptimizer() {
               <table className="table" style={{ minWidth: '600px' }}>
                 <thead><tr><th>#</th><th>Video</th><th>Views</th><th>Likes</th><th>Status</th><th>Action</th></tr></thead>
                 {videos.map((v, i) => {
-              // FIX BUG MUTLAK: Deteksi ID Super Stabil (Anti-Meleset)
-              const currentVideoId = v.id?.videoId || v.id || v.snippet?.publishedAt || v.snippet?.title || v.title;
-              const selectedVideoId = selectedVideo?.id?.videoId || selectedVideo?.id || selectedVideo?.snippet?.publishedAt || selectedVideo?.snippet?.title || selectedVideo?.title;
-              const isSelected = !!selectedVideo && currentVideoId === selectedVideoId;
-                  
+              // FIX BUG MUTLAK: Deteksi ID Paling Akurat (Membongkar Format YouTube)
+              const getVidId = (vid: any) => vid?.id?.videoId || (typeof vid?.id === 'string' ? vid.id : null) || vid?.snippet?.resourceId?.videoId || vid?.etag || vid?.snippet?.title;
+              const isSelected = !!selectedVideo && getVidId(v) === getVidId(selectedVideo);
                   return (
                     <tbody key={i}>
                       <VideoRow video={v} index={i} onSelect={optimizeVideo} />
@@ -877,18 +875,22 @@ function OptimizerResultView({ result, format, video, onLivePreview }: { result:
     onLivePreview(titles[idx]);
   };
 
-  async function applyChangesToYouTube() {
+async function applyChangesToYouTube() {
     if (!actualSelectedTitle && !actualSelectedDesc) return;
     setIsUpdating(true);
     try {
+      // Mengambil ID Video dengan sangat spesifik agar tidak salah sasaran
+      const targetVideoId = video?.id?.videoId || (typeof video?.id === 'string' ? video.id : null) || video?.snippet?.resourceId?.videoId;
+      
       await fetchJson("/api/youtube/update-video", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ videoId: video?.id?.videoId || video?.id, title: actualSelectedTitle, description: actualSelectedDesc, tags: result.keywords || [] })
+        body: JSON.stringify({ videoId: targetVideoId, title: actualSelectedTitle, description: actualSelectedDesc, tags: result.keywords || [] })
       });
-      alert("🎉 Berhasil! Judul dan Deskripsi telah diperbarui ke server YouTube.");
+      alert("🎉 Berhasil! Judul dan Deskripsi telah diperbarui langsung ke server YouTube.");
     } catch (err: any) {
-      alert("Tampilan UI tabel berhasil dirubah secara Live! (Notifikasi: API Update YouTube belum aktif di server)");
+      // FIX: Menampilkan pesan error ASLI dari backend, bukan pesan palsu
+      alert("GAGAL MENYIMPAN: " + err.message + "\n\n(Pastikan Anda sudah LOGOUT lalu LOGIN ULANG untuk memberikan Izin YouTube!)");
     } finally {
       setIsUpdating(false);
     }
