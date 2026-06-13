@@ -95,7 +95,7 @@ function VideoRow({ video, index, onSelect }: { video: any; index: number; onSel
       <td>{compact(video?.views ?? video?.statistics?.viewCount)}</td>
       <td>{compact(video?.likes ?? video?.statistics?.likeCount)}</td>
       <td><span className={privacy === "public" ? "status-pill" : "status-pill yellow"}>{privacy}</span></td>
-      // Pastikan baris ini di dalam VideoRow
+      
 {onSelect && <td><button className="btn" onClick={() => onSelect(video)}>Optimize</button></td>}
     </tr>
   );
@@ -706,7 +706,7 @@ function renderOptimizer() {
           {videosState.loading ? <div className="skeleton" /> : (
             <div className="table-wrapper" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
               <table className="table" style={{ minWidth: '600px' }}>
-                <thead><tr><th>#</th><th>Video</th><th>Views</th><th>Likes</th><th>Status</th><th>Action</th></tr></thead>
+                <thead><tr><th>#</th><th>Video</th><th>Views</th><th>Likes</th><th>Status</th><th></th></tr></thead>
                 {videos.map((v, i) => {
       // FIX UI BUG: Gunakan Judul sebagai pencocok karena Judul pasti unik!
           const isSelected = selectedVideo && selectedVideo.title === v.title;
@@ -969,7 +969,20 @@ async function applyChangesToYouTube() {
                   </div>
                   <span style={{ fontSize: '14px', color: '#2d3748', fontWeight: isSelected ? 'bold' : 'normal', lineHeight: '1.4' }}>{title}</span>
                 </div>
-                <div style={{ alignSelf: 'flex-end', background: '#e2e8f0', padding: '2px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold', color: '#4a5568' }}>Score: {itemScore}</div>
+                <div style={{ alignSelf: 'flex-end', display: 'flex', alignItems: 'center', gap: '8px' }}>
+  <button
+    onClick={(e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      navigator.clipboard.writeText(title);
+      alert("✅ Judul disalin!");
+    }}
+    style={{ padding: '2px 8px', fontSize: '12px', cursor: 'pointer', borderRadius: '4px', border: '1px solid #cbd5e1', background: '#fff', color: '#334155' }}
+  >
+    📋 Copy
+  </button>
+  <div style={{ background: '#e2e8f0', padding: '2px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold', color: '#4a5568' }}>Score: {itemScore}</div>
+</div>
               </div>
             );
           })}
@@ -983,7 +996,10 @@ async function applyChangesToYouTube() {
           <div onClick={() => setSelectedDescIdx(0)} style={{ background: selectedDescIdx === 0 ? '#f0fff4' : '#fff', border: `2px solid ${selectedDescIdx === 0 ? '#48bb78' : '#e2e8f0'}`, padding: '12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', gap: '10px' }}>
             <div style={{ width: '18px', height: '18px', borderRadius: '50%', border: `2px solid ${selectedDescIdx === 0 ? '#48bb78' : '#cbd5e0'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '2px' }}>{selectedDescIdx === 0 && <div style={{ width: '10px', height: '10px', backgroundColor: '#48bb78', borderRadius: '50%' }} />}</div>
             <div>
-              <strong style={{ display: 'block', fontSize: '13px', marginBottom: '4px', color: '#2f855a' }}>Opsi 1 (Caption + Hashtag)</strong>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+  <strong style={{ fontSize: '13px', color: '#2f855a' }}>Opsi 1 (Caption + Hashtag)</strong>
+  <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigator.clipboard.writeText(result.caption); alert("✅ Deskripsi Opsi 1 disalin!"); }} style={{ padding: '2px 8px', fontSize: '12px', cursor: 'pointer', borderRadius: '4px', border: '1px solid #cbd5e1', background: '#fff', color: '#334155' }}>📋 Copy</button>
+</div>
               <span style={{ fontSize: '13px', color: '#4a5568', whiteSpace: 'pre-wrap', lineHeight: '1.4' }}>{result.caption}</span>
             </div>
           </div>
@@ -991,7 +1007,10 @@ async function applyChangesToYouTube() {
           <div onClick={() => setSelectedDescIdx(1)} style={{ background: selectedDescIdx === 1 ? '#f0fff4' : '#fff', border: `2px solid ${selectedDescIdx === 1 ? '#48bb78' : '#e2e8f0'}`, padding: '12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', gap: '10px' }}>
             <div style={{ width: '18px', height: '18px', borderRadius: '50%', border: `2px solid ${selectedDescIdx === 1 ? '#48bb78' : '#cbd5e0'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '2px' }}>{selectedDescIdx === 1 && <div style={{ width: '10px', height: '10px', backgroundColor: '#48bb78', borderRadius: '50%' }} />}</div>
             <div>
-              <strong style={{ display: 'block', fontSize: '13px', marginBottom: '4px', color: '#2f855a' }}>Opsi 2 (Deskripsi Lengkap)</strong>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+  <strong style={{ fontSize: '13px', color: '#2f855a' }}>Opsi 2 (Deskripsi Lengkap)</strong>
+  <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigator.clipboard.writeText(result.description); alert("✅ Deskripsi Opsi 2 disalin!"); }} style={{ padding: '2px 8px', fontSize: '12px', cursor: 'pointer', borderRadius: '4px', border: '1px solid #cbd5e1', background: '#fff', color: '#334155' }}>📋 Copy</button>
+</div>
               <span style={{ fontSize: '13px', color: '#4a5568', whiteSpace: 'pre-wrap', lineHeight: '1.4' }}>{result.description}</span>
             </div>
           </div>
