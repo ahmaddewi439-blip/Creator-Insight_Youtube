@@ -51,10 +51,22 @@ export async function POST(req: Request) {
       })
     });
 
-    const updateData = await updateRes.json();
+   const updateData = await updateRes.json();
+    
     if (!updateRes.ok) {
+      const errMsg = updateData.error?.message || "";
       console.error("YouTube API Error:", updateData);
-      throw new Error(updateData.error?.message || "YouTube API menolak update.");
+
+      // 💡 CONTEKAN VIDIQ: Deteksi spesifik jika izin (scope) kurang / ditolak Google
+      if (errMsg.toLowerCase().includes("insufficient") || updateData.error?.code === 403) {
+        return NextResponse.json({ 
+          error: "Izin YouTube Anda belum lengkap untuk menyimpan data.", 
+          code: "REQUIRE_CONSENT" // Kode rahasia agar dibaca oleh frontend
+        }, { status: 403 }); // Gunakan status 403 (Forbidden), BUKAN 500
+      }
+
+      // Jika error lain (misal video dihapus, dll)
+      throw new Error(errMsg || "YouTube API menolak permintaan.");
     }
 
     return NextResponse.json({ success: true });

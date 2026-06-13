@@ -896,13 +896,13 @@ async function applyChangesToYouTube() {
         return;
     }
 
-    setIsUpdating(true);
+  setIsUpdating(true);
     try {
       const res = await fetch("/api/youtube/update-video", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
-            videoId: finalId, // ID hasil curian dari Thumbnail siap dikirim!
+            videoId: finalId, 
             title: actualSelectedTitle, 
             description: actualSelectedDesc, 
             tags: result.keywords || [] 
@@ -910,11 +910,26 @@ async function applyChangesToYouTube() {
       });
 
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "Gagal update dari server");
+
+      // 💡 CONTEKAN VIDIQ: Tangkap kode rahasia dari backend
+      if (!res.ok) {
+        if (json.code === "REQUIRE_CONSENT") {
+           // Memunculkan peringatan elegan ala vidIQ
+           const mauReauth = window.confirm("⚠️ Akses Ditolak oleh Google.\n\nAplikasi membutuhkan izin tambahan untuk menyimpan perubahan ini langsung ke channel Anda.\n\nKlik 'OK' untuk Login ulang, dan PASTIKAN Anda MENCENTANG kotak 'Kelola akun YouTube Anda'!");
+           
+           if (mauReauth) {
+               // Perintah sakti yang akan menerobos cookies lama dan memaksa pop-up izin muncul!
+               signIn("google", { prompt: "consent" }); 
+           }
+           return; // Hentikan proses simpan
+        }
+        // Jika error biasa
+        throw new Error(json.error || "Gagal update dari server");
+      }
       
       alert("🎉 BERHASIL! Judul dan Deskripsi telah resmi diperbarui ke server YouTube.");
     } catch (err: any) {
-      alert("GAGAL MENYIMPAN: " + err.message + "\n\nPastikan Anda sudah Logout dan Login ulang agar izin YouTube aktif.");
+      alert("GAGAL MENYIMPAN: " + err.message);
     } finally {
       setIsUpdating(false);
     }
