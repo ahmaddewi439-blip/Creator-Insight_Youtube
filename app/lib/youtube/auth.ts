@@ -15,12 +15,15 @@ export const authOptions: NextAuthOptions = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
       authorization: {
         params: {
-          // FIX: Mengganti .readonly menjadi .force-ssl agar diizinkan mengubah judul/deskripsi
+          // TAMBAHAN BARU: Memaksa Google selalu memunculkan pop-up izin!
+          prompt: "consent",
+          access_type: "offline",
           scope: "openid email profile https://www.googleapis.com/auth/youtube.force-ssl"
         }
       }
     })
   ],
+  
   secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
     async jwt({ token, account }) {
