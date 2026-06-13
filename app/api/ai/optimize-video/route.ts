@@ -1,43 +1,56 @@
-import { callAIJson } from "@/lib/ai";
+import { NextResponse } from "next/server";
 
-export const runtime = "nodejs";
-
-export async function POST(request: Request) {
+export async function POST(req: Request) {
   try {
-    const body = await request.json();
-    const video = body?.video;
-    if (!video) return Response.json({ error: "Video belum dipilih." }, { status: 400 });
+    const body = await req.json();
+    const { video, videoFormat } = body;
+    
+    const originalTitle = video?.snippet?.title || video?.title || "";
+    const originalDesc = video?.snippet?.description || video?.description || "";
 
-    const system = `Kamu adalah YouTube strategist untuk channel gaming/Roblox. Jawab hanya JSON valid. Jangan markdown.`;
-    const user = `Analisis video YouTube berikut dan buat optimasi yang bisa langsung dicopy.
+    // INSTRUKSI MUTLAK DI LEVEL SERVER
+    const systemPrompt = `You are an elite YouTube SEO Expert.
+    CRITICAL RULE: You MUST generate your response in the EXACT SAME LANGUAGE as the original video title.
+    - If the original title "${originalTitle}" is in ENGLISH, your entire JSON response MUST be in ENGLISH.
+    - If it is in INDONESIAN, your response MUST be in INDONESIAN.
+    - DO NOT translate. DO NOT mix languages.
+    
+    Original Title: "${originalTitle}"
+    Original Description: "${originalDesc}"
+    Format Target: ${videoFormat}
+    
+    Return a valid JSON object with the following keys:
+    {
+      "score": {"Title": 85, "SEO": 90, "CTR": 88, "Retention": 80, "Overall": 85},
+      "diagnosis": "Short analysis of the current metadata",
+      "recommendedTitles": ["Title 1", "Title 2", "Title 3", "Title 4", "Title 5"],
+      "caption": "Short caption with hashtag",
+      "description": "Full organic description",
+      "hashtags": ["#tag1", "#tag2"],
+      "keywords": ["tag1", "tag2"],
+      "pinnedComment": "Comment text",
+      "cta": "Call to action",
+      "thumbnailTexts": ["Text 1"],
+      "actionPlan": ["Step 1"]
+    }`;
 
-Data video:
-${JSON.stringify(video, null, 2)}
+    const res = await fetch(process.env.AI_BASE_URL || "https://lite.koboillm.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.AI_API_KEYS}`
+      },
+      body: JSON.stringify({
+        model: process.env.AI_MODEL || "openai/gpt-4o-mini",
+        messages: [{ role: "system", content: systemPrompt }],
+        response_format: { type: "json_object" }
+      })
+    });
 
-Output wajib JSON dengan struktur:
-{
-  "score": {"title": number, "seo": number, "ctr": number, "retention": number, "overall": number},
-  "diagnosis": "ringkasan singkat masalah dan peluang",
-  "recommendedTitles": ["5 judul alternatif kuat"],
-  "caption": "caption singkat untuk posting/Shorts",
-  "description": "deskripsi YouTube yang natural dan SEO friendly",
-  "hashtags": ["#Roblox"],
-  "keywords": ["keyword"],
-  "thumbnailTexts": ["3 opsi teks thumbnail maksimal 5 kata"],
-  "pinnedComment": "komentar pin yang mengundang diskusi",
-  "cta": "CTA natural untuk subscribe/like/comment",
-  "actionPlan": ["5 langkah perbaikan praktis"]
-}
-
-Aturan:
-- Bahasa output Indonesia.
-- Kalau topik Roblox, gunakan gaya global Roblox news.
-- CTA harus kuat, bukan sekadar 'like and subscribe'.
-- Jangan klaim data yang tidak ada.`;
-
-    const result = await callAIJson([ { role: "system", content: system }, { role: "user", content: user } ], 0.7);
-    return Response.json(result.parsed ? { result: result.parsed } : { raw: result.raw });
-  } catch (err: any) {
-    return Response.json({ error: err?.message || "AI gagal membuat optimasi." }, { status: 500 });
+    const data = await res.json();
+    const content = data.choices[0].message.content;
+    return NextResponse.json({ result: JSON.parse(content) });
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }

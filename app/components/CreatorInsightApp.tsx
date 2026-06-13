@@ -689,61 +689,55 @@ function renderOptimizer() {
       <div className="grid">
         <div className="card">
           <h2>Video Optimizer</h2>
-          <p className="muted">Pilih video publish/terjadwal yang terbaca dari channel, lalu AI akan memberi saran optimasi.</p>
-          
           <div className="form-row" style={{ marginTop: 18, marginBottom: 18, backgroundColor: '#f0f4f9', padding: 16, borderRadius: 12 }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: '15px', fontWeight: 'bold', cursor: 'pointer', flexWrap: 'wrap' }}>
               Format Target AI:
-              <select 
-                className="select" 
-                style={{ padding: '12px 18px', fontSize: '14px', borderRadius: '8px', backgroundColor: '#fff', cursor: 'pointer', border: '1px solid #ccc', flex: 1, minWidth: '200px' }}
-                value={selectedVideoFormat} 
-                onChange={(e) => setSelectedVideoFormat(e.target.value)}
-              >
+              <select className="select" style={{ padding: '12px 18px', fontSize: '14px', borderRadius: '8px', backgroundColor: '#fff', cursor: 'pointer', border: '1px solid #ccc', flex: 1, minWidth: '200px' }} value={selectedVideoFormat} onChange={(e) => setSelectedVideoFormat(e.target.value)}>
                 <option value="Shorts">YouTube Shorts (Vertikal, Hook Cepat, CTA)</option>
                 <option value="Long">Video Panjang (Durasi Normal, Horizontal, SEO Lengkap)</option>
               </select>
             </label>
           </div>
 
-          {selectedVideo && (
-            <div style={{ marginBottom: '24px', backgroundColor: '#f8fafc', border: '2px solid #3182ce', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}>
-              <div style={{ padding: '16px', backgroundColor: '#ebf8ff', borderBottom: '1px solid #bee3f8', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-                <h2 style={{ margin: 0, color: '#2b6cb0', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  ⚙️ Panel Optimasi AI 
-                </h2>
-                <button className="btn ghost" style={{ backgroundColor: '#fff', border: '1px solid #cbd5e0', fontSize: '13px', padding: '6px 12px' }} onClick={() => setSelectedVideo(null)}>Tutup Panel</button>
-              </div>
-              
-              <div style={{ padding: '16px' }}>
-                <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
-                  <strong style={{ fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '4px' }}>MENGOPTIMASI VIDEO:</strong>
-                  <span style={{ fontSize: '14px', color: '#1e293b', fontWeight: 'bold' }}>{selectedVideo.snippet?.title || selectedVideo.title}</span>
-                </div>
-
-                {optimizer.loading && <div className="skeleton" style={{ height: '300px', width: '100%', borderRadius: '12px' }} />}
-                {optimizer.error && <div className="alert error">{optimizer.error}</div>}
-                {optimizer.data && !optimizer.loading && (
-                  <OptimizerResultView 
-                    result={optimizer.data} 
-                    format={selectedVideoFormat} 
-                    video={selectedVideo}
-                    onLivePreview={(newTitle) => handleLivePreview(selectedVideo.id?.videoId || selectedVideo.id, newTitle)}
-                  />
-                )}
-              </div>
-            </div>
-          )}
-
           {videosState.loading ? <div className="skeleton" /> : (
             <div className="table-wrapper" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
               <table className="table" style={{ minWidth: '600px' }}>
                 <thead><tr><th>#</th><th>Video</th><th>Views</th><th>Likes</th><th>Status</th><th>Action</th></tr></thead>
-                <tbody>
-                  {videos.map((v, i) => (
-                    <VideoRow key={v.id?.videoId || v.id || i} video={v} index={i} onSelect={optimizeVideo} />
-                  ))}
-                </tbody>
+                {videos.map((v, i) => {
+                  const vId = v.id?.videoId || v.id;
+                  const selectedId = selectedVideo?.id?.videoId || selectedVideo?.id;
+                  const isSelected = selectedId === vId;
+                  
+                  return (
+                    <tbody key={vId || i}>
+                      <VideoRow video={v} index={i} onSelect={optimizeVideo} />
+                      
+                      {/* PANEL KEMBALI MUNCUL TEPAT DI BAWAH VIDEO */}
+                      {isSelected && (
+                        <tr>
+                          <td colSpan={6} style={{ padding: 0, backgroundColor: '#f8fafc', whiteSpace: 'normal' }}>
+                            <div style={{ width: '100%', maxWidth: '100vw', boxSizing: 'border-box', borderTop: '2px solid #3182ce', borderBottom: '2px solid #3182ce', padding: '16px' }}>
+                              <h2 style={{ marginTop: 0, color: '#2b6cb0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '16px' }}>
+                                <span>⚙️ Panel Optimasi AI</span>
+                                <button className="btn ghost" onClick={() => setSelectedVideo(null)} style={{ padding: '6px 12px', fontSize: '12px', backgroundColor: '#e2e8f0' }}>Tutup</button>
+                              </h2>
+                              {optimizer.loading && <div className="skeleton" style={{ height: '300px', width: '100%', borderRadius: '12px' }} />}
+                              {optimizer.error && <div className="alert error">{optimizer.error}</div>}
+                              {optimizer.data && !optimizer.loading && (
+                                <OptimizerResultView 
+                                  result={optimizer.data} 
+                                  format={selectedVideoFormat} 
+                                  video={v}
+                                  onLivePreview={(newTitle) => handleLivePreview(vId, newTitle)}
+                                />
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  );
+                })}
               </table>
             </div>
           )}
@@ -753,9 +747,8 @@ function renderOptimizer() {
   }
 
 function OptimizerResultView({ result, format, video, onLivePreview }: { result: any; format: string; video: any; onLivePreview: (title: string) => void }) {
-  // Menggunakan Index agar terhindar dari bug string yang kembar
   const [selectedTitleIdx, setSelectedTitleIdx] = useState(0);
-  const [selectedDescIdx, setSelectedDescIdx] = useState(0); // 0 = caption, 1 = description
+  const [selectedDescIdx, setSelectedDescIdx] = useState(0);
   const [isUpdating, setIsUpdating] = useState(false);
 
   if (typeof result === "string") return <div className="output">{result}</div>;
@@ -783,7 +776,7 @@ function OptimizerResultView({ result, format, video, onLivePreview }: { result:
 
   const handleTitleSelect = (idx: number) => {
     setSelectedTitleIdx(idx);
-    onLivePreview(titles[idx]); // Update tabel atas secara live
+    onLivePreview(titles[idx]);
   };
 
   async function applyChangesToYouTube() {
@@ -793,16 +786,11 @@ function OptimizerResultView({ result, format, video, onLivePreview }: { result:
       await fetchJson("/api/youtube/update-video", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          videoId: video?.id?.videoId || video?.id,
-          title: actualSelectedTitle,
-          description: actualSelectedDesc,
-          tags: result.keywords || []
-        })
+        body: JSON.stringify({ videoId: video?.id?.videoId || video?.id, title: actualSelectedTitle, description: actualSelectedDesc, tags: result.keywords || [] })
       });
-      alert("🎉 Berhasil! Judul dan Deskripsi telah diperbarui secara permanen ke server YouTube.");
+      alert("🎉 Berhasil! Judul dan Deskripsi telah diperbarui ke server YouTube.");
     } catch (err: any) {
-      alert("Tampilan UI tabel berhasil dirubah secara Live! (Notifikasi: API Update YouTube belum aktif di server Anda)");
+      alert("Tampilan UI tabel berhasil dirubah secara Live! (Notifikasi: API Update YouTube belum aktif di server)");
     } finally {
       setIsUpdating(false);
     }
@@ -811,49 +799,38 @@ function OptimizerResultView({ result, format, video, onLivePreview }: { result:
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       
-      {/* PANEL ANALITIK CEO */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '12px', padding: '16px', background: '#1e293b', borderRadius: '12px', color: '#fff' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', padding: '16px', background: '#1e293b', borderRadius: '12px', color: '#fff' }}>
         <div>
-          <span style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>Skor Saat Ini</span>
+          <span style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase' }}>Skor Saat Ini</span>
           <div style={{ fontSize: '28px', fontWeight: 'bold', color: oldScore < 60 ? '#f87171' : '#fbbf24' }}>{oldScore}<span style={{ fontSize: '13px', color: '#64748b' }}>/100</span></div>
         </div>
         <div>
-          <span style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>Prediksi Baru</span>
+          <span style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase' }}>Prediksi Baru</span>
           <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#4ade80' }}>{currentNewScore}<span style={{ fontSize: '13px', color: '#64748b' }}>/100</span></div>
         </div>
       </div>
 
       <div style={{ background: '#f0f4f8', padding: '16px', borderRadius: '12px', border: '1px solid #d1d9e6' }}>
-        <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#1a202c' }}>✨ Judul Alternatif (Pilih untuk Merubah Live)</h3>
+        <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#1a202c' }}>✨ Pilihan Judul (Ketuk untuk Live Update)</h3>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {titles.map((title: string, idx: number) => {
             const isSelected = selectedTitleIdx === idx;
             const itemScore = calculateRealScore(title, actualSelectedDesc, result.keywords || []);
             return (
-              <label 
+              <div 
                 key={idx} 
-                style={{ 
-                  display: 'flex', flexDirection: 'column', gap: '8px', 
-                  background: isSelected ? '#ebf8ff' : '#fff', 
-                  border: `1px solid ${isSelected ? '#3182ce' : '#e2e8f0'}`, 
-                  padding: '12px', borderRadius: '8px', cursor: 'pointer',
-                  boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
-                }}
+                onClick={() => handleTitleSelect(idx)}
+                style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: isSelected ? '#ebf8ff' : '#fff', border: `2px solid ${isSelected ? '#3182ce' : '#e2e8f0'}`, padding: '12px', borderRadius: '8px', cursor: 'pointer' }}
               >
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                  <input 
-                    type="radio" 
-                    name="titleOption"
-                    checked={isSelected} 
-                    onChange={() => handleTitleSelect(idx)} 
-                    style={{ width: '18px', height: '18px', marginTop: '2px', cursor: 'pointer', flexShrink: 0 }} 
-                  />
-                  <span style={{ fontSize: '14px', color: '#2d3748', fontWeight: 500, lineHeight: '1.4' }}>{title}</span>
+                  {/* RADIO BUTTON KUSTOM (Bebas Bug Sentuhan HP) */}
+                  <div style={{ width: '18px', height: '18px', borderRadius: '50%', border: `2px solid ${isSelected ? '#3182ce' : '#cbd5e0'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '2px' }}>
+                    {isSelected && <div style={{ width: '10px', height: '10px', backgroundColor: '#3182ce', borderRadius: '50%' }} />}
+                  </div>
+                  <span style={{ fontSize: '14px', color: '#2d3748', fontWeight: isSelected ? 'bold' : 'normal', lineHeight: '1.4' }}>{title}</span>
                 </div>
-                <div style={{ alignSelf: 'flex-end', background: '#e2e8f0', padding: '2px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold', color: '#4a5568' }}>
-                  Score: {itemScore}
-                </div>
-              </label>
+                <div style={{ alignSelf: 'flex-end', background: '#e2e8f0', padding: '2px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold', color: '#4a5568' }}>Score: {itemScore}</div>
+              </div>
             );
           })}
         </div>
@@ -863,58 +840,31 @@ function OptimizerResultView({ result, format, video, onLivePreview }: { result:
         <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#1a202c' }}>📝 Pilihan Deskripsi SEO</h3>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           
-          <label style={{ background: selectedDescIdx === 0 ? '#f0fff4' : '#fff', border: `1px solid ${selectedDescIdx === 0 ? '#48bb78' : '#e2e8f0'}`, padding: '12px', borderRadius: '8px', cursor: 'pointer' }}>
-            <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-              <input 
-                type="radio" 
-                name="descOption" 
-                checked={selectedDescIdx === 0} 
-                onChange={() => setSelectedDescIdx(0)} 
-                style={{ width: '18px', height: '18px', marginTop: '2px', flexShrink: 0, cursor: 'pointer' }} 
-              />
-              <div>
-                <strong style={{ display: 'block', fontSize: '13px', marginBottom: '4px', color: '#2f855a' }}>Opsi 1 (Caption + Hashtag)</strong>
-                <span style={{ fontSize: '13px', color: '#4a5568', whiteSpace: 'pre-wrap', lineHeight: '1.4' }}>{result.caption}</span>
-              </div>
+          <div onClick={() => setSelectedDescIdx(0)} style={{ background: selectedDescIdx === 0 ? '#f0fff4' : '#fff', border: `2px solid ${selectedDescIdx === 0 ? '#48bb78' : '#e2e8f0'}`, padding: '12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', gap: '10px' }}>
+            <div style={{ width: '18px', height: '18px', borderRadius: '50%', border: `2px solid ${selectedDescIdx === 0 ? '#48bb78' : '#cbd5e0'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '2px' }}>{selectedDescIdx === 0 && <div style={{ width: '10px', height: '10px', backgroundColor: '#48bb78', borderRadius: '50%' }} />}</div>
+            <div>
+              <strong style={{ display: 'block', fontSize: '13px', marginBottom: '4px', color: '#2f855a' }}>Opsi 1 (Caption + Hashtag)</strong>
+              <span style={{ fontSize: '13px', color: '#4a5568', whiteSpace: 'pre-wrap', lineHeight: '1.4' }}>{result.caption}</span>
             </div>
-          </label>
+          </div>
 
-          <label style={{ background: selectedDescIdx === 1 ? '#f0fff4' : '#fff', border: `1px solid ${selectedDescIdx === 1 ? '#48bb78' : '#e2e8f0'}`, padding: '12px', borderRadius: '8px', cursor: 'pointer' }}>
-            <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-              <input 
-                type="radio" 
-                name="descOption" 
-                checked={selectedDescIdx === 1} 
-                onChange={() => setSelectedDescIdx(1)} 
-                style={{ width: '18px', height: '18px', marginTop: '2px', flexShrink: 0, cursor: 'pointer' }} 
-              />
-              <div>
-                <strong style={{ display: 'block', fontSize: '13px', marginBottom: '4px', color: '#2f855a' }}>Opsi 2 (Deskripsi Lengkap)</strong>
-                <span style={{ fontSize: '13px', color: '#4a5568', whiteSpace: 'pre-wrap', lineHeight: '1.4' }}>{result.description}</span>
-              </div>
+          <div onClick={() => setSelectedDescIdx(1)} style={{ background: selectedDescIdx === 1 ? '#f0fff4' : '#fff', border: `2px solid ${selectedDescIdx === 1 ? '#48bb78' : '#e2e8f0'}`, padding: '12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', gap: '10px' }}>
+            <div style={{ width: '18px', height: '18px', borderRadius: '50%', border: `2px solid ${selectedDescIdx === 1 ? '#48bb78' : '#cbd5e0'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '2px' }}>{selectedDescIdx === 1 && <div style={{ width: '10px', height: '10px', backgroundColor: '#48bb78', borderRadius: '50%' }} />}</div>
+            <div>
+              <strong style={{ display: 'block', fontSize: '13px', marginBottom: '4px', color: '#2f855a' }}>Opsi 2 (Deskripsi Lengkap)</strong>
+              <span style={{ fontSize: '13px', color: '#4a5568', whiteSpace: 'pre-wrap', lineHeight: '1.4' }}>{result.description}</span>
             </div>
-          </label>
+          </div>
 
         </div>
       </div>
 
-      <div style={{ background: '#fff', border: '1px solid #cbd5e0', padding: '16px', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
-        <button className="btn primary block" style={{ width: '100%', padding: '14px', fontSize: '15px', fontWeight: 'bold', background: '#3182ce', borderRadius: '8px' }} onClick={applyChangesToYouTube} disabled={isUpdating}>
-          {isUpdating ? "⏳ Menyimpan..." : "⚡ Simpan Perubahan ke YouTube"}
-        </button>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
-        <OutputBlock title="✨ Thumbnail Text" value={(result.thumbnailTexts || []).join("\n")} />
-        <OutputBlock title="🏷️ Semua Hashtags" value={(result.hashtags || []).join(" ")} />
-        <OutputBlock title="🔎 Keywords / Tags" value={(result.keywords || []).join(", ")} />
-        <OutputBlock title="💬 Pinned Comment" value={result.pinnedComment} />
-        <OutputBlock title="📢 CTA" value={result.cta} />
-      </div>
+      <button className="btn primary block" style={{ padding: '14px', fontSize: '15px', fontWeight: 'bold', background: '#3182ce', borderRadius: '8px' }} onClick={applyChangesToYouTube} disabled={isUpdating}>
+        {isUpdating ? "⏳ Menyimpan..." : "⚡ Simpan Perubahan ke YouTube"}
+      </button>
     </div>
   );
 }
-
   function renderCompetitors() {
     return (
       <div className="grid">
