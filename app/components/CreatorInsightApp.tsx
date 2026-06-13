@@ -878,14 +878,19 @@ function OptimizerResultView({ result, format, video, onLivePreview }: { result:
   };
 
 async function applyChangesToYouTube() {
-    // Menangkap ID video dari berbagai lokasi penyimpanan data YouTube
-    const targetVideoId = video?.id?.videoId || video?.id || (typeof video?.id === 'string' ? video.id : null);
-    
-    // LOGIKA PERLINDUNGAN: Jika ID masih undefined, kita ambil dari data yang ada di tabel
-    const finalId = targetVideoId || video?.snippet?.resourceId?.videoId;
+    // Pelacak ID Super (Mencari di semua kemungkinan struktur, termasuk jika diringkas)
+    const finalId = 
+        (typeof video?.id === 'string' ? video.id : null) || 
+        video?.id?.videoId || 
+        video?.videoId || 
+        video?.snippet?.resourceId?.videoId || 
+        video?._id;
 
     if (!finalId) {
-        alert("GAGAL: ID Video tidak terbaca. Pastikan Anda sudah me-refresh data (tekan tombol Refresh Data di menu atas).");
+        // JURUS DETEKTIF: Menampilkan isi asli objek video agar kita tahu nama kuncinya!
+        const isiVideo = JSON.stringify(video, null, 2);
+        alert("GAGAL: ID tidak terbaca.\n\nIsi Data Video Mentah:\n" + isiVideo.substring(0, 300) + "...\n\n(Mohon screenshot pesan ini dan kirimkan ke sini!)");
+        console.log("Data Video Mentah:", video);
         return;
     }
 
@@ -895,7 +900,7 @@ async function applyChangesToYouTube() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
-            videoId: finalId, // Menggunakan ID yang sudah dibersihkan
+            videoId: finalId, 
             title: actualSelectedTitle, 
             description: actualSelectedDesc, 
             tags: result.keywords || [] 
@@ -903,7 +908,7 @@ async function applyChangesToYouTube() {
       });
 
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "Gagal update");
+      if (!res.ok) throw new Error(json.error || "Gagal update dari server");
       
       alert("🎉 Berhasil! Judul dan Deskripsi telah diperbarui langsung ke server YouTube.");
     } catch (err: any) {
@@ -911,7 +916,7 @@ async function applyChangesToYouTube() {
     } finally {
       setIsUpdating(false);
     }
-}
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
