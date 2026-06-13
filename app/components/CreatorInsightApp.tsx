@@ -745,6 +745,103 @@ function renderOptimizer() {
       </div>
     );
   }
+
+  function renderCompetitors() {
+    return (
+      <div className="grid">
+        <div className="card">
+          <h2>Competitor Research</h2>
+          <div className="form-row">
+            <input className="input" placeholder="Search channel YouTube kompetitor, contoh: KreekCraft" value={competitorQuery} onChange={(e) => setCompetitorQuery(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") searchCompetitors(); }} />
+            <button className="btn primary" onClick={searchCompetitors}>Search Channel</button>
+          </div>
+        </div>
+        {competitors.loading && <div className="skeleton" />}
+        {competitors.error && <div className="alert error">{competitors.error}</div>}
+        {!!competitors.data?.length && (
+          <div className="option-grid">
+            {competitors.data.map((c: any) => {
+              const avatar = c?.snippet?.thumbnails?.medium?.url || c?.snippet?.thumbnails?.default?.url;
+              return (
+                <div className="topic-card" key={c.id}>
+                  <div className="channel" style={{ alignItems: "center" }}>
+                    {avatar && <img src={avatar} className="avatar" style={{ width: 58, height: 58 }} alt="avatar" />}
+                    <div>
+                      <h3 style={{ margin: 0 }}>{c?.snippet?.title}</h3>
+                      <p className="muted small" style={{ margin: "4px 0" }}>{compact(c?.statistics?.subscriberCount)} subscribers • {compact(c?.statistics?.viewCount)} views</p>
+                    </div>
+                  </div>
+                  <p className="muted small">{c?.snippet?.description?.slice(0, 160)}</p>
+                  <button className="btn" onClick={() => loadCompetitorVideos(c.id)}>Lihat Video Terbaru</button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        {competitorVideos.loading && <div className="skeleton" />}
+        {competitorVideos.error && <div className="alert error">{competitorVideos.error}</div>}
+        {competitorVideos.data && (
+          <div className="card">
+            <h2>Video Kompetitor: {competitorVideos.data?.channel?.snippet?.title}</h2>
+            <div className="table-wrapper">
+              <table className="table">
+                <thead><tr><th>#</th><th>Video</th><th>Views</th><th>Likes</th><th>Status</th></tr></thead>
+                <tbody>{(competitorVideos.data?.videos || []).map((v: any, i: number) => <VideoRow key={v.id} video={v} index={i} />)}</tbody>
+              </table>
+            </div>
+            <p className="footer-note">Gunakan pola topik dan hook sebagai inspirasi, bukan menyalin konten mentah.</p>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  function renderRobloxCreator() {
+    return <RobloxCreatorFinalUI />;
+  }
+
+  function renderReports() {
+    const report = `Creator Insight Report\n\nChannel: ${channel?.snippet?.title || "-"}\nSubscribers: ${fullNumber(channel?.statistics?.subscriberCount)}\nTotal Views: ${fullNumber(channel?.statistics?.viewCount)}\nTotal Videos: ${fullNumber(channel?.statistics?.videoCount)}\n\nAction Plan:\n1. Pastikan selalu cek Target Harian di Overview.\n2. Pakai prompt English untuk target penonton global.\n3. Jangan rekam layar statis, ikuti saran gameplay spesifik.`;
+    return (
+      <div className="grid grid-2">
+        <div className="card">
+          <h2>Report Ringkas</h2>
+          <OutputBlock title="Copy Report" value={report} />
+        </div>
+        <div className="card">
+          <h2>Export Note</h2>
+          <p className="muted">Versi ini menyediakan copy report. Export PDF bisa ditambahkan nanti jika kamu ingin laporan desain seperti dashboard screenshot.</p>
+          <button className="btn primary" onClick={() => navigator.clipboard.writeText(report)}>Copy Report</button>
+        </div>
+      </div>
+    );
+  }
+
+  function renderSettings() {
+    return (
+      <div className="grid grid-2">
+        <div className="card">
+          <h2>Environment Checklist</h2>
+          <div className="feature-list">
+            <div className="feature">NEXTAUTH_URL: domain Vercel tanpa slash akhir</div>
+            <div className="feature">NEXTAUTH_SECRET: random secret minimal 32 karakter</div>
+            <div className="feature">GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET: OAuth web client</div>
+            <div className="feature">YOUTUBE_API_KEY: YouTube Data API v3</div>
+            <div className="feature">AI_BASE_URL: https://lite.koboillm.com/v1</div>
+            <div className="feature">AI_MODEL: openai/gpt-4o-mini atau model Koboi aktif</div>
+            <div className="feature">AI_API_KEYS: virtual key Koboi, pisah koma jika banyak</div>
+          </div>
+        </div>
+        <div className="card">
+          <h2>OAuth Redirect</h2>
+          <OutputBlock title="Authorized JavaScript origins" value="https://domain-vercel-kamu.vercel.app" />
+          <OutputBlock title="Authorized redirect URIs" value="https://domain-vercel-kamu.vercel.app/api/auth/callback/google" />
+          <p className="footer-note">Setelah env atau OAuth diubah, lakukan redeploy di Vercel.</p>
+        </div>
+      </div>
+    );
+  }
+}
 function OptimizerResultView({ result, format, video, onLivePreview }: { result: any; format: string; video: any; onLivePreview: (title: string) => void }) {
   const [selectedTitleIdx, setSelectedTitleIdx] = useState(0);
   const [selectedDescIdx, setSelectedDescIdx] = useState(0);
@@ -864,103 +961,6 @@ function OptimizerResultView({ result, format, video, onLivePreview }: { result:
     </div>
   );
 }
-  function renderCompetitors() {
-    return (
-      <div className="grid">
-        <div className="card">
-          <h2>Competitor Research</h2>
-          <div className="form-row">
-            <input className="input" placeholder="Search channel YouTube kompetitor, contoh: KreekCraft" value={competitorQuery} onChange={(e) => setCompetitorQuery(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") searchCompetitors(); }} />
-            <button className="btn primary" onClick={searchCompetitors}>Search Channel</button>
-          </div>
-        </div>
-        {competitors.loading && <div className="skeleton" />}
-        {competitors.error && <div className="alert error">{competitors.error}</div>}
-        {!!competitors.data?.length && (
-          <div className="option-grid">
-            {competitors.data.map((c: any) => {
-              const avatar = c?.snippet?.thumbnails?.medium?.url || c?.snippet?.thumbnails?.default?.url;
-              return (
-                <div className="topic-card" key={c.id}>
-                  <div className="channel" style={{ alignItems: "center" }}>
-                    {avatar && <img src={avatar} className="avatar" style={{ width: 58, height: 58 }} alt="avatar" />}
-                    <div>
-                      <h3 style={{ margin: 0 }}>{c?.snippet?.title}</h3>
-                      <p className="muted small" style={{ margin: "4px 0" }}>{compact(c?.statistics?.subscriberCount)} subscribers • {compact(c?.statistics?.viewCount)} views</p>
-                    </div>
-                  </div>
-                  <p className="muted small">{c?.snippet?.description?.slice(0, 160)}</p>
-                  <button className="btn" onClick={() => loadCompetitorVideos(c.id)}>Lihat Video Terbaru</button>
-                </div>
-              );
-            })}
-          </div>
-        )}
-        {competitorVideos.loading && <div className="skeleton" />}
-        {competitorVideos.error && <div className="alert error">{competitorVideos.error}</div>}
-        {competitorVideos.data && (
-          <div className="card">
-            <h2>Video Kompetitor: {competitorVideos.data?.channel?.snippet?.title}</h2>
-            <div className="table-wrapper">
-              <table className="table">
-                <thead><tr><th>#</th><th>Video</th><th>Views</th><th>Likes</th><th>Status</th></tr></thead>
-                <tbody>{(competitorVideos.data?.videos || []).map((v: any, i: number) => <VideoRow key={v.id} video={v} index={i} />)}</tbody>
-              </table>
-            </div>
-            <p className="footer-note">Gunakan pola topik dan hook sebagai inspirasi, bukan menyalin konten mentah.</p>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  function renderRobloxCreator() {
-    return <RobloxCreatorFinalUI />;
-  }
-
-  function renderReports() {
-    const report = `Creator Insight Report\n\nChannel: ${channel?.snippet?.title || "-"}\nSubscribers: ${fullNumber(channel?.statistics?.subscriberCount)}\nTotal Views: ${fullNumber(channel?.statistics?.viewCount)}\nTotal Videos: ${fullNumber(channel?.statistics?.videoCount)}\n\nAction Plan:\n1. Pastikan selalu cek Target Harian di Overview.\n2. Pakai prompt English untuk target penonton global.\n3. Jangan rekam layar statis, ikuti saran gameplay spesifik.`;
-    return (
-      <div className="grid grid-2">
-        <div className="card">
-          <h2>Report Ringkas</h2>
-          <OutputBlock title="Copy Report" value={report} />
-        </div>
-        <div className="card">
-          <h2>Export Note</h2>
-          <p className="muted">Versi ini menyediakan copy report. Export PDF bisa ditambahkan nanti jika kamu ingin laporan desain seperti dashboard screenshot.</p>
-          <button className="btn primary" onClick={() => navigator.clipboard.writeText(report)}>Copy Report</button>
-        </div>
-      </div>
-    );
-  }
-
-  function renderSettings() {
-    return (
-      <div className="grid grid-2">
-        <div className="card">
-          <h2>Environment Checklist</h2>
-          <div className="feature-list">
-            <div className="feature">NEXTAUTH_URL: domain Vercel tanpa slash akhir</div>
-            <div className="feature">NEXTAUTH_SECRET: random secret minimal 32 karakter</div>
-            <div className="feature">GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET: OAuth web client</div>
-            <div className="feature">YOUTUBE_API_KEY: YouTube Data API v3</div>
-            <div className="feature">AI_BASE_URL: https://lite.koboillm.com/v1</div>
-            <div className="feature">AI_MODEL: openai/gpt-4o-mini atau model Koboi aktif</div>
-            <div className="feature">AI_API_KEYS: virtual key Koboi, pisah koma jika banyak</div>
-          </div>
-        </div>
-        <div className="card">
-          <h2>OAuth Redirect</h2>
-          <OutputBlock title="Authorized JavaScript origins" value="https://domain-vercel-kamu.vercel.app" />
-          <OutputBlock title="Authorized redirect URIs" value="https://domain-vercel-kamu.vercel.app/api/auth/callback/google" />
-          <p className="footer-note">Setelah env atau OAuth diubah, lakukan redeploy di Vercel.</p>
-        </div>
-      </div>
-    );
-  }
-}
-
 function OutputBlock({ title, value, compactBlock = false }: { title: string; value: any; compactBlock?: boolean }) {
   const text = Array.isArray(value) ? value.join("\n") : String(value || "-");
   return (
