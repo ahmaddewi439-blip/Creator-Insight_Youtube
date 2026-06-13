@@ -8,27 +8,30 @@ export async function POST(req: Request) {
     const accessToken = (session as any)?.accessToken;
 
     if (!accessToken) {
-      return NextResponse.json({ error: "Sesi habis." }, { status: 401 });
+      return NextResponse.json({ error: "Sesi habis, relogin diperlukan." }, { status: 401 });
     }
 
-    const { videoId, title, description, tags } = await req.json();
+    const body = await req.json();
+    const { videoId, title, description, tags } = body;
+    
+    // Debugging: Kita cek apakah ID benar-benar terkirim
+    console.log("Menerima request update untuk ID:", videoId);
 
-    // LOGIKA PENCARIAN SUPER: Mengatasi perbedaan format ID
-    // Jika videoId berbentuk objek (misal: {videoId: 'xyz'}), kita ambil string-nya
-    const cleanId = (typeof videoId === 'object' && videoId?.videoId) ? videoId.videoId : videoId;
+    if (!videoId || videoId === "undefined") {
+      throw new Error("ID Video tidak terdeteksi oleh server.");
+    }
 
     // 1. Ambil data video
-    const getRes = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id=${cleanId}`, {
+    const getRes = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}`, {
       headers: { Authorization: `Bearer ${accessToken}` }
     });
     
     const getData = await getRes.json();
-    const video = getData.items?.[0];
-
-    // Jika video tetap tidak ketemu, kita berikan petunjuk spesifik apa yang salah
-    if (!video) {
-      throw new Error(`Video ID '${cleanId}' tidak ditemukan. Pastikan akses channel benar.`);
+    if (!getData.items || getData.items.length === 0) {
+      throw new Error(`Video ID ${videoId} tidak ditemukan di akun Anda.`);
     }
+
+    const video = getData.items[0];
 
     // 2. Update Video
     const updateRes = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet`, {
@@ -38,22 +41,25 @@ export async function POST(req: Request) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        id: cleanId,
+        id: videoId,
         snippet: {
           ...video.snippet,
           title: title,
           description: description,
           tags: tags || video.snippet.tags || [],
-          categoryId: video.snippet.categoryId || "20" // Kategori Gaming
         }
       })
     });
 
     const updateData = await updateRes.json();
-    if (!updateRes.ok) throw new Error(updateData.error?.message || "Gagal update ke YouTube");
+    if (!updateRes.ok) {
+      console.error("YouTube API Error:", updateData);
+      throw new Error(updateData.error?.message || "YouTube API menolak update.");
+    }
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
+    console.error("Server Error:", error.message);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

@@ -94,7 +94,8 @@ function VideoRow({ video, index, onSelect }: { video: any; index: number; onSel
       <td>{compact(video?.views ?? video?.statistics?.viewCount)}</td>
       <td>{compact(video?.likes ?? video?.statistics?.likeCount)}</td>
       <td><span className={privacy === "public" ? "status-pill" : "status-pill yellow"}>{privacy}</span></td>
-      {onSelect && <td><button className="btn" onClick={() => onSelect(video)}>Optimize</button></td>}
+      // Pastikan baris ini di dalam VideoRow
+{onSelect && <td><button className="btn" onClick={() => onSelect(video)}>Optimize</button></td>}
     </tr>
   );
 }
@@ -724,12 +725,13 @@ function renderOptimizer() {
                               {optimizer.loading && <div className="skeleton" style={{ height: '300px', width: '100%', borderRadius: '12px' }} />}
                               {optimizer.error && <div className="alert error">{optimizer.error}</div>}
                               {optimizer.data && !optimizer.loading && (
-                                <OptimizerResultView 
-                                  result={optimizer.data} 
-                                  format={selectedVideoFormat} 
-                                  video={v}
-                                  onLivePreview={(newTitle) => handleLivePreview(v.id?.videoId || v.id, newTitle)}
-                                />
+                                // Di dalam renderOptimizer, temukan bagian ini:
+<OptimizerResultView 
+  result={optimizer.data} 
+  format={selectedVideoFormat} 
+  video={v} // <--- PASTIKAN 'v' ADA DI SINI
+  onLivePreview={(newTitle) => handleLivePreview(v.id?.videoId || v.id, newTitle)}
+/>
                               )}
                             </div>
                           </td>
@@ -876,25 +878,40 @@ function OptimizerResultView({ result, format, video, onLivePreview }: { result:
   };
 
 async function applyChangesToYouTube() {
-    if (!actualSelectedTitle && !actualSelectedDesc) return;
+    // Menangkap ID video dari berbagai lokasi penyimpanan data YouTube
+    const targetVideoId = video?.id?.videoId || video?.id || (typeof video?.id === 'string' ? video.id : null);
+    
+    // LOGIKA PERLINDUNGAN: Jika ID masih undefined, kita ambil dari data yang ada di tabel
+    const finalId = targetVideoId || video?.snippet?.resourceId?.videoId;
+
+    if (!finalId) {
+        alert("GAGAL: ID Video tidak terbaca. Pastikan Anda sudah me-refresh data (tekan tombol Refresh Data di menu atas).");
+        return;
+    }
+
     setIsUpdating(true);
     try {
-      // Mengambil ID Video dengan sangat spesifik agar tidak salah sasaran
-      
-      const targetVideoId = video?.id?.videoId || video?.id || video?.snippet?.resourceId?.videoId;
-      await fetchJson("/api/youtube/update-video", {
+      const res = await fetch("/api/youtube/update-video", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ videoId: targetVideoId, title: actualSelectedTitle, description: actualSelectedDesc, tags: result.keywords || [] })
+        body: JSON.stringify({ 
+            videoId: finalId, // Menggunakan ID yang sudah dibersihkan
+            title: actualSelectedTitle, 
+            description: actualSelectedDesc, 
+            tags: result.keywords || [] 
+        })
       });
+
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Gagal update");
+      
       alert("🎉 Berhasil! Judul dan Deskripsi telah diperbarui langsung ke server YouTube.");
     } catch (err: any) {
-      // FIX: Menampilkan pesan error ASLI dari backend, bukan pesan palsu
-      alert("GAGAL MENYIMPAN: " + err.message + "\n\n(Pastikan Anda sudah LOGOUT lalu LOGIN ULANG untuk memberikan Izin YouTube!)");
+      alert("GAGAL MENYIMPAN: " + err.message);
     } finally {
       setIsUpdating(false);
     }
-  }
+}
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
