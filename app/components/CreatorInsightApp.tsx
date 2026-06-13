@@ -49,18 +49,36 @@ async function fetchJson(url: string, options?: RequestInit) {
   return data;
 }
 
+// 💡 PERBAIKAN UTAMA: Tombol Copy dipermak agar menyala dan terlihat jelas!
 function CopyButton({ text, label = "Copy" }: { text: string; label?: string }) {
   const [done, setDone] = useState(false);
   return (
     <button
-      className="btn ghost"
-      onClick={async () => {
+      onClick={async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         await navigator.clipboard.writeText(text || "");
         setDone(true);
-        setTimeout(() => setDone(false), 1100);
+        setTimeout(() => setDone(false), 2000);
+      }}
+      style={{
+        background: done ? '#10b981' : '#3b82f6', // Hijau jika sukses, Biru jika belum
+        color: '#ffffff',
+        border: 'none',
+        padding: '6px 14px',
+        borderRadius: '8px',
+        fontSize: '13px',
+        cursor: 'pointer',
+        fontWeight: 'bold',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '6px',
+        transition: 'all 0.2s',
+        flexShrink: 0
       }}
     >
-      {done ? "Copied ✓" : label}
+      {done ? "✓ Berhasil Copy!" : `📋 ${label}`}
     </button>
   );
 }
@@ -96,7 +114,7 @@ function VideoRow({ video, index, onSelect }: { video: any; index: number; onSel
       <td>{compact(video?.likes ?? video?.statistics?.likeCount)}</td>
       <td><span className={privacy === "public" ? "status-pill" : "status-pill yellow"}>{privacy}</span></td>
       
-{onSelect && <td><button className="btn" onClick={() => onSelect(video)}>Optimize</button></td>}
+      {onSelect && <td><button className="btn" onClick={() => onSelect(video)}>Optimize</button></td>}
     </tr>
   );
 }
@@ -185,7 +203,8 @@ export default function CreatorInsightApp() {
     const raw = Math.min(92, Math.max(45, Math.round(55 + Math.log10(Math.max(avg, 10)) * 7 + Math.log10(Math.max(subs, 10)) * 3)));
     return raw;
   }, [channel]);
-// 1. Growth Score (Realistis)
+
+  // 1. Growth Score
   const growthScore = useMemo(() => {
     if (!channel || !videos || videos.length === 0) return 0;
     const totalChannelViews = Number(channel?.statistics?.viewCount || 0);
@@ -202,12 +221,12 @@ export default function CreatorInsightApp() {
     return Math.min(99, Math.max(45, score));
   }, [channel, videos]);
 
-  // 2. SEO Score (Realistis)
+  // 2. SEO Score
   const seoScore = useMemo(() => {
     if (!videos || videos.length === 0) return 0;
     let totalScore = 0;
     videos.forEach(v => {
-      let vScore = 50; // Base score
+      let vScore = 50; 
       const title = v?.snippet?.title || "";
       const desc = v?.snippet?.description || "";
       if (title.length > 20 && title.length < 75) vScore += 15;
@@ -218,7 +237,7 @@ export default function CreatorInsightApp() {
     return Math.min(99, Math.round(totalScore / videos.length));
   }, [videos]);
 
-  // 3. Viral Potential (Realistis)
+  // 3. Viral Potential
   const viralScore = useMemo(() => {
     if (!videos || videos.length === 0) return 0;
     let totalViews = 0;
@@ -232,6 +251,7 @@ export default function CreatorInsightApp() {
     let score = Math.round(40 + (likeRatio * 1000)); 
     return Math.min(99, Math.max(45, score));
   }, [videos]);
+
   async function generateDailyTarget() {
     setDailyTarget({ loading: true, error: "", data: null });
     setDailyScripts({});
@@ -319,8 +339,7 @@ export default function CreatorInsightApp() {
     }
   }, [activeDailyTab, dailyTarget]);
 
-
-async function optimizeVideo(video: any) {
+  async function optimizeVideo(video: any) {
     setSelectedVideo(video);
     setOptimizer({ loading: true, error: "", data: null });
     try {
@@ -331,7 +350,6 @@ async function optimizeVideo(video: any) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           video, 
-          // Menyusupkan instruksi bahasa ke dalam format agar backend pasti membacanya
           videoFormat: selectedVideoFormat + ". RULE: MATCH THE EXACT LANGUAGE OF THE ORIGINAL TITLE!",
           instruction: `CRITICAL SYSTEM OVERRIDE: Judul asli video ini adalah "${originalTitle}". 
           1. DETEKSI BAHASA JUDUL TERSEBUT! 
@@ -546,14 +564,12 @@ async function optimizeVideo(video: any) {
                   ))}
                 </div>
 
-                {/* KONTEN VIDEO AKTIF YANG SUPER DETAIL & ANTI-GENERIK */}
                 {(() => {
                   const topicData = dailyTarget.data.videos[activeDailyTab];
                   const scriptData = dailyScripts[activeDailyTab];
                   const isGenerating = loadingDailyScript[activeDailyTab];
                   const timeWIB = uploadTimes[activeDailyTab] || "12:00 WIB";
 
-                  // FILTER CERDAS: Jika AI ngeyel kasih bahasa generik, ganti dengan High Retention Games
                   const getSpecificGames = (data: any) => {
                     const raw = data?.specificGameplay || data?.gameplayPlan?.recommendedRobloxGamesOrMaps?.join(", ") || "";
                     const lowerRaw = raw.toLowerCase();
@@ -573,7 +589,7 @@ async function optimizeVideo(video: any) {
                         </div>
                       ) : scriptData ? (
                         <>
-                          <div className="copy-row" style={{ marginBottom: 20, borderBottom: '1px solid #f3f4f6', paddingBottom: 16 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20, borderBottom: '1px solid #f3f4f6', paddingBottom: 16 }}>
                             <div>
                               <strong style={{ display: 'block', fontSize: 13, color: '#6b7280', marginBottom: 4 }}>📌 Judul Video (Clickbait Global):</strong>
                               <h3 style={{ margin: 0, color: '#111', fontSize: 22 }}>{scriptData.youtubeTitle || scriptData.videoTitle || topicData.title}</h3>
@@ -603,25 +619,23 @@ async function optimizeVideo(video: any) {
                             />
                           </div>
                           
-                          {/* KOTAK GAMEPLAY SPESIFIK & ANTI-GENERIK */}
                           <div style={{ backgroundColor: '#e0e7ff', borderLeft: '4px solid #4f46e5', padding: '20px', borderRadius: '12px', marginBottom: '24px' }}>
-                             <div className="copy-row" style={{ marginBottom: '12px', borderBottom: '1px solid #c7d2fe', paddingBottom: '8px' }}>
-                               <strong style={{ color: '#3730a3', fontSize: '16px', margin: 0 }}>🎮 Judul Game Roblox Asli (Untuk Rekaman Background):</strong>
+                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', borderBottom: '1px solid #c7d2fe', paddingBottom: '8px' }}>
+                               <strong style={{ color: '#3730a3', fontSize: '16px', margin: 0 }}>🎮 Judul Game Roblox Asli:</strong>
                                <CopyButton text={getSpecificGames(scriptData)} label="Copy Game" />
                              </div>
                              <p style={{ margin: 0, fontSize: '15px', color: '#312e81', lineHeight: '1.6', fontWeight: '600' }}>
                                {getSpecificGames(scriptData)}
                              </p>
                              <p style={{ margin: '10px 0 0 0', fontSize: '13px', color: '#4338ca', lineHeight: '1.5' }}>
-                               <em>💡 Tips: Cari nama game di atas di Roblox. Rekam layar Anda bermain selama 15-30 detik dengan rasio 9:16. Jangan rekam karakter diam, penonton Shorts butuh visual aksi yang sangat cepat!</em>
+                               <em>💡 Tips: Rekam layar Anda bermain selama 15-30 detik dengan rasio 9:16. Jangan rekam karakter diam, penonton Shorts butuh visual aksi cepat!</em>
                              </p>
                           </div>
 
-                          <OutputBlock title="🖼️ Prompt Thumbnail (9:16 Clickbait)" value={scriptData.thumbnailPrompt || scriptData.thumbnail_prompt || "Create a vertical 9:16 Roblox 3D render image with high contrast, big surprised blocky avatar, bright colorful background, suitable for a viral YouTube Shorts gaming thumbnail."} />
+                          <OutputBlock title="🖼️ Prompt Thumbnail (9:16 Clickbait)" value={scriptData.thumbnailPrompt || scriptData.thumbnail_prompt || "Create a vertical 9:16 Roblox 3D render image with high contrast..."} />
                           
                           <OutputBlock title="🎙️ Full Voice Over Script (Siap Record)" value={scriptData.fullVO || "Voice over is missing."} />
                           
-                          {/* SCENES BREAKDOWN DENGAN PROMPT GAMBAR */}
                           {scriptData.scenes && scriptData.scenes.length > 0 && (
                             <div style={{ marginTop: '32px', borderTop: '2px solid #e5e7eb', paddingTop: '24px' }}>
                               <h3 style={{ fontSize: '18px', color: '#111', marginBottom: '16px' }}>🎬 Breakdown 5 Scene & Image Prompts</h3>
@@ -669,7 +683,7 @@ async function optimizeVideo(video: any) {
     );
   }
 
-function renderOptimizer() {
+  function renderOptimizer() {
     const handleLivePreview = (videoId: string, newTitle: string) => {
       setVideosState(prev => ({
         ...prev,
@@ -708,39 +722,37 @@ function renderOptimizer() {
               <table className="table" style={{ minWidth: '600px' }}>
                 <thead><tr><th>#</th><th>Video</th><th>Views</th><th>Likes</th><th>Status</th><th></th></tr></thead>
                 {videos.map((v, i) => {
-      // FIX UI BUG: Gunakan Judul sebagai pencocok karena Judul pasti unik!
-          const isSelected = selectedVideo && selectedVideo.title === v.title;
+                  const isSelected = selectedVideo && selectedVideo.title === v.title;
+                  return (
+                    <tbody key={i}>
+                      <VideoRow video={v} index={i} onSelect={optimizeVideo} />
 
-          return (
-            <tbody key={i}>
-              <VideoRow video={v} index={i} onSelect={optimizeVideo} />
+                      {isSelected && (
+                        <tr>
+                          <td colSpan={6} style={{ padding: 0, backgroundColor: '#f8fafc', whiteSpace: 'normal' }}>
+                            <div style={{ width: '100%', maxWidth: '100vw', boxSizing: 'border-box', borderTop: '2px solid #3182ce', borderBottom: '2px solid #3182ce', padding: '16px', margin: '16px 0', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}>
+                              <h2 style={{ marginTop: 0, color: '#2b6cb0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <span>⚙️ Panel Optimasi AI</span>
+                                <button className="btn ghost" onClick={() => setSelectedVideo(null)} style={{ padding: '6px 12px', fontSize: '12px', backgroundColor: '#e2e8f0', color: '#4a5568', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Tutup</button>
+                              </h2>
 
-              {isSelected && (
-                <tr>
-                  <td colSpan={6} style={{ padding: 0, backgroundColor: '#f8fafc', whiteSpace: 'normal' }}>
-                    <div style={{ width: '100%', maxWidth: '100vw', boxSizing: 'border-box', borderTop: '2px solid #3182ce', borderBottom: '2px solid #3182ce', padding: '16px', margin: '16px 0', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}>
-                      <h2 style={{ marginTop: 0, color: '#2b6cb0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span>⚙️ Panel Optimasi AI</span>
-                        <button className="btn ghost" onClick={() => setSelectedVideo(null)} style={{ padding: '6px 12px', fontSize: '12px', backgroundColor: '#e2e8f0', color: '#4a5568', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Tutup</button>
-                      </h2>
+                              {optimizer.loading && <div className="skeleton" style={{ height: '300px', width: '100%', borderRadius: '12px' }} />}
+                              {optimizer.error && <div className="alert error">{optimizer.error}</div>}
 
-                      {optimizer.loading && <div className="skeleton" style={{ height: '300px', width: '100%', borderRadius: '12px' }} />}
-                      {optimizer.error && <div className="alert error">{optimizer.error}</div>}
-
-                      {optimizer.data && !optimizer.loading && (
-                        <OptimizerResultView
-                          result={optimizer.data}
-                          format={selectedVideoFormat}
-                          video={v}
-                          onLivePreview={(newTitle) => handleLivePreview(v.id?.videoId || v.id, newTitle)}
-                        />
+                              {optimizer.data && !optimizer.loading && (
+                                <OptimizerResultView
+                                  result={optimizer.data}
+                                  format={selectedVideoFormat}
+                                  video={v}
+                                  onLivePreview={(newTitle) => handleLivePreview(v.id?.videoId || v.id, newTitle)}
+                                />
+                              )}
+                            </div>
+                          </td>
+                        </tr>
                       )}
-                    </div>
-                  </td>
-                </tr>
-              )}
-           </tbody>
-          );
+                   </tbody>
+                  );
                 })}
               </table>
             </div>
@@ -756,7 +768,7 @@ function renderOptimizer() {
         <div className="card">
           <h2>Competitor Research</h2>
           <div className="form-row">
-            <input className="input" placeholder="Search channel YouTube kompetitor, contoh: KreekCraft" value={competitorQuery} onChange={(e) => setCompetitorQuery(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") searchCompetitors(); }} />
+            <input className="input" placeholder="Search channel YouTube kompetitor..." value={competitorQuery} onChange={(e) => setCompetitorQuery(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") searchCompetitors(); }} />
             <button className="btn primary" onClick={searchCompetitors}>Search Channel</button>
           </div>
         </div>
@@ -846,6 +858,7 @@ function renderOptimizer() {
     );
   }
 }
+
 function OptimizerResultView({ result, format, video, onLivePreview }: { result: any; format: string; video: any; onLivePreview: (title: string) => void }) {
   const [selectedTitleIdx, setSelectedTitleIdx] = useState(0);
   const [selectedDescIdx, setSelectedDescIdx] = useState(0);
@@ -879,53 +892,32 @@ function OptimizerResultView({ result, format, video, onLivePreview }: { result:
     onLivePreview(titles[idx]);
   };
 
-async function applyChangesToYouTube() {
-    // 1. Coba cari ID dengan cara normal dulu
+  async function applyChangesToYouTube() {
     let finalId = video?.id?.videoId || video?.id || (typeof video?.id === 'string' ? video.id : null) || video?.videoId;
-
-    // 2. JURUS PAMUNGKAS: Jika kosong, curi ID dari URL Thumbnail!
     if (!finalId && video?.thumbnail) {
-        // Memotong URL https://i.ytimg.com/vi/ID_VIDEO_NYA/hqdefault.jpg
         const parts = video.thumbnail.split('/vi/');
-        if (parts.length > 1) {
-            finalId = parts[1].split('/')[0]; // Mengambil ID yang bersembunyi
-        }
+        if (parts.length > 1) finalId = parts[1].split('/')[0];
     }
-
-    // Jika masih gagal juga (sangat tidak mungkin)
     if (!finalId) {
         alert("GAGAL: ID tidak ditemukan bahkan setelah diekstrak dari Thumbnail.");
         return;
     }
 
-  setIsUpdating(true);
+    setIsUpdating(true);
     try {
       const res = await fetch("/api/youtube/update-video", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-            videoId: finalId, 
-            title: actualSelectedTitle, 
-            description: actualSelectedDesc, 
-            tags: result.keywords || [] 
-        })
+        body: JSON.stringify({ videoId: finalId, title: actualSelectedTitle, description: actualSelectedDesc, tags: result.keywords || [] })
       });
 
       const json = await res.json();
-
-      // 💡 CONTEKAN VIDIQ: Tangkap kode rahasia dari backend
       if (!res.ok) {
         if (json.code === "REQUIRE_CONSENT") {
-           // Memunculkan peringatan elegan ala vidIQ
            const mauReauth = window.confirm("⚠️ Akses Ditolak oleh Google.\n\nAplikasi membutuhkan izin tambahan untuk menyimpan perubahan ini langsung ke channel Anda.\n\nKlik 'OK' untuk Login ulang, dan PASTIKAN Anda MENCENTANG kotak 'Kelola akun YouTube Anda'!");
-           
-           if (mauReauth) {
-               // Jurus paksa pindah halaman (dijamin 100% jalan)
-               window.location.href = "/api/auth/signin";
-           }
-           return; // Hentikan proses simpan
+           if (mauReauth) window.location.href = "/api/auth/signin";
+           return; 
         }
-        // Jika error biasa
         throw new Error(json.error || "Gagal update dari server");
       }
       
@@ -936,9 +928,9 @@ async function applyChangesToYouTube() {
       setIsUpdating(false);
     }
   }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', padding: '16px', background: '#1e293b', borderRadius: '12px', color: '#fff' }}>
         <div>
           <span style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase' }}>Skor Saat Ini</span>
@@ -957,32 +949,17 @@ async function applyChangesToYouTube() {
             const isSelected = selectedTitleIdx === idx;
             const itemScore = calculateRealScore(title, actualSelectedDesc, result.keywords || []);
             return (
-              <div 
-                key={idx} 
-                onClick={() => handleTitleSelect(idx)}
-                style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: isSelected ? '#ebf8ff' : '#fff', border: `2px solid ${isSelected ? '#3182ce' : '#e2e8f0'}`, padding: '12px', borderRadius: '8px', cursor: 'pointer' }}
-              >
+              <div key={idx} onClick={() => handleTitleSelect(idx)} style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: isSelected ? '#ebf8ff' : '#fff', border: `2px solid ${isSelected ? '#3182ce' : '#e2e8f0'}`, padding: '12px', borderRadius: '8px', cursor: 'pointer' }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                  {/* RADIO BUTTON KUSTOM (Bebas Bug Sentuhan HP) */}
                   <div style={{ width: '18px', height: '18px', borderRadius: '50%', border: `2px solid ${isSelected ? '#3182ce' : '#cbd5e0'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '2px' }}>
                     {isSelected && <div style={{ width: '10px', height: '10px', backgroundColor: '#3182ce', borderRadius: '50%' }} />}
                   </div>
                   <span style={{ fontSize: '14px', color: '#2d3748', fontWeight: isSelected ? 'bold' : 'normal', lineHeight: '1.4' }}>{title}</span>
                 </div>
                 <div style={{ alignSelf: 'flex-end', display: 'flex', alignItems: 'center', gap: '8px' }}>
-  <button
-    onClick={(e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      navigator.clipboard.writeText(title);
-      alert("✅ Judul disalin!");
-    }}
-    style={{ padding: '2px 8px', fontSize: '12px', cursor: 'pointer', borderRadius: '4px', border: '1px solid #cbd5e1', background: '#fff', color: '#334155' }}
-  >
-    📋 Copy
-  </button>
-  <div style={{ background: '#e2e8f0', padding: '2px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold', color: '#4a5568' }}>Score: {itemScore}</div>
-</div>
+                  <CopyButton text={title} />
+                  <div style={{ background: '#e2e8f0', padding: '2px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold', color: '#4a5568' }}>Score: {itemScore}</div>
+                </div>
               </div>
             );
           })}
@@ -995,22 +972,22 @@ async function applyChangesToYouTube() {
           
           <div onClick={() => setSelectedDescIdx(0)} style={{ background: selectedDescIdx === 0 ? '#f0fff4' : '#fff', border: `2px solid ${selectedDescIdx === 0 ? '#48bb78' : '#e2e8f0'}`, padding: '12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', gap: '10px' }}>
             <div style={{ width: '18px', height: '18px', borderRadius: '50%', border: `2px solid ${selectedDescIdx === 0 ? '#48bb78' : '#cbd5e0'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '2px' }}>{selectedDescIdx === 0 && <div style={{ width: '10px', height: '10px', backgroundColor: '#48bb78', borderRadius: '50%' }} />}</div>
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-  <strong style={{ fontSize: '13px', color: '#2f855a' }}>Opsi 1 (Caption + Hashtag)</strong>
-  <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigator.clipboard.writeText(result.caption); alert("✅ Deskripsi Opsi 1 disalin!"); }} style={{ padding: '2px 8px', fontSize: '12px', cursor: 'pointer', borderRadius: '4px', border: '1px solid #cbd5e1', background: '#fff', color: '#334155' }}>📋 Copy</button>
-</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <strong style={{ fontSize: '13px', color: '#2f855a' }}>Opsi 1 (Caption + Hashtag)</strong>
+                <CopyButton text={result.caption} />
+              </div>
               <span style={{ fontSize: '13px', color: '#4a5568', whiteSpace: 'pre-wrap', lineHeight: '1.4' }}>{result.caption}</span>
             </div>
           </div>
 
           <div onClick={() => setSelectedDescIdx(1)} style={{ background: selectedDescIdx === 1 ? '#f0fff4' : '#fff', border: `2px solid ${selectedDescIdx === 1 ? '#48bb78' : '#e2e8f0'}`, padding: '12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', gap: '10px' }}>
             <div style={{ width: '18px', height: '18px', borderRadius: '50%', border: `2px solid ${selectedDescIdx === 1 ? '#48bb78' : '#cbd5e0'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '2px' }}>{selectedDescIdx === 1 && <div style={{ width: '10px', height: '10px', backgroundColor: '#48bb78', borderRadius: '50%' }} />}</div>
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-  <strong style={{ fontSize: '13px', color: '#2f855a' }}>Opsi 2 (Deskripsi Lengkap)</strong>
-  <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigator.clipboard.writeText(result.description); alert("✅ Deskripsi Opsi 2 disalin!"); }} style={{ padding: '2px 8px', fontSize: '12px', cursor: 'pointer', borderRadius: '4px', border: '1px solid #cbd5e1', background: '#fff', color: '#334155' }}>📋 Copy</button>
-</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <strong style={{ fontSize: '13px', color: '#2f855a' }}>Opsi 2 (Deskripsi Lengkap)</strong>
+                <CopyButton text={result.description} />
+              </div>
               <span style={{ fontSize: '13px', color: '#4a5568', whiteSpace: 'pre-wrap', lineHeight: '1.4' }}>{result.description}</span>
             </div>
           </div>
@@ -1024,11 +1001,12 @@ async function applyChangesToYouTube() {
     </div>
   );
 }
+
 function OutputBlock({ title, value, compactBlock = false }: { title: string; value: any; compactBlock?: boolean }) {
   const text = Array.isArray(value) ? value.join("\n") : String(value || "-");
   return (
     <div style={{ marginTop: compactBlock ? 10 : 0, position: 'relative', background: '#f9fafb', border: '1px solid #e5e7eb', padding: '16px', borderRadius: '12px', marginBottom: '16px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
         <h3 style={{ margin: 0, fontSize: '15px', color: '#374151' }}>{title}</h3>
         <CopyButton text={text} />
       </div>
