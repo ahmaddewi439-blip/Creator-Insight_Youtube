@@ -673,7 +673,7 @@ function renderOptimizer() {
         ...prev,
         data: prev.data?.map(v => {
           const currentId = v.id?.videoId || v.id;
-          if (currentId === videoId) {
+          if (currentId === videoId || v === selectedVideo) {
             return { ...v, snippet: { ...v.snippet, title: newTitle } };
           }
           return v;
@@ -689,6 +689,8 @@ function renderOptimizer() {
       <div className="grid">
         <div className="card">
           <h2>Video Optimizer</h2>
+          <p className="muted">Pilih video publish/terjadwal yang terbaca dari channel, lalu AI akan memberi saran optimasi.</p>
+          
           <div className="form-row" style={{ marginTop: 18, marginBottom: 18, backgroundColor: '#f0f4f9', padding: 16, borderRadius: 12 }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: '15px', fontWeight: 'bold', cursor: 'pointer', flexWrap: 'wrap' }}>
               Format Target AI:
@@ -704,15 +706,13 @@ function renderOptimizer() {
               <table className="table" style={{ minWidth: '600px' }}>
                 <thead><tr><th>#</th><th>Video</th><th>Views</th><th>Likes</th><th>Status</th><th>Action</th></tr></thead>
                 {videos.map((v, i) => {
-                  const vId = v.id?.videoId || v.id;
-                  const selectedId = selectedVideo?.id?.videoId || selectedVideo?.id;
-                  const isSelected = selectedId === vId;
+                  // FIX BUG MUTLAK: Pencocokan dengan index array atau referensi objek agar tidak bocor ke video lain
+                  const isSelected = selectedVideo === v;
                   
                   return (
-                    <tbody key={vId || i}>
+                    <tbody key={i}>
                       <VideoRow video={v} index={i} onSelect={optimizeVideo} />
                       
-                      {/* PANEL KEMBALI MUNCUL TEPAT DI BAWAH VIDEO */}
                       {isSelected && (
                         <tr>
                           <td colSpan={6} style={{ padding: 0, backgroundColor: '#f8fafc', whiteSpace: 'normal' }}>
@@ -728,7 +728,7 @@ function renderOptimizer() {
                                   result={optimizer.data} 
                                   format={selectedVideoFormat} 
                                   video={v}
-                                  onLivePreview={(newTitle) => handleLivePreview(vId, newTitle)}
+                                  onLivePreview={(newTitle) => handleLivePreview(v.id?.videoId || v.id, newTitle)}
                                 />
                               )}
                             </div>
@@ -745,7 +745,6 @@ function renderOptimizer() {
       </div>
     );
   }
-
 function OptimizerResultView({ result, format, video, onLivePreview }: { result: any; format: string; video: any; onLivePreview: (title: string) => void }) {
   const [selectedTitleIdx, setSelectedTitleIdx] = useState(0);
   const [selectedDescIdx, setSelectedDescIdx] = useState(0);

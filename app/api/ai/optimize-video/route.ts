@@ -5,10 +5,10 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { video, videoFormat } = body;
     
-    const originalTitle = video?.snippet?.title || video?.title || "";
+    const originalTitle = video?.snippet?.title || video?.title || "Untitled";
     const originalDesc = video?.snippet?.description || video?.description || "";
 
-    // INSTRUKSI MUTLAK DI LEVEL SERVER
+    // INSTRUKSI MUTLAK DI LEVEL SERVER (ANTI NGERUBAH BAHASA)
     const systemPrompt = `You are an elite YouTube SEO Expert.
     CRITICAL RULE: You MUST generate your response in the EXACT SAME LANGUAGE as the original video title.
     - If the original title "${originalTitle}" is in ENGLISH, your entire JSON response MUST be in ENGLISH.
@@ -48,6 +48,12 @@ export async function POST(req: Request) {
     });
 
     const data = await res.json();
+
+    // PENGAMAN ANTI ERROR 'UNDEFINED'
+    if (!data.choices || !data.choices[0]) {
+      throw new Error(data.error?.message || "Server AI sedang sibuk atau key salah. Coba lagi.");
+    }
+
     const content = data.choices[0].message.content;
     return NextResponse.json({ result: JSON.parse(content) });
   } catch (e: any) {
