@@ -878,19 +878,21 @@ function OptimizerResultView({ result, format, video, onLivePreview }: { result:
   };
 
 async function applyChangesToYouTube() {
-    // Pelacak ID Super (Mencari di semua kemungkinan struktur, termasuk jika diringkas)
-    const finalId = 
-        (typeof video?.id === 'string' ? video.id : null) || 
-        video?.id?.videoId || 
-        video?.videoId || 
-        video?.snippet?.resourceId?.videoId || 
-        video?._id;
+    // 1. Coba cari ID dengan cara normal dulu
+    let finalId = video?.id?.videoId || video?.id || (typeof video?.id === 'string' ? video.id : null) || video?.videoId;
 
+    // 2. JURUS PAMUNGKAS: Jika kosong, curi ID dari URL Thumbnail!
+    if (!finalId && video?.thumbnail) {
+        // Memotong URL https://i.ytimg.com/vi/ID_VIDEO_NYA/hqdefault.jpg
+        const parts = video.thumbnail.split('/vi/');
+        if (parts.length > 1) {
+            finalId = parts[1].split('/')[0]; // Mengambil ID yang bersembunyi
+        }
+    }
+
+    // Jika masih gagal juga (sangat tidak mungkin)
     if (!finalId) {
-        // JURUS DETEKTIF: Menampilkan isi asli objek video agar kita tahu nama kuncinya!
-        const isiVideo = JSON.stringify(video, null, 2);
-        alert("GAGAL: ID tidak terbaca.\n\nIsi Data Video Mentah:\n" + isiVideo.substring(0, 300) + "...\n\n(Mohon screenshot pesan ini dan kirimkan ke sini!)");
-        console.log("Data Video Mentah:", video);
+        alert("GAGAL: ID tidak ditemukan bahkan setelah diekstrak dari Thumbnail.");
         return;
     }
 
@@ -900,7 +902,7 @@ async function applyChangesToYouTube() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
-            videoId: finalId, 
+            videoId: finalId, // ID hasil curian dari Thumbnail siap dikirim!
             title: actualSelectedTitle, 
             description: actualSelectedDesc, 
             tags: result.keywords || [] 
@@ -910,14 +912,13 @@ async function applyChangesToYouTube() {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Gagal update dari server");
       
-      alert("🎉 Berhasil! Judul dan Deskripsi telah diperbarui langsung ke server YouTube.");
+      alert("🎉 BERHASIL! Judul dan Deskripsi telah resmi diperbarui ke server YouTube.");
     } catch (err: any) {
-      alert("GAGAL MENYIMPAN: " + err.message);
+      alert("GAGAL MENYIMPAN: " + err.message + "\n\nPastikan Anda sudah Logout dan Login ulang agar izin YouTube aktif.");
     } finally {
       setIsUpdating(false);
     }
   }
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       
