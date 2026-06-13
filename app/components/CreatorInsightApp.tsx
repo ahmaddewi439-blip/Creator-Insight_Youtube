@@ -919,8 +919,8 @@ async function applyChangesToYouTube() {
            const mauReauth = window.confirm("⚠️ Akses Ditolak oleh Google.\n\nAplikasi membutuhkan izin tambahan untuk menyimpan perubahan ini langsung ke channel Anda.\n\nKlik 'OK' untuk Login ulang, dan PASTIKAN Anda MENCENTANG kotak 'Kelola akun YouTube Anda'!");
            
            if (mauReauth) {
-               // Perintah sakti yang akan menerobos cookies lama dan memaksa pop-up izin muncul!
-               signIn("google", { prompt: "consent" }); 
+               // Jurus paksa pindah halaman (dijamin 100% jalan)
+               window.location.href = "/api/auth/signin";
            }
            return; // Hentikan proses simpan
         }
