@@ -706,8 +706,10 @@ function renderOptimizer() {
               <table className="table" style={{ minWidth: '600px' }}>
                 <thead><tr><th>#</th><th>Video</th><th>Views</th><th>Likes</th><th>Status</th><th>Action</th></tr></thead>
                 {videos.map((v, i) => {
-                  // FIX BUG MUTLAK: Pencocokan dengan index array atau referensi objek agar tidak bocor ke video lain
-                  const isSelected = selectedVideo === v;
+              // FIX BUG MUTLAK: Deteksi ID Super Stabil (Anti-Meleset)
+              const currentVideoId = v.id?.videoId || v.id || v.snippet?.publishedAt || v.snippet?.title || v.title;
+              const selectedVideoId = selectedVideo?.id?.videoId || selectedVideo?.id || selectedVideo?.snippet?.publishedAt || selectedVideo?.snippet?.title || selectedVideo?.title;
+              const isSelected = !!selectedVideo && currentVideoId === selectedVideoId;
                   
                   return (
                     <tbody key={i}>
