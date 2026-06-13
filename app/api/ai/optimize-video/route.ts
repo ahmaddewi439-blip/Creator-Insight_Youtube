@@ -3,29 +3,27 @@ import { NextResponse } from "next/server";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { video, videoFormat } = body;
+    // Menangkap instruksi paksaan bahasa dari UI
+    const { video, videoFormat, instruction } = body; 
     
     const originalTitle = video?.snippet?.title || video?.title || "Untitled";
     const originalDesc = video?.snippet?.description || video?.description || "";
 
-    // INSTRUKSI MUTLAK DI LEVEL SERVER (ANTI NGERUBAH BAHASA)
+    // MENGGABUNGKAN INSTRUKSI MUTLAK KE OTAK AI
     const systemPrompt = `You are an elite YouTube SEO Expert.
-    CRITICAL RULE: You MUST generate your response in the EXACT SAME LANGUAGE as the original video title.
-    - If the original title "${originalTitle}" is in ENGLISH, your entire JSON response MUST be in ENGLISH.
-    - If it is in INDONESIAN, your response MUST be in INDONESIAN.
-    - DO NOT translate. DO NOT mix languages.
+    ${instruction || `CRITICAL RULE: You MUST generate your response in the EXACT SAME LANGUAGE as the original video title. DO NOT translate.`}
     
     Original Title: "${originalTitle}"
     Original Description: "${originalDesc}"
     Format Target: ${videoFormat}
     
-    Return a valid JSON object with the following keys:
+    Return a valid JSON object exactly matching this structure:
     {
       "score": {"Title": 85, "SEO": 90, "CTR": 88, "Retention": 80, "Overall": 85},
-      "diagnosis": "Short analysis of the current metadata",
+      "diagnosis": "Short analysis",
       "recommendedTitles": ["Title 1", "Title 2", "Title 3", "Title 4", "Title 5"],
       "caption": "Short caption with hashtag",
-      "description": "Full organic description",
+      "description": "Full description",
       "hashtags": ["#tag1", "#tag2"],
       "keywords": ["tag1", "tag2"],
       "pinnedComment": "Comment text",
@@ -34,14 +32,17 @@ export async function POST(req: Request) {
       "actionPlan": ["Step 1"]
     }`;
 
-    const res = await fetch(process.env.AI_BASE_URL || "https://lite.koboillm.com/v1/chat/completions", {
+    // MENGGUNAKAN JALUR OPENROUTER API KEY YANG BENAR
+    const apiKey = process.env.OPENROUTER_API_KEY || process.env.AI_API_KEYS || process.env.NEXT_PUBLIC_OPENROUTER_API_KEY;
+
+    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.AI_API_KEYS}`
+        "Authorization": `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: process.env.AI_MODEL || "openai/gpt-4o-mini",
+        model: "openai/gpt-4o-mini", // Model JSON paling stabil
         messages: [{ role: "system", content: systemPrompt }],
         response_format: { type: "json_object" }
       })
@@ -49,9 +50,12 @@ export async function POST(req: Request) {
 
     const data = await res.json();
 
-    // PENGAMAN ANTI ERROR 'UNDEFINED'
+    // PENGAMAN ERROR
+    if (data.error) {
+      throw new Error("OpenRouter Error: " + data.error.message);
+    }
     if (!data.choices || !data.choices[0]) {
-      throw new Error(data.error?.message || "Server AI sedang sibuk atau key salah. Coba lagi.");
+      throw new Error("Gagal mendapat respon. Pastikan API Key OpenRouter Anda aktif di setting Vercel.");
     }
 
     const content = data.choices[0].message.content;
