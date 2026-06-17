@@ -149,7 +149,8 @@ function makeScenes(topic: Topic, language: string, duration: string) {
   
   const isLongVideo = duration.toLowerCase().includes("menit") || duration.toLowerCase().includes("minutes");
 
-  let scenes = [];
+  // SOLUSI ERROR TYPESCRIPT: Menambahkan : any[] agar tidak dibaca 'never[]'
+  let scenes: any[] = [];
 
   if (isLongVideo) {
     // TEMPLATE BARU: UNTUK VIDEO PANJANG (Diambil dari durasi yang dipilih)
@@ -186,7 +187,6 @@ function makeScenes(topic: Topic, language: string, duration: string) {
         editingDirection: "Animasi tombol subscribe membesar, outro music fade in.", sfx: "pop up + chime"
       }
     ] : [
-      // Versi English untuk Long Video dihilangkan untuk menghemat ruang, (Sama seperti Indo tapi English)
       {
         scene: 1, name: "Intro & Hook", duration: "00:00 - 01:30", goal: "Extreme curiosity.", overlayText: "BIG SECRET REVEALED",
         vo: `Hey everyone! Today we are diving deep into ${title}. Most people missed this, but there is a massive secret hidden here.`,
@@ -246,7 +246,6 @@ export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({}));
 
-    // PERBAIKAN KRUSIAL: Menerima String Topik dari Web lalu diubah jadi Object agar AI tidak mereset
     const rawTopic = body?.topic;
     const topicObj: Topic = typeof rawTopic === 'string' ? { title: rawTopic, summary: "Pembaruan penting Roblox" } : (rawTopic as Topic || { title: "Roblox Update" });
     
