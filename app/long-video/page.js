@@ -1,19 +1,3 @@
-Berdasarkan gambar Network Tab yang Anda kirimkan (Gambar ke-3), eksekusi API-nya sebenarnya BERHASIL 100%! Server merespons dengan status 200 OK dan mengembalikan data JSON panjang yang berisi naskah Anda.
-
-Lalu, kenapa layarnya kosong dan tidak muncul apa-apa?
-Penyebabnya adalah perbedaan format kunci (key). Kode frontend web kita memblokir tampilannya karena ia secara ketat mencari kata sandi "hook". Ternyata, API /api/roblox/script membungkus naskah AI tersebut ke dalam format yang sedikit berbeda (seperti yang terlihat di gambar Anda: "videoTitle", "topicScore", dll), sehingga web memutuskan untuk menyembunyikan hasilnya karena mengira datanya tidak lengkap.
-
-Mari kita bongkar "gembok" tersebut. Kita akan buat kode Frontend yang Tahan Banting (Bulletproof). Apapun format yang dikembalikan oleh AI, entah itu tersembunyi atau teracak, web wajib menampilkannya ke layar Anda!
-
-Langkah Perbaikan Final (Anti-Layar Kosong)
-Buka kembali file page.js Anda di CMD:
-
-notepad app\long-video\page.js
-
-2. **Tekan Ctrl+A lalu Delete** untuk menghapus isi yang lama.
-3. **Paste** kode "Tahan Banting" di bawah ini:
-
-```javascript
 "use client";
 
 import React, { useState } from "react";
@@ -59,11 +43,9 @@ export default function LongVideoCreator() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Gagal memproses AI");
 
-      // LOGIKA TAHAN BANTING: Tangkap semua data dari AI bagaimanapun formatnya
       let rawData = data.result || data.raw || data;
       let finalParsed = rawData;
 
-      // Coba paksa cari JSON di dalam string jika AI menyembunyikannya
       let searchString = typeof rawData === "string" ? rawData : JSON.stringify(rawData);
       try {
         const match = searchString.match(/\{[\s\S]*\}/);
@@ -81,6 +63,23 @@ export default function LongVideoCreator() {
       setLoading(false);
     }
   };
+
+  // LOGIKA AMAN UNTUK VERCEL (Mencegah Error Turbopack)
+  let hookData = null;
+  let scenesData = [];
+  let isStandardFormat = false;
+
+  if (result) {
+    if (result.hook) {
+      hookData = result.hook;
+      scenesData = result.scenes || [];
+      isStandardFormat = true;
+    } else if (result.script && result.script.hook) {
+      hookData = result.script.hook;
+      scenesData = result.script.scenes || [];
+      isStandardFormat = true;
+    }
+  }
 
   return (
     <div className="min-h-screen bg-black text-white p-4 md:p-8 font-sans">
@@ -111,40 +110,34 @@ export default function LongVideoCreator() {
           {errorMsg && <div className="p-4 bg-red-900/50 border border-red-500 text-white rounded mt-4">{errorMsg}</div>}
         </div>
 
-        {/* AREA HASIL: TAHAN BANTING */}
+        {/* AREA HASIL: RAPI & BEBAS ERROR */}
         {result && (
           <div className="mt-8 space-y-6 animate-fadeIn">
             <h2 className="text-2xl font-bold text-green-400 border-b border-green-900 pb-2">Hasil Sutradara AI:</h2>
 
-            {/* JIKA FORMAT SESUAI HARAPAN (Ada Hook & Scenes) */}
-            {result.hook || (result.script && result.script.hook) ? (
+            {isStandardFormat && hookData ? (
               <>
-                {(() => {
-                  const hookData = result.hook || result.script.hook;
-                  const scenesData = result.scenes || result.script.scenes || [];
-                  return (
-                    <>
-                      <div className="bg-gray-900 p-6 rounded-xl border-l-4 border-red-500 shadow-lg">
-                        <span className="bg-red-500/20 text-red-400 px-3 py-1 rounded text-xs font-bold uppercase">Hook 3 Detik Pertama</span>
-                        <p className="text-sm text-gray-400 font-bold mt-4 mb-2">⏱️ {hookData.time || "00:00 - 00:05"}</p>
-                        <p className="text-xl font-bold text-white mb-4">🎙️ VO: "{hookData.vo}"</p>
-                        <div className="bg-black/50 p-3 rounded border border-gray-800"><p className="text-sm italic text-green-400">🖼️ Visual: {hookData.visualPrompt}</p></div>
-                      </div>
+                <div className="bg-gray-900 p-6 rounded-xl border-l-4 border-red-500 shadow-lg">
+                  <span className="bg-red-500/20 text-red-400 px-3 py-1 rounded text-xs font-bold uppercase">Hook 3 Detik Pertama</span>
+                  <p className="text-sm text-gray-400 font-bold mt-4 mb-2">⏱️ {hookData.time || "00:00 - 00:05"}</p>
+                  <p className="text-xl font-bold text-white mb-4">🎙️ VO: "{hookData.vo}"</p>
+                  <div className="bg-black/50 p-3 rounded border border-gray-800">
+                    <p className="text-sm italic text-green-400">🖼️ Visual: {hookData.visualPrompt || hookData.visual || "-"}</p>
+                  </div>
+                </div>
 
-                      {scenesData.map((scene, i) => (
-                        <div key={i} className="bg-gray-900 p-6 rounded-xl border-l-4 border-blue-500 shadow-lg">
-                          <span className="bg-blue-500/20 text-blue-400 px-3 py-1 rounded text-xs font-bold uppercase">Scene {i + 1}</span>
-                          <p className="text-sm text-gray-400 font-bold mt-4 mb-2">⏱️ {scene.timestamp}</p>
-                          <p className="text-lg text-white mb-4">🎙️ VO: "{scene.vo}"</p>
-                          <div className="bg-black/50 p-3 rounded border border-gray-800"><p className="text-sm italic text-green-400">🖼️ Visual: {scene.visualPrompt}</p></div>
-                        </div>
-                      ))}
-                    </>
-                  );
-                })()}
+                {scenesData && scenesData.length > 0 && scenesData.map((scene, i) => (
+                  <div key={i} className="bg-gray-900 p-6 rounded-xl border-l-4 border-blue-500 shadow-lg">
+                    <span className="bg-blue-500/20 text-blue-400 px-3 py-1 rounded text-xs font-bold uppercase">Scene {i + 1}</span>
+                    <p className="text-sm text-gray-400 font-bold mt-4 mb-2">⏱️ {scene.timestamp || scene.time || "-"}</p>
+                    <p className="text-lg text-white mb-4">🎙️ VO: "{scene.vo}"</p>
+                    <div className="bg-black/50 p-3 rounded border border-gray-800">
+                      <p className="text-sm italic text-green-400">🖼️ Visual: {scene.visualPrompt || scene.visual || "-"}</p>
+                    </div>
+                  </div>
+                ))}
               </>
             ) : (
-              /* JIKA FORMAT BERBEDA DARI AI, TETAP TAMPILKAN DATANYA (Mode Fallback) */
               <div className="bg-gray-900 p-6 rounded-xl border border-yellow-600 shadow-lg">
                 <p className="text-yellow-400 text-sm mb-4">⚠️ AI memberikan format alternatif, ini adalah hasil mentahnya:</p>
                 <pre className="text-sm text-gray-300 whitespace-pre-wrap overflow-x-auto">{JSON.stringify(result, null, 2)}</pre>
