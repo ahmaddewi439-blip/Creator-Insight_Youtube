@@ -2,7 +2,6 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { signIn, signOut, useSession } from "next-auth/react";
-import RobloxCreatorFinalUI from "../../src/components/RobloxCreatorFinalUI";
 
 type TabId = "overview" | "optimizer" | "competitors" | "roblox" | "reports" | "settings";
 
@@ -124,7 +123,7 @@ function LoginScreen() {
             <div className="logo-badge">▶</div>
             <div>Creator Insight<small>YouTube Analyzer + Roblox Shorts Creator</small></div>
           </div>
-          <h1>Tool pribadi untuk analisis YouTube dan membuat Roblox Shorts.</h1>
+          <h1>Tool pribadi untuk analisis YouTube.</h1>
           <p className="muted" style={{ fontSize: 17, lineHeight: 1.6 }}>
             Login channel YouTube, optimasi video, cek kompetitor, lalu generate paket Roblox Shorts lengkap: hook 3 detik, VO natural, 5 scene, prompt gambar, arahan gameplay, dll.
           </p>
@@ -159,12 +158,6 @@ export default function CreatorInsightApp() {
   const [competitors, setCompetitors] = useState<ApiState<any[]>>({ loading: false, error: "", data: [] });
   const [competitorVideos, setCompetitorVideos] = useState<ApiState<any>>({ loading: false, error: "", data: null });
 
-  const [dailyTarget, setDailyTarget] = useState<ApiState<any>>({ loading: false, error: "", data: null });
-  const [dailyScripts, setDailyScripts] = useState<Record<number, any>>({});
-  const [loadingDailyScript, setLoadingDailyScript] = useState<Record<number, boolean>>({});
-  const [activeDailyTab, setActiveDailyTab] = useState<number>(0);
-  const uploadTimes = ["08:00 WIB", "13:00 WIB", "18:00 WIB", "20:00 WIB"];
-
   useEffect(() => {
     if (status !== "authenticated") return;
     loadDashboard();
@@ -187,15 +180,6 @@ export default function CreatorInsightApp() {
   const videos = videosState.data || [];
   const sortedVideos = useMemo(() => [...videos].sort((a, b) => Number(b?.statistics?.viewCount || 0) - Number(a?.statistics?.viewCount || 0)), [videos]);
   
-  const channelScore = useMemo(() => {
-    const views = Number(channel?.statistics?.viewCount || 0);
-    const subs = Number(channel?.statistics?.subscriberCount || 0);
-    const count = Number(channel?.statistics?.videoCount || 0);
-    const avg = count ? views / count : 0;
-    const raw = Math.min(92, Math.max(45, Math.round(55 + Math.log10(Math.max(avg, 10)) * 7 + Math.log10(Math.max(subs, 10)) * 3)));
-    return raw;
-  }, [channel]);
-
   async function optimizeVideo(video: any) {
     setSelectedVideo(video);
     setOptimizer({ loading: true, error: "", data: null });
@@ -246,7 +230,7 @@ export default function CreatorInsightApp() {
         )}
         
         {active === "optimizer" && renderOptimizer()}
-        {active === "roblox" && <RobloxCreatorFinalUI />}
+        {active === "roblox" && <div className="card"><h2>Roblox Creator</h2><p className="muted">Fitur sedang diistirahatkan sementara karena file hilang.</p></div>}
       </main>
     </div>
   );
