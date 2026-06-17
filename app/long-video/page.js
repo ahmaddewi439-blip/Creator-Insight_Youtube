@@ -34,7 +34,7 @@ export default function LongVideoCreator() {
     setResult(null);
 
     try {
-      const response = await fetch("/api/roblox/script", {
+      const response = await fetch("/api/ai/director", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -122,7 +122,8 @@ export default function LongVideoCreator() {
           </div>
           
           <button className="w-full bg-green-600 hover:bg-green-500 py-4 rounded font-bold text-lg transition-all flex justify-center items-center" onClick={generateFullScript} disabled={loading}>
-            {loading ? "⏳ AI Sedang Menulis Naskah Video Panjang... (Bisa 20+ Detik)" : "🎬 Generate Naskah Matang Final"}
+            
+            {loading ? "⏳ AI Sedang Menulis Ribuan Kata... (Tunggu 20-40 Detik)" : "🎬 Generate Naskah Matang Final"}
           </button>
           
           {errorMsg && <div className="p-4 bg-red-900/50 border border-red-500 text-white rounded mt-4">{errorMsg}</div>}
