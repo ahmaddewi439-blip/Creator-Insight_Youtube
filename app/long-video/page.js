@@ -21,22 +21,7 @@ export default function LongVideoCreator() {
           topic: formData.topic,
           duration: formData.duration,
           language: formData.language,
-          style: `ABSOLUTE RULE: You are a professional Video Director. Create a full, mature video script. MUST return ONLY a valid JSON object. 
-          Format JSON yang WAJIB digunakan:
-          {
-            "hook": {
-              "time": "00:00 - 00:05",
-              "vo": "(Teks Voice Over 3 detik pertama WAJIB kalimat tanya yang bikin penasaran)",
-              "visualPrompt": "(Instruksi visual sangat detail, rasio 9:16)"
-            },
-            "scenes": [
-              {
-                "timestamp": "00:05 - 00:15",
-                "vo": "(Teks narasi untuk scene ini)",
-                "visualPrompt": "(Instruksi visual detail)"
-              }
-            ]
-          }`
+          style: "Buatkan naskah video YouTube yang sangat detail dengan hook kuat, voice over natural, arahan visual/gameplay, sfx, dan text on screen."
         })
       });
 
@@ -52,9 +37,7 @@ export default function LongVideoCreator() {
         if (match) {
           finalParsed = JSON.parse(match[0]);
         }
-      } catch (e) {
-        console.log("Bukan format JSON ketat, menampilkan apa adanya.");
-      }
+      } catch (e) {}
 
       setResult(finalParsed);
     } catch (e) {
@@ -64,29 +47,20 @@ export default function LongVideoCreator() {
     }
   };
 
-  // LOGIKA AMAN UNTUK VERCEL (Mencegah Error Turbopack)
-  let hookData = null;
-  let scenesData = [];
-  let isStandardFormat = false;
-
-  if (result) {
-    if (result.hook) {
-      hookData = result.hook;
-      scenesData = result.scenes || [];
-      isStandardFormat = true;
-    } else if (result.script && result.script.hook) {
-      hookData = result.script.hook;
-      scenesData = result.script.scenes || [];
-      isStandardFormat = true;
-    }
+  // MENGAMBIL ARRAY SCENES DARI FORMAT AI ASLI ANDA
+  let scenesList = [];
+  if (result && result.scenes) {
+    scenesList = result.scenes;
+  } else if (result && result.script && result.script.scenes) {
+    scenesList = result.script.scenes;
   }
 
   return (
     <div className="min-h-screen bg-black text-white p-4 md:p-8 font-sans">
       <div className="max-w-4xl mx-auto space-y-6">
-        <h1 className="text-3xl font-bold text-green-500 mb-2">Sutradara AI: Produksi Full Video (Real AI)</h1>
+        <h1 className="text-3xl font-bold text-green-500 mb-2">Sutradara AI: Produksi Full Video</h1>
         
-        <div className="bg-gray-900 p-6 rounded-xl border border-green-800 space-y-4">
+        <div className="bg-gray-900 p-6 rounded-xl border border-green-800 space-y-4 shadow-lg">
           <input
             className="w-full p-4 bg-gray-800 rounded border border-gray-700 text-white focus:border-green-500 outline-none"
             placeholder="Ketik Topik (Contoh: Rahasia item gratis di Brookhaven)"
@@ -104,42 +78,58 @@ export default function LongVideoCreator() {
           </div>
           
           <button className="w-full bg-green-600 hover:bg-green-500 py-4 rounded font-bold text-lg transition-all flex justify-center items-center" onClick={generateFullScript} disabled={loading}>
-            {loading ? "⏳ AI Sedang Bekerja Keras... (Tunggu Sekitar 10-20 Detik)" : "🎬 Generate Naskah Matang"}
+            {loading ? "⏳ Menyusun Skrip, Arahan Visual & Prompt... (Tunggu 15 Detik)" : "🎬 Generate Naskah Matang Final"}
           </button>
           
           {errorMsg && <div className="p-4 bg-red-900/50 border border-red-500 text-white rounded mt-4">{errorMsg}</div>}
         </div>
 
-        {/* AREA HASIL: RAPI & BEBAS ERROR */}
+        {/* AREA HASIL: MENAMPILKAN DATA DETAIL DARI API */}
         {result && (
           <div className="mt-8 space-y-6 animate-fadeIn">
-            <h2 className="text-2xl font-bold text-green-400 border-b border-green-900 pb-2">Hasil Sutradara AI:</h2>
+            <h2 className="text-2xl font-bold text-green-400 border-b border-green-900 pb-2">
+              {result.videoTitle || "Blueprint Produksi Matang:"}
+            </h2>
 
-            {isStandardFormat && hookData ? (
-              <>
-                <div className="bg-gray-900 p-6 rounded-xl border-l-4 border-red-500 shadow-lg">
-                  <span className="bg-red-500/20 text-red-400 px-3 py-1 rounded text-xs font-bold uppercase">Hook 3 Detik Pertama</span>
-                  <p className="text-sm text-gray-400 font-bold mt-4 mb-2">⏱️ {hookData.time || "00:00 - 00:05"}</p>
-                  <p className="text-xl font-bold text-white mb-4">🎙️ VO: "{hookData.vo}"</p>
-                  <div className="bg-black/50 p-3 rounded border border-gray-800">
-                    <p className="text-sm italic text-green-400">🖼️ Visual: {hookData.visualPrompt || hookData.visual || "-"}</p>
-                  </div>
-                </div>
+            {scenesList && scenesList.length > 0 ? (
+              scenesList.map((scene, i) => {
+                const isHook = i === 0;
+                return (
+                  <div key={i} className={`bg-gray-900 p-6 rounded-xl border-l-4 shadow-lg ${isHook ? 'border-red-500' : 'border-blue-500'}`}>
+                    <div className="flex justify-between items-center mb-4 border-b border-gray-800 pb-2">
+                      <span className={`${isHook ? 'bg-red-500/20 text-red-400' : 'bg-blue-500/20 text-blue-400'} px-3 py-1 rounded text-xs font-bold uppercase tracking-widest`}>
+                        {scene.name || `Scene ${scene.scene || i + 1}`}
+                      </span>
+                      <span className="text-sm font-bold text-gray-400">⏱️ Detik: {scene.duration || scene.timestamp || scene.time || "-"}</span>
+                    </div>
+                    
+                    <p className="text-lg text-white mb-4 leading-relaxed">
+                      <span className="text-yellow-500 font-bold mr-2">🎙️ Voice Over:</span> 
+                      "{scene.vo || scene.voiceOver}"
+                    </p>
 
-                {scenesData && scenesData.length > 0 && scenesData.map((scene, i) => (
-                  <div key={i} className="bg-gray-900 p-6 rounded-xl border-l-4 border-blue-500 shadow-lg">
-                    <span className="bg-blue-500/20 text-blue-400 px-3 py-1 rounded text-xs font-bold uppercase">Scene {i + 1}</span>
-                    <p className="text-sm text-gray-400 font-bold mt-4 mb-2">⏱️ {scene.timestamp || scene.time || "-"}</p>
-                    <p className="text-lg text-white mb-4">🎙️ VO: "{scene.vo}"</p>
-                    <div className="bg-black/50 p-3 rounded border border-gray-800">
-                      <p className="text-sm italic text-green-400">🖼️ Visual: {scene.visualPrompt || scene.visual || "-"}</p>
+                    <div className="space-y-3 bg-black/60 p-4 rounded-lg border border-gray-800">
+                      {scene.overlayText && (
+                        <p className="text-sm text-pink-400"><span className="font-bold text-gray-500 uppercase tracking-wide text-xs">💬 Teks di Layar:</span><br/>{scene.overlayText}</p>
+                      )}
+                      {scene.gameplayDirection && (
+                        <p className="text-sm text-blue-300"><span className="font-bold text-gray-500 uppercase tracking-wide text-xs">🎮 Arahan Gameplay:</span><br/>{scene.gameplayDirection}</p>
+                      )}
+                      {scene.editingDirection && (
+                        <p className="text-sm text-purple-300"><span className="font-bold text-gray-500 uppercase tracking-wide text-xs">✂️ Editing & Efek:</span><br/>{scene.editingDirection} {scene.sfx ? `(+ Sound Effect: ${scene.sfx})` : ''}</p>
+                      )}
+                      {scene.imagePrompts && scene.imagePrompts.length > 0 && (
+                        <div className="mt-3 pt-3 border-t border-gray-800">
+                          <p className="text-sm italic text-green-400"><span className="font-bold text-gray-500 uppercase tracking-wide text-xs not-italic">🖼️ Prompt AI Image (9:16):</span><br/>{scene.imagePrompts.join(" | ")}</p>
+                        </div>
+                      )}
                     </div>
                   </div>
-                ))}
-              </>
+                )
+              })
             ) : (
               <div className="bg-gray-900 p-6 rounded-xl border border-yellow-600 shadow-lg">
-                <p className="text-yellow-400 text-sm mb-4">⚠️ AI memberikan format alternatif, ini adalah hasil mentahnya:</p>
+                <p className="text-yellow-400 text-sm mb-4">⚠️ Format JSON tidak terduga, ini hasil mentahnya:</p>
                 <pre className="text-sm text-gray-300 whitespace-pre-wrap overflow-x-auto">{JSON.stringify(result, null, 2)}</pre>
               </div>
             )}
