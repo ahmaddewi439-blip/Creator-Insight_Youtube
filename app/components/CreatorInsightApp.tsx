@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { signIn, signOut, useSession } from "next-auth/react";
-import RobloxCreatorFinalUI from "../../src/components/RobloxCreatorFinalUI";
+import RobloxCreatorFinalUI from "./RobloxCreatorFinalUI";
 
 type TabId = "overview" | "optimizer" | "competitors" | "roblox" | "reports" | "settings";
 
