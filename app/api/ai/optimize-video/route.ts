@@ -22,12 +22,12 @@ export async function POST(req: Request) {
     const originalTitle = video?.snippet?.title || video?.title || "Video Tanpa Judul";
     const originalDesc = video?.snippet?.description || "";
 
-    const prompt = `You are an elite YouTube SEO Expert and Viral Content Strategist.
+   const prompt = `You are an elite YouTube SEO Expert and Viral Content Strategist.
     I have a video currently titled: "${originalTitle}"
     Description: "${originalDesc.substring(0, 500)}"
 
     TASK: Optimize this video for MAXIMUM YouTube Algorithm reach, high Click-Through-Rate (CTR), and top search ranking.
-    Language: Indonesian (Gunakan gaya bahasa yang natural, asik, clickbait namun tidak berbohong, cocok untuk audiens Indonesia).
+    Language: AUTO-DETECT. You MUST detect the language of the original title ("${originalTitle}") and write ALL outputs (titles, description, keywords, caption) in that EXACT SAME language. If the original title is English, output in English. If Indonesian, output in Indonesian. Do not mix languages.
 
     REQUIREMENTS:
     1. recommendedTitles: Provide 3 highly engaging, clickbait (but accurate) titles. Keep them under 70 characters for best visibility. Use emojis strategically.
@@ -37,7 +37,7 @@ export async function POST(req: Request) {
 
     Respond ONLY with a valid JSON object. DO NOT wrap in markdown.
     {
-      "recommendedTitles": ["Judul Viral 1", "Judul Viral 2", "Judul Viral 3"],
+      "recommendedTitles": ["Viral Title 1", "Viral Title 2", "Viral Title 3"],
       "description": "Full SEO description here...",
       "keywords": ["tag1", "tag2", "tag3"],
       "caption": "Short hook caption..."

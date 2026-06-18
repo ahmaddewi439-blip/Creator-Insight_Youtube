@@ -527,6 +527,21 @@ export default function CreatorInsightApp() {
 
   // --- RENDER MENU VIDEO OPTIMIZER (VERSI BARU YANG FIX BUG MULTI-PANEL) ---
   function renderOptimizer() {
+    // Fungsi ini akan mengubah judul di baris tabel secara real-time saat Anda mengklik rekomendasi
+    const handleLivePreview = (newTitle) => {
+      setVideosState(prev => ({
+        ...prev,
+        data: prev.data?.map(v => {
+          if (v === selectedVideo) {
+            const updatedVideo = { ...v, snippet: { ...v.snippet, title: newTitle } };
+            setSelectedVideo(updatedVideo); // Mencegah panel menutup saat judul diubah
+            return updatedVideo;
+          }
+          return v;
+        }) || []
+      }));
+    };
+
     return (
       <div className="grid">
         <div className="card">
@@ -542,11 +557,10 @@ export default function CreatorInsightApp() {
               <thead><tr><th>#</th><th>Video</th><th>Views</th><th>Likes</th><th>Status</th><th>Aksi</th></tr></thead>
               <tbody>
                 {sortedVideos.map((v, i) => {
-                  // INI KUNCI FIX BUGNYA: Panel terbuka eksklusif jika objek videonya sama persis
                   const isSelected = selectedVideo === v; 
                   
                   return (
-                    <React.Fragment key={getVideoId(v) || i}>
+                    <React.Fragment key={i}>
                       <VideoRow video={v} index={i} onSelect={optimizeVideo} />
                       {isSelected && (
                         <tr>
@@ -558,12 +572,15 @@ export default function CreatorInsightApp() {
                               </h2>
                               {optimizer.loading && (
                                 <div style={{ padding: '40px 0', textAlign: 'center', color: '#3b82f6' }}>
-                                  ⏳ AI sedang meracik formula SEO terbaik untuk video ini...
+                                  ⏳ AI sedang mendeteksi bahasa & meracik formula SEO terbaik...
                                 </div>
                               )}
                               {optimizer.error && <div className="alert error">{optimizer.error}</div>}
                               {optimizer.data && !optimizer.loading && (
-                                <OptimizerResultView result={optimizer.data} />
+                                <OptimizerResultView 
+                                  result={optimizer.data} 
+                                  onLivePreview={(newTitle) => handleLivePreview(newTitle)}
+                                />
                               )}
                             </div>
                           </td>
@@ -579,6 +596,76 @@ export default function CreatorInsightApp() {
       </div>
     );
   }
+
+  function renderCompetitors() { return <div><h2 style={{color: 'white'}}>Competitor Research (Dalam Pengembangan)</h2></div>; }
+  function renderReports() { return <div><h2 style={{color: 'white'}}>Reports (Dalam Pengembangan)</h2></div>; }
+  function renderSettings() { return <div><h2 style={{color: 'white'}}>Settings (Dalam Pengembangan)</h2></div>; }
+}
+
+function OptimizerResultView({ result, onLivePreview }: { result: any; onLivePreview: (t: string) => void }) {
+  if (typeof result === "string") return <div className="output" style={{color: 'white'}}>{result}</div>;
+  
+  const titles = result.recommendedTitles || [];
+  const tags = result.keywords || [];
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div style={{ background: '#1e293b', padding: '16px', borderRadius: '12px', border: '1px solid #334155' }}>
+        <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#f8fafc' }}>🔥 3 Rekomendasi Judul Viral (Ketuk untuk Update Judul di Tabel Atas)</h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {titles.map((title: string, idx: number) => (
+            <div 
+              key={idx} 
+              onClick={() => onLivePreview(title)}
+              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#0f172a', border: '1px solid #334155', padding: '12px', borderRadius: '8px', cursor: 'pointer' }}
+              title="Klik untuk mengubah judul video secara real-time"
+            >
+              <span style={{ fontSize: '14px', color: '#f8fafc', fontWeight: 'bold' }}>{title}</span>
+              <CopyButton text={title} />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ background: '#1e293b', padding: '16px', borderRadius: '12px', border: '1px solid #334155' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+          <h3 style={{ margin: '0', fontSize: '14px', color: '#f8fafc' }}>📝 Deskripsi Full SEO (Hooks Algorithm)</h3>
+          <CopyButton text={result.description} />
+        </div>
+        <p style={{ fontSize: '13px', color: '#cbd5e1', whiteSpace: 'pre-wrap', background: '#0f172a', padding: '12px', borderRadius: '8px', border: '1px solid #334155', margin: 0 }}>
+          {result.description}
+        </p>
+      </div>
+
+      <div style={{ background: '#1e293b', padding: '16px', borderRadius: '12px', border: '1px solid #334155' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+          <h3 style={{ margin: '0', fontSize: '14px', color: '#f8fafc' }}>🏷️ Hashtags & Keywords</h3>
+          <CopyButton text={tags.join(", ")} />
+        </div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+          {tags.map((tag: string, i: number) => (
+            <span key={i} style={{ background: '#0f172a', color: '#60a5fa', padding: '4px 10px', borderRadius: '20px', fontSize: '12px', border: '1px solid #1e3a8a' }}>
+              #{tag.replace(/\s+/g, '')}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function OutputBlock({ title, value, compactBlock = false }: { title: string; value: any; compactBlock?: boolean }) {
+  const text = Array.isArray(value) ? value.join("\n") : String(value || "-");
+  return (
+    <div style={{ marginTop: compactBlock ? 10 : 0, background: '#0f172a', border: '1px solid #334155', padding: '16px', borderRadius: '12px', marginBottom: '16px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+        <h3 style={{ margin: 0, fontSize: '15px', color: '#cbd5e1' }}>{title}</h3>
+        <CopyButton text={text} />
+      </div>
+      <div style={{ fontSize: '14px', color: '#f8fafc', whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>{text}</div>
+    </div>
+  );
+}
 
   function renderCompetitors() { return <div><h2 style={{color: 'white'}}>Competitor Research (Dalam Pengembangan)</h2></div>; }
   function renderReports() { return <div><h2 style={{color: 'white'}}>Reports (Dalam Pengembangan)</h2></div>; }
