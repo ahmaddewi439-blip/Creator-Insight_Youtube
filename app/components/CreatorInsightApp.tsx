@@ -151,7 +151,6 @@ export default function CreatorInsightApp() {
   const [selectedVideo, setSelectedVideo] = useState<any>(null);
   const [optimizer, setOptimizer] = useState<ApiState<any>>({ loading: false, error: "", data: null });
   
-  // State untuk Video Optimizer Baru
   const [selectedVideoFormat, setSelectedVideoFormat] = useState("Shorts");
   const [videoDuration, setVideoDuration] = useState("5");
   const [videoLanguage, setVideoLanguage] = useState("Indonesia");
@@ -160,7 +159,6 @@ export default function CreatorInsightApp() {
   const [competitors, setCompetitors] = useState<ApiState<any[]>>({ loading: false, error: "", data: [] });
   const [competitorVideos, setCompetitorVideos] = useState<ApiState<any>>({ loading: false, error: "", data: null });
 
-  // State untuk Target Harian
   const [dailyTarget, setDailyTarget] = useState<ApiState<any>>({ loading: false, error: "", data: null });
   const [dailyScripts, setDailyScripts] = useState<Record<number, any>>({});
   const [loadingDailyScript, setLoadingDailyScript] = useState<Record<number, boolean>>({});
@@ -430,6 +428,17 @@ export default function CreatorInsightApp() {
         </section>
 
         <section className="grid" style={{ gridTemplateColumns: "1fr" }}>
+          
+          {/* ---- TOMBOL SUTRADARA AI KHUSUS HP (SANGAT TERLIHAT) ---- */}
+          <div className="card" style={{ border: '2px solid #10b981', background: 'linear-gradient(to right, #064e3b, #022c22)', padding: '20px', borderRadius: '12px', marginBottom: '8px' }}>
+             <h2 style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#34d399', margin: '0 0 8px 0', fontSize: '20px' }}>🎬 Sutradara AI (Full Video)</h2>
+             <p style={{ color: '#a7f3d0', margin: '0 0 16px 0', fontSize: '14px', lineHeight: '1.5' }}>Buat naskah video panjang (5-20 Menit) dengan Voice Over spesifik dan format gambar Slide-by-Slide untuk channel luar negeri.</p>
+             <button onClick={() => window.location.href='/long-video'} style={{ width: '100%', background: '#10b981', color: 'white', fontWeight: 'bold', padding: '14px', fontSize: '16px', border: 'none', borderRadius: '8px', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.3)' }}>
+               Masuk ke Sutradara AI 🚀
+             </button>
+          </div>
+          {/* -------------------------------------------------------- */}
+
           <div className="card" style={{ border: '2px solid #3b82f6' }}>
             <h2 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>🎯 TARGET HARIAN SEKARANG</h2>
             <p className="muted" style={{ marginBottom: 20 }}>Sistem akan meriset 4 Topik Trending hari ini dan secara otomatis memproduksi Data Matang (SEO, Judul, Game Spesifik, Thumbnail 9:16, & Prompt per Scene) untuk setiap videonya.</p>
@@ -537,7 +546,6 @@ export default function CreatorInsightApp() {
         <div className="card">
           <h2>Video Optimizer (Shorts & Long Video)</h2>
           
-          {/* PERBAIKAN WARNA DROPDOWN MENJADI DARK MODE */}
           <div className="form-row" style={{ marginTop: 18, marginBottom: 18, backgroundColor: '#1e293b', padding: 16, borderRadius: 12, border: '1px solid #334155' }}>
             <label style={{ display: 'flex', flexDirection: 'column', gap: 12, fontSize: '15px', fontWeight: 'bold', color: '#f8fafc' }}>
               Format Target AI:
