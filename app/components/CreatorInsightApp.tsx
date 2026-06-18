@@ -132,8 +132,14 @@ function LoginScreen() {
 
 function getVideoId(video: any) {
   if (!video) return "";
-  if (typeof video.id === "string") return video.id;
-  return video.id?.videoId || video.videoId || "";
+  // 1. Radar Khusus untuk format Playlist/Uploads YouTube
+  if (video.snippet?.resourceId?.videoId) return video.snippet.resourceId.videoId;
+  // 2. Radar untuk format pencarian standar
+  if (video.id?.videoId) return video.id.videoId;
+  // 3. Radar untuk format ID langsung
+  if (typeof video.id === "string" && video.id.length === 11) return video.id;
+  // 4. Fallback terakhir
+  return video.videoId || (typeof video.id === "string" ? video.id : "");
 }
 
 export default function CreatorInsightApp() {
@@ -505,42 +511,31 @@ export default function CreatorInsightApp() {
       if (type === "tags") alert("🏷️ Hashtags berhasil diterapkan pada video! Jangan lupa klik 'Simpan Perubahan'.");
     };
 
- // FUNGSI TOMBOL SIMPAN KE YOUTUBE (Pintar: Deteksi Video Asli vs Dummy)
+ // FUNGSI TOMBOL SIMPAN KE YOUTUBE (Live Update API Asli)
     const handleSaveToYouTube = async (e: any) => {
       if (!selectedVideo) return;
       
       const btn = e.currentTarget;
       const originalText = btn.innerHTML;
-      btn.innerHTML = "⏳ Memproses penyimpanan...";
+      btn.innerHTML = "⏳ Mengirim Tembakan ke Server YouTube...";
       btn.disabled = true;
 
       try {
         const v = selectedVideo;
         
-        // PENCARIAN ID SUPER AGRESIF DARI SEGALA SUDUT STRUKTUR DATA
-        let videoId = "";
-        if (typeof v.id === "string") videoId = v.id;
-        else if (v.videoId) videoId = v.videoId;
-        else if (v.id?.videoId) videoId = v.id.videoId;
-        else if (v.snippet?.resourceId?.videoId) videoId = v.snippet.resourceId.videoId;
-        else if (v.contentDetails?.upload?.videoId) videoId = v.contentDetails.upload.videoId;
-        else if (v.contentDetails?.videoId) videoId = v.contentDetails.videoId;
-
-        // Ambil teks hasil editan Anda
+        // Gunakan radar canggih yang baru kita pasang di atas
+        const videoId = getVideoId(v);
         const title = v.title || v.snippet?.title || "";
         const description = v.snippet?.description || "";
         const tags = v.snippet?.tags || v.tags || [];
         const categoryId = v.snippet?.categoryId || "20"; 
 
-        if (!title) throw new Error("Judul video kosong. Silakan ketuk salah satu rekomendasi judul.");
-
-        // JIKA ID TIDAK DITEMUKAN (Berarti ini Video Konsep/Dummy di Dasbor)
-        if (!videoId || videoId.length < 5) {
-          alert("✅ TERSIMPAN LOKAL!\n\nKarena ini adalah Video Konsep/Scheduled yang belum rilis resmi, perubahan Judul, Deskripsi, dan Hashtag otomatis diamankan secara lokal di Dasbor Anda!");
-          return; // Hentikan proses, tidak perlu kirim ke Server Google
+        // Jika radar masih gagal menemukan ID 11 Karakter
+        if (!videoId || videoId.length < 11) {
+          throw new Error("Gagal mendeteksi ID asli Video. Pastikan Anda mengeklik video yang sudah Published/Scheduled.");
         }
 
-        // JIKA ID DITEMUKAN (Berarti ini Video Asli, Tembakkan ke YouTube!)
+        // Tembakkan langsung ke Google Server
         const res = await fetch("/api/youtube/update-video", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -552,12 +547,12 @@ export default function CreatorInsightApp() {
         // Tangkap kode error khusus jika Google menolak izin (401/403)
         if (!res.ok) {
            if (res.status === 401 || res.status === 403) {
-             throw new Error("Akses Ditolak oleh Google.\n\nSOLUSI: Tekan tombol 'Logout', lalu Login lagi. Saat muncul pop-up Google, Anda WAJIB MENCENTANG kotak izin 'Manage / Kelola Akun YouTube' agar sistem kita diizinkan menyimpan data.");
+             throw new Error("Akses Ditolak oleh Google.\n\nSOLUSI: Tekan tombol 'Logout' di pojok kanan atas, lalu Login lagi. Saat muncul layar Google, Anda WAJIB MENCENTANG kotak izin 'Manage / Kelola Akun YouTube'.");
            }
            throw new Error(data.error || "Gagal menghubungi Server YouTube.");
         }
 
-        alert("🚀 SUKSES BESAR (LIVE YOUTUBE)!\n\nPerubahan Judul, Deskripsi, dan Hashtag resmi meluncur dan di-Update ke YouTube Studio Anda!");
+        alert("🚀 SUKSES BESAR (LIVE YOUTUBE)!\n\nPerubahan Judul, Deskripsi, dan Hashtag sudah permanen di YouTube Studio Anda! Jika Anda me-refresh web ini sekarang, datanya tidak akan kembali ke awal!");
       } catch (err: any) {
         alert("❌ GAGAL: " + err.message);
       } finally {
