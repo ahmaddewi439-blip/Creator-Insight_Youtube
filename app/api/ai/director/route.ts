@@ -69,12 +69,9 @@ export async function POST(req: Request) {
     
     let textResponse = data.choices[0].message.content;
     
-    // Pembersih Super Aman (Anti Error Vercel)
-    textResponse = textResponse.replace("```json", "").replace("
-```JSON", "").replace("```", "").trim();
-    if (textResponse.endsWith("```")) {
-        textResponse = textResponse.slice(0, -3).trim();
-    }
+    // Pembersih Super Aman (Satu baris, anti error pemotongan string Vercel)
+    textResponse = textResponse.replace(/```json/gi, "").replace(/
+```/g, "").trim();
 
     const scriptData = JSON.parse(textResponse);
     return NextResponse.json({ success: true, result: scriptData });
