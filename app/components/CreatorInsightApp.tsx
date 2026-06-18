@@ -525,24 +525,32 @@ export default function CreatorInsightApp() {
     );
   }
 
-  // --- RENDER MENU VIDEO OPTIMIZER (VERSI BARU YANG FIX BUG MULTI-PANEL) ---
- function renderOptimizer() {
-    // METODE TUBEBUDDY/VIDIQ: Update UI secara instan berdasarkan ID Unik
-    const handleLivePreview = (newTitle) => {
+ // METODE TUBEBUDDY/VIDIQ: Update UI secara instan berdasarkan ID Unik
+    const handleLivePreview = (newTitle: string) => {
       if (!selectedVideo) return;
       const currentId = getVideoId(selectedVideo);
       
+      // Update daftar video di tabel (Menimpa judul di root dan di snippet)
       setVideosState(prev => ({
         ...prev,
         data: prev.data?.map(v => {
           if (getVideoId(v) === currentId) {
-            return { ...v, snippet: { ...v.snippet, title: newTitle } };
+            return { 
+              ...v, 
+              title: newTitle, // Paksa ubah judul utama
+              snippet: { ...(v.snippet || {}), title: newTitle } // Paksa ubah judul snippet
+            };
           }
           return v;
         }) || []
       }));
       
-      setSelectedVideo((prev) => ({ ...prev, snippet: { ...prev.snippet, title: newTitle } }));
+      // Update panel video yang sedang aktif
+      setSelectedVideo((prev: any) => ({ 
+        ...prev, 
+        title: newTitle, 
+        snippet: { ...(prev?.snippet || {}), title: newTitle } 
+      }));
     };
 
     return (
