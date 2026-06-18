@@ -527,18 +527,24 @@ export default function CreatorInsightApp() {
 
   // --- RENDER MENU VIDEO OPTIMIZER (VERSI BARU YANG FIX BUG MULTI-PANEL) ---
  function renderOptimizer() {
-    const handleLivePreview = (newTitle) => {
+    // METODE TUBEBUDDY/VIDIQ: Update UI secara instan berdasarkan ID Unik
+    const handleLivePreview = (newTitle: string) => {
+      if (!selectedVideo) return;
+      const currentId = getVideoId(selectedVideo);
+      
+      // 1. Update daftar video di tabel
       setVideosState(prev => ({
         ...prev,
         data: prev.data?.map(v => {
-          if (v === selectedVideo) {
-            const updatedVideo = { ...v, snippet: { ...v.snippet, title: newTitle } };
-            setSelectedVideo(updatedVideo); 
-            return updatedVideo;
+          if (getVideoId(v) === currentId) {
+            return { ...v, snippet: { ...v.snippet, title: newTitle } };
           }
           return v;
         }) || []
       }));
+      
+      // 2. Update panel video yang sedang aktif
+      setSelectedVideo((prev: any) => ({ ...prev, snippet: { ...prev.snippet, title: newTitle } }));
     };
 
     return (
@@ -556,7 +562,8 @@ export default function CreatorInsightApp() {
               <thead><tr><th>#</th><th>Video</th><th>Views</th><th>Likes</th><th>Status</th><th>Aksi</th></tr></thead>
               <tbody>
                 {sortedVideos.map((v, i) => {
-                  const isSelected = selectedVideo === v; 
+                  // Pencocokan ketat menggunakan ID Video
+                  const isSelected = selectedVideo && getVideoId(selectedVideo) === getVideoId(v);
                   
                   return (
                     <React.Fragment key={getVideoId(v) || i}>
@@ -578,7 +585,7 @@ export default function CreatorInsightApp() {
                               {optimizer.data && !optimizer.loading && (
                                 <OptimizerResultView 
                                   result={optimizer.data} 
-                                  onLivePreview={(newTitle) => handleLivePreview(newTitle)}
+                                  onLivePreview={handleLivePreview}
                                 />
                               )}
                             </div>
@@ -600,7 +607,8 @@ export default function CreatorInsightApp() {
   function renderSettings() { return <div><h2 style={{color: 'white'}}>Settings (Dalam Pengembangan)</h2></div>; }
 }
 
-function OptimizerResultView({ result, onLivePreview }) {
+// PERBAIKAN VERCEL BUILD: Menambahkan Type Checking ketat agar npm run build tidak gagal
+function OptimizerResultView({ result, onLivePreview }: { result: any; onLivePreview: (title: string) => void }) {
   if (typeof result === "string") return <div className="output" style={{color: 'white'}}>{result}</div>;
   
   const titles = result.recommendedTitles || [];
@@ -611,7 +619,7 @@ function OptimizerResultView({ result, onLivePreview }) {
       <div style={{ background: '#1e293b', padding: '16px', borderRadius: '12px', border: '1px solid #334155' }}>
         <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#f8fafc' }}>🔥 3 Rekomendasi Judul Viral (Ketuk untuk Update Judul di Tabel Atas)</h3>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {titles.map((title, idx) => (
+          {titles.map((title: string, idx: number) => (
             <div 
               key={idx} 
               onClick={() => onLivePreview(title)}
@@ -641,7 +649,7 @@ function OptimizerResultView({ result, onLivePreview }) {
           <CopyButton text={tags.join(", ")} />
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-          {tags.map((tag, i) => (
+          {tags.map((tag: string, i: number) => (
             <span key={i} style={{ background: '#0f172a', color: '#60a5fa', padding: '4px 10px', borderRadius: '20px', fontSize: '12px', border: '1px solid #1e3a8a' }}>
               #{tag.replace(/\s+/g, '')}
             </span>
@@ -651,7 +659,6 @@ function OptimizerResultView({ result, onLivePreview }) {
     </div>
   );
 }
-
 function OutputBlock({ title, value, compactBlock = false }: { title: string; value: any; compactBlock?: boolean }) {
   const text = Array.isArray(value) ? value.join("\n") : String(value || "-");
   return (
