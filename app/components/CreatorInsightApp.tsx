@@ -505,7 +505,7 @@ export default function CreatorInsightApp() {
       if (type === "tags") alert("🏷️ Hashtags berhasil diterapkan pada video! Jangan lupa klik 'Simpan Perubahan'.");
     };
 
- // FUNGSI TOMBOL SIMPAN KE YOUTUBE (Live Update)
+ // FUNGSI TOMBOL SIMPAN KE YOUTUBE (Live Update - Versi Sapu Jagat)
     const handleSaveToYouTube = async (e: any) => {
       if (!selectedVideo) return;
       
@@ -515,14 +515,26 @@ export default function CreatorInsightApp() {
       btn.disabled = true;
 
       try {
-        // Tarik data terbaru hasil klik Anda
-        const videoId = getVideoId(selectedVideo);
-        const title = selectedVideo.title || selectedVideo.snippet?.title;
-        const description = selectedVideo.snippet?.description || "";
-        const tags = selectedVideo.snippet?.tags || [];
-        const categoryId = selectedVideo.snippet?.categoryId || "20"; 
+        const v = selectedVideo;
+        
+        // 1. Ekstrak Video ID menembus semua struktur folder API YouTube
+        const videoId = v.snippet?.resourceId?.videoId || 
+                        v.contentDetails?.videoId || 
+                        v.id?.videoId || 
+                        (typeof v.id === 'string' ? v.id : null) || 
+                        v.videoId;
 
-        // Eksekusi tembakan ke API yang baru kita buat
+        // 2. Ekstrak Judul & Deskripsi dengan aman
+        const title = v.snippet?.title || v.title || "";
+        const description = v.snippet?.description || "";
+        const tags = v.snippet?.tags || [];
+        const categoryId = v.snippet?.categoryId || "20"; 
+
+        // 3. Validasi lokal agar ketahuan jika ada yang tertinggal
+        if (!videoId) throw new Error("Sistem gagal menemukan ID asli video ini dari YouTube.");
+        if (!title) throw new Error("Judul video tidak terdeteksi. Silakan klik rekomendasi judul di atas sekali lagi.");
+
+        // 4. Eksekusi tembakan ke API
         const res = await fetch("/api/youtube/update-video", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -530,11 +542,11 @@ export default function CreatorInsightApp() {
         });
         
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Gagal menghubungi YouTube");
+        if (!res.ok) throw new Error(data.error || "Gagal menghubungi Server YouTube");
 
-        alert("🚀 SUKSES BESAR!\n\nJudul, Deskripsi, dan Hashtag video Anda sudah resmi berubah di YouTube Studio! Silakan Refresh web ini atau cek langsung YouTube Anda.");
+        alert("🚀 SUKSES BESAR!\n\nPerubahan Judul, Deskripsi, dan Hashtag sudah resmi menempel di YouTube Studio Anda! Silakan Refresh web ini atau cek Dasbor YouTube Anda.");
       } catch (err: any) {
-        alert("❌ GAGAL: " + err.message + "\n\n(Jika error karena izin, pastikan Anda sudah login ulang agar YouTube memberi izin sistem untuk mengedit video).");
+        alert("❌ GAGAL: " + err.message + "\n\n(Jika ini error izin 'Forbidden', silakan Logout dari web ini, lalu Login lagi, dan pastikan Anda MENCENTANG kotak 'Kelola Akun YouTube' saat pop-up Google muncul).");
       } finally {
         btn.innerHTML = originalText;
         btn.disabled = false;
