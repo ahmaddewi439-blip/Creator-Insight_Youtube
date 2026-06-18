@@ -1,43 +1,76 @@
-import { callAIJson } from "@/lib/ai";
+import { NextResponse } from "next/server";
 
+export const maxDuration = 60;
 export const runtime = "nodejs";
 
-export async function POST(request: Request) {
+export async function POST(req: Request) {
   try {
-    const body = await request.json();
-    const video = body?.video;
-    if (!video) return Response.json({ error: "Video belum dipilih." }, { status: 400 });
+    const body = await req.json();
+    const { video } = body;
 
-    const system = `Kamu adalah YouTube strategist untuk channel gaming/Roblox. Jawab hanya JSON valid. Jangan markdown.`;
-    const user = `Analisis video YouTube berikut dan buat optimasi yang bisa langsung dicopy.
+    const apiKey = process.env.AI_API_KEYS;
+    let baseUrl = process.env.AI_BASE_URL || "https://lite.koboillm.com/v1";
+    const aiModel = process.env.AI_MODEL || "gemini/gemini-2.5-flash-lite";
 
-Data video:
-${JSON.stringify(video, null, 2)}
+    if (!apiKey) {
+      return NextResponse.json({ error: "API Key belum diatur." }, { status: 400 });
+    }
 
-Output wajib JSON dengan struktur:
-{
-  "score": {"title": number, "seo": number, "ctr": number, "retention": number, "overall": number},
-  "diagnosis": "ringkasan singkat masalah dan peluang",
-  "recommendedTitles": ["5 judul alternatif kuat"],
-  "caption": "caption singkat untuk posting/Shorts",
-  "description": "deskripsi YouTube yang natural dan SEO friendly",
-  "hashtags": ["#Roblox"],
-  "keywords": ["keyword"],
-  "thumbnailTexts": ["3 opsi teks thumbnail maksimal 5 kata"],
-  "pinnedComment": "komentar pin yang mengundang diskusi",
-  "cta": "CTA natural untuk subscribe/like/comment",
-  "actionPlan": ["5 langkah perbaikan praktis"]
-}
+    baseUrl = baseUrl.replace(/\/+$/, "");
+    const endpoint = baseUrl.endsWith("/chat/completions") ? baseUrl : `${baseUrl}/chat/completions`;
 
-Aturan:
-- Bahasa output Indonesia.
-- Kalau topik Roblox, gunakan gaya global Roblox news.
-- CTA harus kuat, bukan sekadar 'like and subscribe'.
-- Jangan klaim data yang tidak ada.`;
+    const originalTitle = video?.snippet?.title || video?.title || "Video Tanpa Judul";
+    const originalDesc = video?.snippet?.description || "";
 
-    const result = await callAIJson([ { role: "system", content: system }, { role: "user", content: user } ], 0.7);
-    return Response.json(result.parsed ? { result: result.parsed } : { raw: result.raw });
-  } catch (err: any) {
-    return Response.json({ error: err?.message || "AI gagal membuat optimasi." }, { status: 500 });
+    const prompt = `You are an elite YouTube SEO Expert and Viral Content Strategist.
+    I have a video currently titled: "${originalTitle}"
+    Description: "${originalDesc.substring(0, 500)}"
+
+    TASK: Optimize this video for MAXIMUM YouTube Algorithm reach, high Click-Through-Rate (CTR), and top search ranking.
+    Language: Indonesian (Gunakan gaya bahasa yang natural, asik, clickbait namun tidak berbohong, cocok untuk audiens Indonesia).
+
+    REQUIREMENTS:
+    1. recommendedTitles: Provide 3 highly engaging, clickbait (but accurate) titles. Keep them under 70 characters for best visibility. Use emojis strategically.
+    2. description: Write a full SEO-optimized description. First 2 lines must hook the viewer. Include a brief summary, CTA to subscribe, and relevant keywords naturally woven in.
+    3. keywords: Provide an array of 15-20 highly searched tags/keywords related to the topic.
+    4. caption: A short 2-sentence version of the description for quick sharing.
+
+    Respond ONLY with a valid JSON object. DO NOT wrap in markdown.
+    {
+      "recommendedTitles": ["Judul Viral 1", "Judul Viral 2", "Judul Viral 3"],
+      "description": "Full SEO description here...",
+      "keywords": ["tag1", "tag2", "tag3"],
+      "caption": "Short hook caption..."
+    }`;
+
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json", 
+        "Authorization": `Bearer ${apiKey}` 
+      },
+      body: JSON.stringify({
+        model: aiModel,
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error?.message || JSON.stringify(data));
+    
+    let textResponse = data.choices[0].message.content.trim();
+    
+    // Pembersih JSON Anti-Error
+    const bt = "\x60\x60\x60";
+    if (textResponse.startsWith(bt + "json")) textResponse = textResponse.slice(7);
+    else if (textResponse.startsWith(bt + "JSON")) textResponse = textResponse.slice(7);
+    else if (textResponse.startsWith(bt)) textResponse = textResponse.slice(3);
+    if (textResponse.endsWith(bt)) textResponse = textResponse.slice(0, -3);
+    textResponse = textResponse.trim();
+
+    const result = JSON.parse(textResponse);
+    return NextResponse.json({ success: true, result });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
