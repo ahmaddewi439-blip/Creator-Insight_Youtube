@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 function CopyButton({ text, label = "Copy" }) {
   const [copied, setCopied] = useState(false);
@@ -21,7 +21,19 @@ export default function LongVideoCreator() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [errorMsg, setErrorMsg] = useState("");
+  // --- MULAI KODE AUTO-SAVE ---
+  useEffect(() => {
+    const savedForm = localStorage.getItem("sutradaraForm");
+    const savedResult = localStorage.getItem("sutradaraResult");
+    if (savedForm) setFormData(JSON.parse(savedForm));
+    if (savedResult) setResult(JSON.parse(savedResult));
+  }, []);
 
+  useEffect(() => {
+    localStorage.setItem("sutradaraForm", JSON.stringify(formData));
+    if (result) localStorage.setItem("sutradaraResult", JSON.stringify(result));
+  }, [formData, result]);
+  // --- AKHIR KODE AUTO-SAVE ---
   const generateFullScript = async () => {
     setLoading(true);
     setErrorMsg("");
