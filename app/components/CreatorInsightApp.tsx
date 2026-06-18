@@ -528,11 +528,10 @@ export default function CreatorInsightApp() {
   // --- RENDER MENU VIDEO OPTIMIZER (VERSI BARU YANG FIX BUG MULTI-PANEL) ---
  function renderOptimizer() {
     // METODE TUBEBUDDY/VIDIQ: Update UI secara instan berdasarkan ID Unik
-    const handleLivePreview = (newTitle: string) => {
+    const handleLivePreview = (newTitle) => {
       if (!selectedVideo) return;
       const currentId = getVideoId(selectedVideo);
       
-      // 1. Update daftar video di tabel
       setVideosState(prev => ({
         ...prev,
         data: prev.data?.map(v => {
@@ -543,8 +542,7 @@ export default function CreatorInsightApp() {
         }) || []
       }));
       
-      // 2. Update panel video yang sedang aktif
-      setSelectedVideo((prev: any) => ({ ...prev, snippet: { ...prev.snippet, title: newTitle } }));
+      setSelectedVideo((prev) => ({ ...prev, snippet: { ...prev.snippet, title: newTitle } }));
     };
 
     return (
@@ -562,7 +560,6 @@ export default function CreatorInsightApp() {
               <thead><tr><th>#</th><th>Video</th><th>Views</th><th>Likes</th><th>Status</th><th>Aksi</th></tr></thead>
               <tbody>
                 {sortedVideos.map((v, i) => {
-                  // Pencocokan ketat menggunakan ID Video
                   const isSelected = selectedVideo && getVideoId(selectedVideo) === getVideoId(v);
                   
                   return (
@@ -602,13 +599,13 @@ export default function CreatorInsightApp() {
       </div>
     );
   }
+
   function renderCompetitors() { return <div><h2 style={{color: 'white'}}>Competitor Research (Dalam Pengembangan)</h2></div>; }
   function renderReports() { return <div><h2 style={{color: 'white'}}>Reports (Dalam Pengembangan)</h2></div>; }
   function renderSettings() { return <div><h2 style={{color: 'white'}}>Settings (Dalam Pengembangan)</h2></div>; }
-}
+} // INI ADALAH KURUNG PENUTUP UTAMA APLIKASI (JANGAN DIHAPUS)
 
-
-// PERBAIKAN VERCEL BUILD: Menambahkan Type Checking ketat agar npm run build tidak gagal
+// --- KOMPONEN HASIL SEO (DESAIN BARU & ANTI ERROR VERCEL) ---
 function OptimizerResultView({ result, onLivePreview }: { result: any; onLivePreview: (title: string) => void }) {
   if (typeof result === "string") return <div className="output" style={{color: 'white'}}>{result}</div>;
   
@@ -647,71 +644,6 @@ function OptimizerResultView({ result, onLivePreview }: { result: any; onLivePre
       <div style={{ background: '#1e293b', padding: '16px', borderRadius: '12px', border: '1px solid #334155' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
           <h3 style={{ margin: '0', fontSize: '14px', color: '#f8fafc' }}>🏷️ Hashtags & Keywords</h3>
-          <CopyButton text={tags.join(", ")} />
-        </div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-          {tags.map((tag: string, i: number) => (
-            <span key={i} style={{ background: '#0f172a', color: '#60a5fa', padding: '4px 10px', borderRadius: '20px', fontSize: '12px', border: '1px solid #1e3a8a' }}>
-              #{tag.replace(/\s+/g, '')}
-            </span>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-function OutputBlock({ title, value, compactBlock = false }: { title: string; value: any; compactBlock?: boolean }) {
-  const text = Array.isArray(value) ? value.join("\n") : String(value || "-");
-  return (
-    <div style={{ marginTop: compactBlock ? 10 : 0, background: '#0f172a', border: '1px solid #334155', padding: '16px', borderRadius: '12px', marginBottom: '16px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-        <h3 style={{ margin: 0, fontSize: '15px', color: '#cbd5e1' }}>{title}</h3>
-        <CopyButton text={text} />
-      </div>
-      <div style={{ fontSize: '14px', color: '#f8fafc', whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>{text}</div>
-    </div>
-  );
-}
-
-  function renderCompetitors() { return <div><h2 style={{color: 'white'}}>Competitor Research (Dalam Pengembangan)</h2></div>; }
-  function renderReports() { return <div><h2 style={{color: 'white'}}>Reports (Dalam Pengembangan)</h2></div>; }
-  function renderSettings() { return <div><h2 style={{color: 'white'}}>Settings (Dalam Pengembangan)</h2></div>; }
-}
-
-// --- KOMPONEN HASIL SEO (DESAIN BARU) ---
-function OptimizerResultView({ result }: { result: any }) {
-  if (typeof result === "string") return <div className="output" style={{color: 'white'}}>{result}</div>;
-  
-  const titles = result.recommendedTitles || [];
-  const tags = result.keywords || [];
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <div style={{ background: '#1e293b', padding: '16px', borderRadius: '12px', border: '1px solid #334155' }}>
-        <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#f8fafc' }}>🔥 3 Rekomendasi Judul Viral (Clickbait namun Akurat)</h3>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {titles.map((title: string, idx: number) => (
-            <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#0f172a', border: '1px solid #334155', padding: '12px', borderRadius: '8px' }}>
-              <span style={{ fontSize: '14px', color: '#f8fafc', fontWeight: 'bold' }}>{title}</span>
-              <CopyButton text={title} />
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div style={{ background: '#1e293b', padding: '16px', borderRadius: '12px', border: '1px solid #334155' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-          <h3 style={{ margin: 0, fontSize: '14px', color: '#f8fafc' }}>📝 Deskripsi Full SEO (Hooks Algorithm)</h3>
-          <CopyButton text={result.description} />
-        </div>
-        <p style={{ fontSize: '13px', color: '#cbd5e1', whiteSpace: 'pre-wrap', background: '#0f172a', padding: '12px', borderRadius: '8px', border: '1px solid #334155' }}>
-          {result.description}
-        </p>
-      </div>
-
-      <div style={{ background: '#1e293b', padding: '16px', borderRadius: '12px', border: '1px solid #334155' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-          <h3 style={{ margin: 0, fontSize: '14px', color: '#f8fafc' }}>🏷️ Hashtags & Keywords (Copy & Paste ke Kolom Tag)</h3>
           <CopyButton text={tags.join(", ")} />
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
