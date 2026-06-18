@@ -607,6 +607,7 @@ export default function CreatorInsightApp() {
   function renderSettings() { return <div><h2 style={{color: 'white'}}>Settings (Dalam Pengembangan)</h2></div>; }
 }
 
+
 // PERBAIKAN VERCEL BUILD: Menambahkan Type Checking ketat agar npm run build tidak gagal
 function OptimizerResultView({ result, onLivePreview }: { result: any; onLivePreview: (title: string) => void }) {
   if (typeof result === "string") return <div className="output" style={{color: 'white'}}>{result}</div>;
