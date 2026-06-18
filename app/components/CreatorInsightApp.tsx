@@ -11,6 +11,7 @@ type ApiState<T> = {
   data: T | null;
 };
 
+// KITA KEMBALIKAN MENU VIDEO OPTIMIZER KE DAFTAR TABS
 const tabs: { id: TabId; label: string; icon: string }[] = [
   { id: "overview", label: "Overview", icon: "🏠" },
   { id: "optimizer", label: "Video Optimizer", icon: "▶️" },
@@ -108,7 +109,7 @@ function VideoRow({ video, index, onSelect }: { video: any; index: number; onSel
       </td>
       <td>{compact(video?.views ?? video?.statistics?.viewCount)}</td>
       <td>{compact(video?.likes ?? video?.statistics?.likeCount)}</td>
-      <td><span className={privacy === "public" ? "status-pill" : "status-pill yellow"}>{privacy}</span></td>
+      <td><span className={privacy === "public" ? "status-pill" : (privacy === "scheduled" ? "status-pill yellow" : "status-pill red")}>{privacy}</span></td>
       {onSelect && <td><button className="btn" onClick={() => onSelect(video)}>Optimize</button></td>}
     </tr>
   );
@@ -125,7 +126,7 @@ function LoginScreen() {
           </div>
           <h1>Tool pribadi untuk analisis YouTube dan membuat Roblox Shorts.</h1>
           <p className="muted" style={{ fontSize: 17, lineHeight: 1.6 }}>
-            Login channel YouTube, optimasi video, cek kompetitor, lalu generate paket Roblox Shorts lengkap: hook 3 detik, VO natural, 5 scene, prompt gambar, arahan gameplay, caption, deskripsi, hashtag, dan CTA kuat.
+            Login channel YouTube, cek performa, lalu gunakan Sutradara AI untuk generate paket video super lengkap dengan gaya Micro-Pacing!
           </p>
           <div className="form-row" style={{ marginTop: 22 }}>
             <button className="btn primary" onClick={() => signIn("google")}>Login Channel YouTube</button>
@@ -148,17 +149,10 @@ export default function CreatorInsightApp() {
   const [channelState, setChannelState] = useState<ApiState<any>>({ loading: false, error: "", data: null });
   const [videosState, setVideosState] = useState<ApiState<any[]>>({ loading: false, error: "", data: [] });
   
+  // STATE UNTUK VIDEO OPTIMIZER KITA KEMBALIKAN
   const [selectedVideo, setSelectedVideo] = useState<any>(null);
   const [optimizer, setOptimizer] = useState<ApiState<any>>({ loading: false, error: "", data: null });
   
-  const [selectedVideoFormat, setSelectedVideoFormat] = useState("Shorts");
-  const [videoDuration, setVideoDuration] = useState("5");
-  const [videoLanguage, setVideoLanguage] = useState("Indonesia");
-
-  const [competitorQuery, setCompetitorQuery] = useState("");
-  const [competitors, setCompetitors] = useState<ApiState<any[]>>({ loading: false, error: "", data: [] });
-  const [competitorVideos, setCompetitorVideos] = useState<ApiState<any>>({ loading: false, error: "", data: null });
-
   const [dailyTarget, setDailyTarget] = useState<ApiState<any>>({ loading: false, error: "", data: null });
   const [dailyScripts, setDailyScripts] = useState<Record<number, any>>({});
   const [loadingDailyScript, setLoadingDailyScript] = useState<Record<number, boolean>>({});
@@ -301,6 +295,7 @@ export default function CreatorInsightApp() {
     }
   }, [activeDailyTab, dailyTarget]);
 
+  // FUNGSI OPTIMASI VIDEO YANG SUDAH DIPERBARUI
   async function optimizeVideo(video: any) {
     setSelectedVideo(video);
     setOptimizer({ loading: true, error: "", data: null });
@@ -310,36 +305,17 @@ export default function CreatorInsightApp() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
-          video, videoFormat: selectedVideoFormat,
-          duration: selectedVideoFormat === "Long" ? `${videoDuration} minutes` : "Shorts",
-          language: videoLanguage,
-          instruction: `CRITICAL: Judul asli video ini adalah "${originalTitle}". Format target: ${selectedVideoFormat}. Durasi: ${selectedVideoFormat === "Long" ? `${videoDuration} minutes` : "Shorts"}. Bahasa: ${videoLanguage}. Berikan JSON (recommendedTitles, caption, description, keywords).`
+          video, 
+          // Default otomatis agar AI langsung bekerja tanpa input manual
+          videoFormat: "General YouTube Video",
+          duration: "Auto-detect",
+          language: "Indonesia/English Mix",
+          instruction: `CRITICAL: Judul asli video ini adalah "${originalTitle}". Tolong optimasi SEO untuk video ini agar lebih clickbait dan mudah ditemukan di pencarian. Berikan JSON (recommendedTitles, caption, description, keywords).`
         })
       });
       setOptimizer({ loading: false, error: "", data: data.result || data.raw });
     } catch (err: any) {
       setOptimizer({ loading: false, error: err.message, data: null });
-    }
-  }
-
-  async function searchCompetitors() {
-    setCompetitors({ loading: true, error: "", data: [] });
-    setCompetitorVideos({ loading: false, error: "", data: null });
-    try {
-      const data = await fetchJson(`/api/youtube/competitors?q=${encodeURIComponent(competitorQuery)}`);
-      setCompetitors({ loading: false, error: "", data: data.channels || [] });
-    } catch (err: any) {
-      setCompetitors({ loading: false, error: err.message, data: [] });
-    }
-  }
-
-  async function loadCompetitorVideos(channelId: string) {
-    setCompetitorVideos({ loading: true, error: "", data: null });
-    try {
-      const data = await fetchJson(`/api/youtube/channel-videos?channelId=${encodeURIComponent(channelId)}`);
-      setCompetitorVideos({ loading: false, error: "", data });
-    } catch (err: any) {
-      setCompetitorVideos({ loading: false, error: err.message, data: null });
     }
   }
 
@@ -371,12 +347,13 @@ export default function CreatorInsightApp() {
         </div>
 
         {channelState.error && <div className="alert error">{channelState.error}</div>}
+        
         {active === "overview" && renderOverview()}
         {active === "optimizer" && renderOptimizer()}
-        {active === "competitors" && renderCompetitors()}
+        {active === "competitors" && <div className="card"><h2>Competitor Research (Dalam Pengembangan)</h2></div>}
         {active === "roblox" && <div className="card"><h2>Roblox Creator</h2><p className="muted">Silakan gunakan fitur <strong>Target Harian</strong> di tab Overview untuk membuat Roblox Shorts secara otomatis, atau klik tombol <strong>Sutradara AI Video</strong> di menu kiri bawah.</p></div>}
-        {active === "reports" && renderReports()}
-        {active === "settings" && renderSettings()}
+        {active === "reports" && <div className="card"><h2>Reports (Dalam Pengembangan)</h2></div>}
+        {active === "settings" && <div className="card"><h2>Settings (Dalam Pengembangan)</h2></div>}
       </main>
     </div>
   );
@@ -415,8 +392,8 @@ export default function CreatorInsightApp() {
               <ScoreRing value={channelScore} label={channelScore >= 85 ? "Excellent" : "Bagus"} />
               <div>
                 <h3>Channel kamu sudah siap dioptimasi.</h3>
-                <p className="muted">Pertahankan konsistensi upload, perkuat hook 3 detik pertama, dan optimalkan SEO.</p>
-                <button className="btn primary" onClick={() => setActive("optimizer")}>Lihat Rekomendasi →</button>
+                <p className="muted">Pertahankan konsistensi upload, perkuat hook pertama, dan fokus pada gaya Micro-Pacing.</p>
+                <button className="btn primary" onClick={() => setActive("optimizer")}>Lihat Video Terjadwal →</button>
               </div>
             </div>
           </div>
@@ -429,19 +406,17 @@ export default function CreatorInsightApp() {
 
         <section className="grid" style={{ gridTemplateColumns: "1fr" }}>
           
-          {/* ---- TOMBOL SUTRADARA AI KHUSUS HP (SANGAT TERLIHAT) ---- */}
           <div className="card" style={{ border: '2px solid #10b981', background: 'linear-gradient(to right, #064e3b, #022c22)', padding: '20px', borderRadius: '12px', marginBottom: '8px' }}>
              <h2 style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#34d399', margin: '0 0 8px 0', fontSize: '20px' }}>🎬 Sutradara AI (Full Video)</h2>
-             <p style={{ color: '#a7f3d0', margin: '0 0 16px 0', fontSize: '14px', lineHeight: '1.5' }}>Buat naskah video panjang (5-20 Menit) dengan Voice Over spesifik dan format gambar Slide-by-Slide untuk channel luar negeri.</p>
+             <p style={{ color: '#a7f3d0', margin: '0 0 16px 0', fontSize: '14px', lineHeight: '1.5' }}>Buat naskah video panjang (5-20 Menit) dengan Voice Over spesifik, instruksi overlay teks, dan format gambar Micro-Pacing (Slide-by-Slide) untuk channel luar negeri.</p>
              <button onClick={() => window.location.href='/long-video'} style={{ width: '100%', background: '#10b981', color: 'white', fontWeight: 'bold', padding: '14px', fontSize: '16px', border: 'none', borderRadius: '8px', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.3)' }}>
                Masuk ke Sutradara AI 🚀
              </button>
           </div>
-          {/* -------------------------------------------------------- */}
 
           <div className="card" style={{ border: '2px solid #3b82f6' }}>
             <h2 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>🎯 TARGET HARIAN SEKARANG</h2>
-            <p className="muted" style={{ marginBottom: 20 }}>Sistem akan meriset 4 Topik Trending hari ini dan secara otomatis memproduksi Data Matang (SEO, Judul, Game Spesifik, Thumbnail 9:16, & Prompt per Scene) untuk setiap videonya.</p>
+            <p className="muted" style={{ marginBottom: 20 }}>Sistem akan meriset 4 Topik Trending hari ini dan secara otomatis memproduksi Data Matang untuk setiap videonya.</p>
             {!dailyTarget.data && (
               <button className="btn primary block" onClick={generateDailyTarget} disabled={dailyTarget.loading} style={{ width: '100%', padding: 16, fontSize: 16 }}>
                 {dailyTarget.loading ? "⏳ Mencari Topik Trending & Meracik Data..." : "Generate 4 Video Matang Hari Ini"}
@@ -463,7 +438,6 @@ export default function CreatorInsightApp() {
                   const topicData = dailyTarget.data.videos[activeDailyTab];
                   const scriptData = dailyScripts[activeDailyTab];
                   const isGenerating = loadingDailyScript[activeDailyTab];
-                  const timeWIB = uploadTimes[activeDailyTab] || "12:00 WIB";
                   const getSpecificGames = (data: any) => {
                     const raw = data?.specificGameplay || data?.gameplayPlan?.recommendedRobloxGamesOrMaps?.join(", ") || "";
                     if (!raw || raw.toLowerCase().includes("relevant")) return "Tower of Hell, Blade Ball, Anime Defenders, atau Death Ball.";
@@ -529,6 +503,7 @@ export default function CreatorInsightApp() {
     );
   }
 
+  // --- RENDER MENU VIDEO OPTIMIZER (VERSI BERSIH TANPA DROPDOWN) ---
   function renderOptimizer() {
     const handleLivePreview = (videoId: string, newTitle: string) => {
       setVideosState(prev => ({
@@ -544,44 +519,17 @@ export default function CreatorInsightApp() {
     return (
       <div className="grid">
         <div className="card">
-          <h2>Video Optimizer (Shorts & Long Video)</h2>
-          
-          <div className="form-row" style={{ marginTop: 18, marginBottom: 18, backgroundColor: '#1e293b', padding: 16, borderRadius: 12, border: '1px solid #334155' }}>
-            <label style={{ display: 'flex', flexDirection: 'column', gap: 12, fontSize: '15px', fontWeight: 'bold', color: '#f8fafc' }}>
-              Format Target AI:
-              <select className="select" style={{ padding: '12px 18px', fontSize: '14px', borderRadius: '8px', backgroundColor: '#0f172a', color: '#ffffff', border: '1px solid #475569', outline: 'none' }} value={selectedVideoFormat} onChange={(e) => setSelectedVideoFormat(e.target.value)}>
-                <option value="Shorts">YouTube Shorts (Vertikal, Hook Cepat, CTA)</option>
-                <option value="Long">Video Panjang (SEO + Storytelling)</option>
-              </select>
-
-              {selectedVideoFormat === "Long" && (
-                <div>
-                  <label style={{ color: '#cbd5e1' }}>Durasi Target</label>
-                  <select className="select" style={{ padding: '12px 18px', fontSize: '14px', borderRadius: '8px', backgroundColor: '#0f172a', color: '#ffffff', border: '1px solid #475569', width: '100%', marginTop: '5px', outline: 'none' }} value={videoDuration} onChange={(e) => setVideoDuration(e.target.value)}>
-                    <option value="5">5 Menit</option>
-                    <option value="10">10 Menit</option>
-                    <option value="15">15 Menit</option>
-                    <option value="20">20 Menit</option>
-                  </select>
-                </div>
-              )}
-
-              <div>
-                <label style={{ color: '#cbd5e1' }}>Bahasa</label>
-                <select className="select" style={{ padding: '12px 18px', fontSize: '14px', borderRadius: '8px', backgroundColor: '#0f172a', color: '#ffffff', border: '1px solid #475569', width: '100%', marginTop: '5px', outline: 'none' }} value={videoLanguage} onChange={(e) => setVideoLanguage(e.target.value)}>
-                  <option value="Indonesia">Indonesia</option>
-                  <option value="English">English</option>
-                  <option value="Mandarin">Mandarin</option>
-                  <option value="Korea">Korea</option>
-                  <option value="Jepang">Jepang</option>
-                </select>
-              </div>
-            </label>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+            <div>
+              <h2 style={{ margin: '0 0 8px 0', fontSize: '24px' }}>Video Optimizer</h2>
+              <p className="muted" style={{ margin: 0 }}>Optimasi Judul & Deskripsi SEO untuk video yang sudah Published atau Scheduled.</p>
+            </div>
           </div>
-
+          
+          {/* TABEL VIDEO LANGSUNG MUNCUL DI SINI, KOTAK DROPDOWN SUDAH DIHAPUS */}
           <div className="table-wrapper">
             <table className="table">
-              <thead><tr><th>#</th><th>Video</th><th>Views</th><th>Likes</th><th>Status</th><th></th></tr></thead>
+              <thead><tr><th>#</th><th>Video</th><th>Views</th><th>Likes</th><th>Status</th><th>Aksi</th></tr></thead>
               <tbody>
                 {sortedVideos.map((v, i) => {
                   const isSelected = selectedVideo && getVideoId(selectedVideo) === getVideoId(v);
@@ -599,7 +547,7 @@ export default function CreatorInsightApp() {
                               {optimizer.loading && <div className="skeleton" style={{ height: '300px', width: '100%', borderRadius: '12px' }} />}
                               {optimizer.error && <div className="alert error">{optimizer.error}</div>}
                               {optimizer.data && !optimizer.loading && (
-                                <OptimizerResultView result={optimizer.data} format={selectedVideoFormat} video={v} onLivePreview={(newTitle) => handleLivePreview(getVideoId(v), newTitle)} />
+                                <OptimizerResultView result={optimizer.data} format="General" video={v} onLivePreview={(newTitle) => handleLivePreview(getVideoId(v), newTitle)} />
                               )}
                             </div>
                           </td>
@@ -615,12 +563,9 @@ export default function CreatorInsightApp() {
       </div>
     );
   }
-
-  function renderCompetitors() { return <div><h2 style={{color: 'white'}}>Competitor Research (Dalam Pengembangan)</h2></div>; }
-  function renderReports() { return <div><h2 style={{color: 'white'}}>Reports (Dalam Pengembangan)</h2></div>; }
-  function renderSettings() { return <div><h2 style={{color: 'white'}}>Settings (Dalam Pengembangan)</h2></div>; }
 }
 
+// KOMPONEN UNTUK MENAMPILKAN HASIL OPTIMIZER
 function OptimizerResultView({ result, format, video, onLivePreview }: { result: any; format: string; video: any; onLivePreview: (title: string) => void }) {
   const [selectedTitleIdx, setSelectedTitleIdx] = useState(0);
   const [selectedDescIdx, setSelectedDescIdx] = useState(0);
