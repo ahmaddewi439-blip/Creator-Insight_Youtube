@@ -8,7 +8,7 @@ export async function POST(req: Request) {
     const { topic, duration, language } = await req.json();
 
     const apiKey = process.env.AI_API_KEYS;
-    let baseUrl = process.env.AI_BASE_URL || "https://lite.koboillm.com/v1";
+    let baseUrl = process.env.AI_BASE_URL || "[https://lite.koboillm.com/v1](https://lite.koboillm.com/v1)";
     const aiModel = process.env.AI_MODEL || "gemini/gemini-2.5-flash-lite";
 
     if (!apiKey) {
@@ -67,11 +67,22 @@ export async function POST(req: Request) {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error?.message || JSON.stringify(data));
     
-    let textResponse = data.choices[0].message.content;
+    let textResponse = data.choices[0].message.content.trim();
     
-    // Pembersih Super Aman (Satu baris, anti error pemotongan string Vercel)
-    textResponse = textResponse.replace(/```json/gi, "").replace(/
-```/g, "").trim();
+    // PEMBERSIH SUPER AMAN: Tanpa Regex, 100% Anti Error Vercel
+    if (textResponse.startsWith("```json")) {
+        textResponse = textResponse.slice(7);
+    } else if (textResponse.startsWith("```JSON")) {
+        textResponse = textResponse.slice(7);
+    } else if (textResponse.startsWith("```")) {
+        textResponse = textResponse.slice(3);
+    }
+    
+    if (textResponse.endsWith("```")) {
+        textResponse = textResponse.slice(0, -3);
+    }
+    
+    textResponse = textResponse.trim();
 
     const scriptData = JSON.parse(textResponse);
     return NextResponse.json({ success: true, result: scriptData });

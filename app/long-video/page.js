@@ -84,8 +84,7 @@ export default function LongVideoCreator() {
               <h2 className="text-2xl font-bold text-green-400">
                 {result.videoTitle || "Blueprint Video Panjang:"}
               </h2>
-              
-              <CopyButton text="{JSON.stringify(result," null, 2)} label="Copy Semua (JSON)"/>
+              <CopyButton 2)} label="Copy Semua (JSON)" null, text="{JSON.stringify(result,"/>
             </div>
 
             {scenesList.length > 0 ? (
@@ -98,8 +97,7 @@ export default function LongVideoCreator() {
                       </span>
                       <p className="text-sm font-bold text-gray-400 mt-2">⏱️ Waktu VO: {scene.duration || scene.time || "-"}</p>
                     </div>
-                    
-                    <CopyButton text="{scene.vo" || scene.voiceOver} label="Copy Naskah VO"/>
+                    <CopyButton label="Copy Naskah VO" scene.voiceOver} text="{scene.vo" ||/>
                   </div>
                   
                   <p className="text-lg text-white mb-6 leading-relaxed">
@@ -117,8 +115,7 @@ export default function LongVideoCreator() {
                             <span className="text-xs font-bold text-yellow-500 bg-yellow-500/10 px-2 py-1 rounded mr-2 border border-yellow-500/20">⏱️ {vis.time}</span>
                             <p className="text-sm italic text-green-400 mt-2 leading-relaxed">{vis.prompt}</p>
                           </div>
-                          
-                          <CopyButton text="{vis.prompt}" label="Copy Prompt"/>
+                          <CopyButton label="Copy Prompt" text="{vis.prompt}"/>
                         </div>
                       ))
                     ) : (
