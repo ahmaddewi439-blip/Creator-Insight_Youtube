@@ -505,9 +505,40 @@ export default function CreatorInsightApp() {
       if (type === "tags") alert("🏷️ Hashtags berhasil diterapkan pada video! Jangan lupa klik 'Simpan Perubahan'.");
     };
 
-    // FUNGSI TOMBOL SIMPAN
-    const handleSaveToYouTube = () => {
-      alert("✅ SEMUA PERUBAHAN TERSIMPAN!\n\nJudul, Deskripsi, dan Hashtag telah berhasil diamankan di Dasbor. \n\n(Catatan: Untuk sinkronisasi otomatis push ke YouTube Studio, kita perlu mengaktifkan rute API Update di sesi selanjutnya. Saat ini data aman di tabel lokal Anda.)");
+ // FUNGSI TOMBOL SIMPAN KE YOUTUBE (Live Update)
+    const handleSaveToYouTube = async (e: any) => {
+      if (!selectedVideo) return;
+      
+      const btn = e.currentTarget;
+      const originalText = btn.innerHTML;
+      btn.innerHTML = "⏳ Mengirim perubahan ke YouTube...";
+      btn.disabled = true;
+
+      try {
+        // Tarik data terbaru hasil klik Anda
+        const videoId = getVideoId(selectedVideo);
+        const title = selectedVideo.title || selectedVideo.snippet?.title;
+        const description = selectedVideo.snippet?.description || "";
+        const tags = selectedVideo.snippet?.tags || [];
+        const categoryId = selectedVideo.snippet?.categoryId || "20"; 
+
+        // Eksekusi tembakan ke API yang baru kita buat
+        const res = await fetch("/api/youtube/update-video", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ videoId, title, description, tags, categoryId })
+        });
+        
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Gagal menghubungi YouTube");
+
+        alert("🚀 SUKSES BESAR!\n\nJudul, Deskripsi, dan Hashtag video Anda sudah resmi berubah di YouTube Studio! Silakan Refresh web ini atau cek langsung YouTube Anda.");
+      } catch (err: any) {
+        alert("❌ GAGAL: " + err.message + "\n\n(Jika error karena izin, pastikan Anda sudah login ulang agar YouTube memberi izin sistem untuk mengedit video).");
+      } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
     };
 
     return (
