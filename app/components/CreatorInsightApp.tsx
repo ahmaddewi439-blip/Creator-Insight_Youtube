@@ -526,15 +526,14 @@ export default function CreatorInsightApp() {
   }
 
   // --- RENDER MENU VIDEO OPTIMIZER (VERSI BARU YANG FIX BUG MULTI-PANEL) ---
-  function renderOptimizer() {
-    // Fungsi ini akan mengubah judul di baris tabel secara real-time saat Anda mengklik rekomendasi
+ function renderOptimizer() {
     const handleLivePreview = (newTitle) => {
       setVideosState(prev => ({
         ...prev,
         data: prev.data?.map(v => {
           if (v === selectedVideo) {
             const updatedVideo = { ...v, snippet: { ...v.snippet, title: newTitle } };
-            setSelectedVideo(updatedVideo); // Mencegah panel menutup saat judul diubah
+            setSelectedVideo(updatedVideo); 
             return updatedVideo;
           }
           return v;
@@ -560,7 +559,7 @@ export default function CreatorInsightApp() {
                   const isSelected = selectedVideo === v; 
                   
                   return (
-                    <React.Fragment key={i}>
+                    <React.Fragment key={getVideoId(v) || i}>
                       <VideoRow video={v} index={i} onSelect={optimizeVideo} />
                       {isSelected && (
                         <tr>
@@ -596,13 +595,12 @@ export default function CreatorInsightApp() {
       </div>
     );
   }
-
   function renderCompetitors() { return <div><h2 style={{color: 'white'}}>Competitor Research (Dalam Pengembangan)</h2></div>; }
   function renderReports() { return <div><h2 style={{color: 'white'}}>Reports (Dalam Pengembangan)</h2></div>; }
   function renderSettings() { return <div><h2 style={{color: 'white'}}>Settings (Dalam Pengembangan)</h2></div>; }
 }
 
-function OptimizerResultView({ result, onLivePreview }: { result: any; onLivePreview: (t: string) => void }) {
+function OptimizerResultView({ result, onLivePreview }) {
   if (typeof result === "string") return <div className="output" style={{color: 'white'}}>{result}</div>;
   
   const titles = result.recommendedTitles || [];
@@ -613,7 +611,7 @@ function OptimizerResultView({ result, onLivePreview }: { result: any; onLivePre
       <div style={{ background: '#1e293b', padding: '16px', borderRadius: '12px', border: '1px solid #334155' }}>
         <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#f8fafc' }}>🔥 3 Rekomendasi Judul Viral (Ketuk untuk Update Judul di Tabel Atas)</h3>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {titles.map((title: string, idx: number) => (
+          {titles.map((title, idx) => (
             <div 
               key={idx} 
               onClick={() => onLivePreview(title)}
@@ -643,7 +641,7 @@ function OptimizerResultView({ result, onLivePreview }: { result: any; onLivePre
           <CopyButton text={tags.join(", ")} />
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-          {tags.map((tag: string, i: number) => (
+          {tags.map((tag, i) => (
             <span key={i} style={{ background: '#0f172a', color: '#60a5fa', padding: '4px 10px', borderRadius: '20px', fontSize: '12px', border: '1px solid #1e3a8a' }}>
               #{tag.replace(/\s+/g, '')}
             </span>
