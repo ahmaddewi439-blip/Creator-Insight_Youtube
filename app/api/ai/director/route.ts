@@ -72,17 +72,17 @@ export async function POST(req: Request) {
     
     let textResponse = data.choices[0].message.content.trim();
     
-    if (textResponse.startsWith("```json")) {
+    // ANTI-ERROR COPY PASTE: Menggunakan HEX Code \x60 pengganti backtick
+    const bt = "\x60\x60\x60";
+    if (textResponse.startsWith(bt + "json")) {
         textResponse = textResponse.slice(7);
-    } else if (textResponse.startsWith("
-```JSON")) {
+    } else if (textResponse.startsWith(bt + "JSON")) {
         textResponse = textResponse.slice(7);
-    } else if (textResponse.startsWith("```")) {
+    } else if (textResponse.startsWith(bt)) {
         textResponse = textResponse.slice(3);
     }
     
-    if (textResponse.endsWith("
-```")) {
+    if (textResponse.endsWith(bt)) {
         textResponse = textResponse.slice(0, -3);
     }
     
