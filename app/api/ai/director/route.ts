@@ -8,7 +8,7 @@ export async function POST(req: Request) {
     const { topic, duration, language } = await req.json();
 
     const apiKey = process.env.AI_API_KEYS;
-    let baseUrl = process.env.AI_BASE_URL || "[https://lite.koboillm.com/v1](https://lite.koboillm.com/v1)";
+    let baseUrl = process.env.AI_BASE_URL || "https://lite.koboillm.com/v1";
     const aiModel = process.env.AI_MODEL || "gemini/gemini-2.5-flash-lite";
 
     if (!apiKey) {
@@ -18,36 +18,39 @@ export async function POST(req: Request) {
     baseUrl = baseUrl.replace(/\/+$/, "");
     const endpoint = baseUrl.endsWith("/chat/completions") ? baseUrl : `${baseUrl}/chat/completions`;
 
-    const prompt = `You are an elite YouTube Director and Master Scriptwriter.
+    const prompt = `You are an elite YouTube Director specializing in "High-Retention Micro-Pacing" (like top-tier viral Shorts and fast-paced documentaries).
     Topic: "${topic}"
-    Language: ${language} (Write the Voice Over COMPLETELY in this language. Target audience is international. Ensure native-level storytelling).
-    Target Duration: ${duration}
+    Language: ${language} (Write the Voice Over COMPLETELY in this language. Ensure native-level, engaging storytelling).
+    Target Total Duration: ${duration}
 
     CRITICAL RULES:
-    1. TRUE DURATION MATCH: Average speaking rate is 130 words per minute. For a 5-minute video, you MUST write at least 650-750 words. For 10 minutes, write 1300+ words. Do NOT summarize. Write massive, extensive, detailed paragraphs for the Voice Over ('vo') to genuinely fill the time.
-    2. SLIDE-BY-SLIDE VISUALS: Provide a visual presentation style. For every single sentence or concept in the VO, provide a specific image prompt. Use the "visuals" array to list multiple images per scene with exact timestamps (e.g., 00:00 - 00:05, 00:05 - 00:12) that synchronize perfectly with the spoken VO.
-    3. AESTHETIC: All image prompts MUST seamlessly incorporate a premium dark green gaming aesthetic, cinematic lighting, high contrast, and sharp focus.
+    1. HYPER-SYNCED SLIDE-BY-SLIDE: The visuals MUST perfectly sync with the Voice Over (VO) concept by concept. Change the visual every 3 to 6 seconds to keep the viewer hooked.
+    2. EXACT TIMESTAMPS & OVERLAYS: For EVERY single visual, you must provide exact timestamps (e.g., "00:00 - 00:03") AND explicit instructions for on-screen text/overlays.
+    3. NATURAL PACING: Write the VO naturally. Do not force word counts, just ensure the spoken words comfortably fit the duration of the scene at a natural human speaking pace.
+    4. AESTHETIC: All image prompts MUST seamlessly incorporate a premium dark green gaming aesthetic, cinematic lighting, high contrast, and sharp focus.
     
-    Output ONLY a valid JSON object. DO NOT wrap the output in markdown code blocks. Just the raw JSON format:
+    Output ONLY a valid JSON object. DO NOT wrap the output in markdown. Just the raw JSON format:
     {
       "videoTitle": "Catchy Clickbait Title",
       "scenes": [
         {
           "scene": 1,
           "name": "Intro Hook",
-          "time": "00:00 - 01:00",
-          "vo": "Write massive paragraphs of voice over here. Hundreds of words to fill the duration...",
+          "time": "00:00 - 00:15",
+          "vo": "Write the natural voice over here. Focus on flow so it takes exactly 15 seconds to read aloud...",
           "visuals": [
             {
-              "time": "00:00 - 00:08",
-              "prompt": "Detailed 16:9 image prompt matching the exact first sentence. Premium dark green gaming style, cinematic lighting..."
+              "time": "00:00 - 00:04",
+              "prompt": "Detailed 16:9 image prompt matching the exact first sentence. Premium dark green gaming style...",
+              "overlay": "+ Overlay Teks: 'KATA KUNCI 1' (Tampil dari 00:00 - 00:04)"
             },
             {
-              "time": "00:08 - 00:15",
-              "prompt": "Next detailed 16:9 image prompt matching the next sentence..."
+              "time": "00:04 - 00:08",
+              "prompt": "Next detailed 16:9 image prompt matching the next sentence...",
+              "overlay": "+ Overlay Teks: 'KATA KUNCI 2' (Tampil dari 00:04 - 00:08)"
             }
           ],
-          "editingDirection": "Professional editing style"
+          "editingDirection": "Fast zoom, pop-up text animation, add whoosh sound effect."
         }
       ]
     }`;
@@ -69,16 +72,17 @@ export async function POST(req: Request) {
     
     let textResponse = data.choices[0].message.content.trim();
     
-    // PEMBERSIH SUPER AMAN: Tanpa Regex, 100% Anti Error Vercel
     if (textResponse.startsWith("```json")) {
         textResponse = textResponse.slice(7);
-    } else if (textResponse.startsWith("```JSON")) {
+    } else if (textResponse.startsWith("
+```JSON")) {
         textResponse = textResponse.slice(7);
     } else if (textResponse.startsWith("```")) {
         textResponse = textResponse.slice(3);
     }
     
-    if (textResponse.endsWith("```")) {
+    if (textResponse.endsWith("
+```")) {
         textResponse = textResponse.slice(0, -3);
     }
     

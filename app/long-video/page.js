@@ -72,7 +72,7 @@ export default function LongVideoCreator() {
           </div>
           
           <button className="w-full bg-green-600 hover:bg-green-500 py-4 rounded font-bold text-lg transition-all flex justify-center items-center" onClick={generateFullScript} disabled={loading}>
-            {loading ? "⏳ AI Sedang Menulis Ribuan Kata... (Tunggu 20-40 Detik)" : "🎬 Generate Naskah Matang Final"}
+            {loading ? "⏳ AI Sedang Meracik Visual & Overlay... (Tunggu 20-40 Detik)" : "🎬 Generate Naskah Matang Final"}
           </button>
           
           {errorMsg && <div className="p-4 bg-red-900/50 border border-red-500 text-white rounded mt-4">{errorMsg}</div>}
@@ -84,7 +84,7 @@ export default function LongVideoCreator() {
               <h2 className="text-2xl font-bold text-green-400">
                 {result.videoTitle || "Blueprint Video Panjang:"}
               </h2>
-              <CopyButton text={JSON.stringify(result, null, 2)} label="Copy Semua (JSON)" />
+              <CopyButton text="{JSON.stringify(result," null, 2)} label="Copy Semua (JSON)"/>
             </div>
 
             {scenesList.length > 0 ? (
@@ -97,7 +97,7 @@ export default function LongVideoCreator() {
                       </span>
                       <p className="text-sm font-bold text-gray-400 mt-2">⏱️ Waktu VO: {scene.duration || scene.time || "-"}</p>
                     </div>
-                    <CopyButton text={scene.vo || scene.voiceOver} label="Copy Naskah VO" />
+                    <CopyButton text="{scene.vo" || scene.voiceOver} label="Copy Naskah VO"/>
                   </div>
                   
                   <p className="text-lg text-white mb-6 leading-relaxed">
@@ -110,12 +110,18 @@ export default function LongVideoCreator() {
                     
                     {scene.visuals && scene.visuals.length > 0 ? (
                       scene.visuals.map((vis, vIdx) => (
-                        <div key={vIdx} className="flex justify-between items-start border-b border-gray-700/50 pb-3 mb-3 last:border-0 last:pb-0 last:mb-0 hover:bg-gray-800/50 p-2 rounded transition-colors">
+                        <div key={vIdx} className="flex justify-between items-start border-b border-gray-700/50 pb-3 mb-3 last:border-0 last:pb-0 last:mb-0 hover:bg-gray-800/50 p-3 rounded transition-colors">
                           <div className="w-5/6 pr-4">
                             <span className="text-xs font-bold text-yellow-500 bg-yellow-500/10 px-2 py-1 rounded mr-2 border border-yellow-500/20">⏱️ {vis.time}</span>
-                            <p className="text-sm italic text-green-400 mt-2 leading-relaxed">{vis.prompt}</p>
+                            <p className="text-sm italic text-green-400 mt-2 leading-relaxed">🖼️ Prompt: {vis.prompt}</p>
+                            
+                            {vis.overlay && (
+                              <p className="text-sm font-bold text-blue-400 mt-2 bg-blue-900/30 p-2 rounded border border-blue-800/50">
+                                🔠 {vis.overlay}
+                              </p>
+                            )}
                           </div>
-                          <CopyButton text={vis.prompt} label="Copy Prompt" />
+                          <CopyButton text="{vis.prompt}" label="Copy Prompt"/>
                         </div>
                       ))
                     ) : (
