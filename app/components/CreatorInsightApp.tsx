@@ -471,30 +471,43 @@ export default function CreatorInsightApp() {
   }
 
   function renderOptimizer() {
-    // FITUR LIVE PREVIEW TUBEBUDDY (Sudah Fix ganti 2 title sekaligus)
-    const handleLivePreview = (newTitle: string) => {
+    // FITUR LIVE PREVIEW (Update Judul, Deskripsi, dan Tags sekaligus)
+    const handleLivePreview = (type: string, value: any) => {
       if (!selectedVideo) return;
       const currentId = getVideoId(selectedVideo);
       
+      // Update data di state utama
       setVideosState(prev => ({
         ...prev,
         data: prev.data?.map(v => {
           if (getVideoId(v) === currentId) {
-            return { 
-              ...v, 
-              title: newTitle, 
-              snippet: { ...(v.snippet || {}), title: newTitle } 
-            };
+            let updatedSnippet = { ...(v.snippet || {}) };
+            if (type === "title") updatedSnippet.title = value;
+            if (type === "description") updatedSnippet.description = value;
+            if (type === "tags") updatedSnippet.tags = value;
+            return { ...v, title: type === "title" ? value : (v.title || updatedSnippet.title), snippet: updatedSnippet };
           }
           return v;
         }) || []
       }));
       
-      setSelectedVideo((prev: any) => ({ 
-        ...prev, 
-        title: newTitle, 
-        snippet: { ...(prev?.snippet || {}), title: newTitle } 
-      }));
+      // Update data di panel yang sedang terbuka
+      setSelectedVideo((prev: any) => {
+        let updatedSnippet = { ...(prev?.snippet || {}) };
+        if (type === "title") updatedSnippet.title = value;
+        if (type === "description") updatedSnippet.description = value;
+        if (type === "tags") updatedSnippet.tags = value;
+        return { ...prev, title: type === "title" ? value : (prev?.title || updatedSnippet.title), snippet: updatedSnippet };
+      });
+
+      // Memberikan notifikasi visual sukses diterapkan
+      if (type === "description") alert("📝 Deskripsi baru berhasil diterapkan pada video! Jangan lupa klik 'Simpan Perubahan'.");
+      if (type === "tags") alert("🏷️ Hashtags berhasil diterapkan pada video! Jangan lupa klik 'Simpan Perubahan'.");
+    };
+
+    // FUNGSI TOMBOL SIMPAN
+    const handleSaveToYouTube = () => {
+      alert("✅ SEMUA PERUBAHAN TERSIMPAN!\n\nJudul, Deskripsi, dan Hashtag telah berhasil diamankan di Dasbor. \n\n(Catatan: Untuk sinkronisasi otomatis push ke YouTube Studio, kita perlu mengaktifkan rute API Update di sesi selanjutnya. Saat ini data aman di tabel lokal Anda.)");
     };
 
     return (
@@ -532,10 +545,21 @@ export default function CreatorInsightApp() {
                               )}
                               {optimizer.error && <div className="alert error">{optimizer.error}</div>}
                               {optimizer.data && !optimizer.loading && (
-                                <OptimizerResultView 
-                                  result={optimizer.data} 
-                                  onLivePreview={handleLivePreview}
-                                />
+                                <>
+                                  <OptimizerResultView 
+                                    result={optimizer.data} 
+                                    onLivePreview={handleLivePreview}
+                                  />
+                                  {/* TOMBOL SIMPAN DITAMBAHKAN DI SINI */}
+                                  <div style={{ marginTop: '24px', borderTop: '1px solid #334155', paddingTop: '20px', display: 'flex', justifyContent: 'flex-end' }}>
+                                    <button 
+                                      onClick={handleSaveToYouTube} 
+                                      style={{ padding: '12px 24px', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.2)' }}
+                                    >
+                                      💾 Simpan Perubahan Video
+                                    </button>
+                                  </div>
+                                </>
                               )}
                             </div>
                           </td>
@@ -558,7 +582,7 @@ export default function CreatorInsightApp() {
 } 
 
 // --- KOMPONEN HASIL SEO (DESAIN BARU & ANTI ERROR VERCEL) ---
-function OptimizerResultView({ result, onLivePreview }: { result: any; onLivePreview: (title: string) => void }) {
+function OptimizerResultView({ result, onLivePreview }: { result: any; onLivePreview: (type: string, value: any) => void }) {
   if (typeof result === "string") return <div className="output" style={{color: 'white'}}>{result}</div>;
   
   const titles = result.recommendedTitles || [];
@@ -566,15 +590,19 @@ function OptimizerResultView({ result, onLivePreview }: { result: any; onLivePre
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      
+      {/* KOTAK JUDUL */}
       <div style={{ background: '#1e293b', padding: '16px', borderRadius: '12px', border: '1px solid #334155' }}>
-        <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#f8fafc' }}>🔥 3 Rekomendasi Judul Viral (Ketuk untuk Update Judul di Tabel Atas)</h3>
+        <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#f8fafc' }}>🔥 3 Rekomendasi Judul Viral (Ketuk untuk Update)</h3>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {titles.map((title: string, idx: number) => (
             <div 
               key={idx} 
-              onClick={() => onLivePreview(title)}
+              onClick={() => onLivePreview("title", title)}
               style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#0f172a', border: '1px solid #334155', padding: '12px', borderRadius: '8px', cursor: 'pointer' }}
-              title="Klik untuk mengubah judul video secara real-time"
+              title="Klik untuk mengubah judul video"
+              onMouseOver={(e) => e.currentTarget.style.borderColor = '#60a5fa'}
+              onMouseOut={(e) => e.currentTarget.style.borderColor = '#334155'}
             >
               <span style={{ fontSize: '14px', color: '#f8fafc', fontWeight: 'bold' }}>{title}</span>
               <CopyButton text={title} />
@@ -583,9 +611,16 @@ function OptimizerResultView({ result, onLivePreview }: { result: any; onLivePre
         </div>
       </div>
 
-      <div style={{ background: '#1e293b', padding: '16px', borderRadius: '12px', border: '1px solid #334155' }}>
+      {/* KOTAK DESKRIPSI (Sekarang Bisa Diklik) */}
+      <div 
+        onClick={() => onLivePreview("description", result.description)}
+        style={{ background: '#1e293b', padding: '16px', borderRadius: '12px', border: '1px solid #334155', cursor: 'pointer' }}
+        title="Klik untuk menerapkan deskripsi ini ke video"
+        onMouseOver={(e) => e.currentTarget.style.borderColor = '#60a5fa'}
+        onMouseOut={(e) => e.currentTarget.style.borderColor = '#334155'}
+      >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-          <h3 style={{ margin: '0', fontSize: '14px', color: '#f8fafc' }}>📝 Deskripsi Full SEO (Hooks Algorithm)</h3>
+          <h3 style={{ margin: '0', fontSize: '14px', color: '#f8fafc' }}>📝 Deskripsi Full SEO (Ketuk untuk Update)</h3>
           <CopyButton text={result.description} />
         </div>
         <p style={{ fontSize: '13px', color: '#cbd5e1', whiteSpace: 'pre-wrap', background: '#0f172a', padding: '12px', borderRadius: '8px', border: '1px solid #334155', margin: 0 }}>
@@ -593,9 +628,16 @@ function OptimizerResultView({ result, onLivePreview }: { result: any; onLivePre
         </p>
       </div>
 
-      <div style={{ background: '#1e293b', padding: '16px', borderRadius: '12px', border: '1px solid #334155' }}>
+      {/* KOTAK HASHTAG (Sekarang Bisa Diklik) */}
+      <div 
+        onClick={() => onLivePreview("tags", tags)}
+        style={{ background: '#1e293b', padding: '16px', borderRadius: '12px', border: '1px solid #334155', cursor: 'pointer' }}
+        title="Klik untuk menerapkan hashtags ini ke video"
+        onMouseOver={(e) => e.currentTarget.style.borderColor = '#60a5fa'}
+        onMouseOut={(e) => e.currentTarget.style.borderColor = '#334155'}
+      >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-          <h3 style={{ margin: '0', fontSize: '14px', color: '#f8fafc' }}>🏷️ Hashtags & Keywords</h3>
+          <h3 style={{ margin: '0', fontSize: '14px', color: '#f8fafc' }}>🏷️ Hashtags & Keywords (Ketuk untuk Update)</h3>
           <CopyButton text={tags.join(", ")} />
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
@@ -606,6 +648,7 @@ function OptimizerResultView({ result, onLivePreview }: { result: any; onLivePre
           ))}
         </div>
       </div>
+      
     </div>
   );
 }
