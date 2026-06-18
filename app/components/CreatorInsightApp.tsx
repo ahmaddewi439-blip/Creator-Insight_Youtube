@@ -505,7 +505,7 @@ export default function CreatorInsightApp() {
       if (type === "tags") alert("🏷️ Hashtags berhasil diterapkan pada video! Jangan lupa klik 'Simpan Perubahan'.");
     };
 
- // FUNGSI TOMBOL SIMPAN KE YOUTUBE (Live Update - Versi Sapu Jagat)
+ // FUNGSI TOMBOL SIMPAN KE YOUTUBE (Pendeteksi ID 11 Karakter)
     const handleSaveToYouTube = async (e: any) => {
       if (!selectedVideo) return;
       
@@ -517,24 +517,30 @@ export default function CreatorInsightApp() {
       try {
         const v = selectedVideo;
         
-        // 1. Ekstrak Video ID menembus semua struktur folder API YouTube
-        const videoId = v.snippet?.resourceId?.videoId || 
-                        v.contentDetails?.videoId || 
-                        v.id?.videoId || 
-                        (typeof v.id === 'string' ? v.id : null) || 
-                        v.videoId;
+        // 1. Tarik ID dasar yang dipakai oleh Tabel
+        let videoId = getVideoId(v);
+        
+        // 2. FILTER CERDAS: Jika ID terlalu panjang (berarti itu ID Playlist), 
+        // kita paksa bongkar brankas datanya untuk mencari ID Video asli (11 Karakter).
+        if (videoId.length > 15 || !videoId) {
+           videoId = v.snippet?.resourceId?.videoId || 
+                     v.contentDetails?.upload?.videoId || 
+                     v.contentDetails?.videoId || 
+                     videoId;
+        }
 
-        // 2. Ekstrak Judul & Deskripsi dengan aman
-        const title = v.snippet?.title || v.title || "";
+        // 3. Ambil teks hasil editan Anda
+        const title = v.title || v.snippet?.title || "";
         const description = v.snippet?.description || "";
-        const tags = v.snippet?.tags || [];
-        const categoryId = v.snippet?.categoryId || "20"; 
+        const tags = v.snippet?.tags || v.tags || [];
+        const categoryId = v.snippet?.categoryId || "20"; // 20 = Gaming
 
-        // 3. Validasi lokal agar ketahuan jika ada yang tertinggal
-        if (!videoId) throw new Error("Sistem gagal menemukan ID asli video ini dari YouTube.");
-        if (!title) throw new Error("Judul video tidak terdeteksi. Silakan klik rekomendasi judul di atas sekali lagi.");
+        if (!videoId || videoId.length > 20) {
+          throw new Error("Gagal mengekstrak ID Asli 11-karakter YouTube. Format API tidak dikenali.");
+        }
+        if (!title) throw new Error("Judul tidak terdeteksi. Klik rekomendasi judul lagi.");
 
-        // 4. Eksekusi tembakan ke API
+        // 4. Tembakkan ke Server YouTube
         const res = await fetch("/api/youtube/update-video", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -542,11 +548,11 @@ export default function CreatorInsightApp() {
         });
         
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Gagal menghubungi Server YouTube");
+        if (!res.ok) throw new Error(data.error || "Akses Ditolak oleh YouTube.");
 
-        alert("🚀 SUKSES BESAR!\n\nPerubahan Judul, Deskripsi, dan Hashtag sudah resmi menempel di YouTube Studio Anda! Silakan Refresh web ini atau cek Dasbor YouTube Anda.");
+        alert("🚀 SUKSES BESAR!\n\nPerubahan Judul, Deskripsi, dan Hashtag sudah berhasil dilesatkan ke YouTube Studio Anda! Silakan cek Dasbor YouTube Anda.");
       } catch (err: any) {
-        alert("❌ GAGAL: " + err.message + "\n\n(Jika ini error izin 'Forbidden', silakan Logout dari web ini, lalu Login lagi, dan pastikan Anda MENCENTANG kotak 'Kelola Akun YouTube' saat pop-up Google muncul).");
+        alert("❌ GAGAL: " + err.message + "\n\n(Jika ini error izin 'Akses Ditolak', silakan tekan tombol 'Logout' di pojok kanan atas, lalu Login lagi. Saat muncul pop-up Google, WAJIB CENTANG kotak 'Kelola Akun YouTube Anda').");
       } finally {
         btn.innerHTML = originalText;
         btn.disabled = false;
