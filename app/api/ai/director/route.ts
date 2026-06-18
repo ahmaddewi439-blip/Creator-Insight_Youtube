@@ -8,30 +8,27 @@ export async function POST(req: Request) {
     const { topic, duration, language } = await req.json();
 
     const apiKey = process.env.AI_API_KEYS;
-    // Mengamankan Base URL untuk Koboi LLM (biasanya butuh /v1)
     let baseUrl = process.env.AI_BASE_URL || "https://lite.koboillm.com/v1";
-    // Default model disesuaikan dengan dashboard Anda
     const aiModel = process.env.AI_MODEL || "gemini/gemini-2.5-flash-lite";
 
     if (!apiKey) {
       return NextResponse.json({ error: "Variabel AI_API_KEYS belum terdeteksi di Vercel." }, { status: 400 });
     }
 
-    // Merapikan URL endpoint agar pasti valid
-    baseUrl = baseUrl.replace(/\/+$/, ""); // Hilangkan slash berlebih di akhir
+    baseUrl = baseUrl.replace(/\/+$/, "");
     const endpoint = baseUrl.endsWith("/chat/completions") ? baseUrl : `${baseUrl}/chat/completions`;
 
+    // INSTRUKSI SUPER KETAT: Slide-by-Slide & Durasi Akurat
     const prompt = `You are an elite YouTube Director and Master Scriptwriter.
-    Your task is to write a FULL, EXTENSIVE video script.
     Topic: "${topic}"
-    Language: ${language}
+    Language: ${language} (Write the Voice Over COMPLETELY in this language. Target audience is international. Ensure native-level storytelling).
     Target Duration: ${duration}
 
     CRITICAL RULES:
-    1. NO PLACEHOLDERS. NO SHORT SUMMARIES.
-    2. To fulfill a ${duration} video, the 'vo' (Voice Over) for EACH scene MUST contain massive, detailed paragraphs. Write exactly what the narrator will say word-for-word. Explain facts, build tension, and provide deep analysis.
-    3. Aim for hundreds of words per scene to match the long duration.
-
+    1. TRUE DURATION MATCH: Average speaking rate is 130 words per minute. For a 5-minute video, you MUST write at least 650-750 words. For 10 minutes, write 1300+ words. Do NOT summarize. Write massive, extensive, detailed paragraphs for the Voice Over ('vo') to genuinely fill the time.
+    2. SLIDE-BY-SLIDE VISUALS: Provide a visual presentation style. For every single sentence or concept in the VO, provide a specific image prompt. Use the "visuals" array to list multiple images per scene with exact timestamps (e.g., 00:00 - 00:05, 00:05 - 00:12) that synchronize perfectly with the spoken VO.
+    3. AESTHETIC: All image prompts MUST seamlessly incorporate a premium dark green gaming aesthetic, cinematic lighting, high contrast, and sharp focus.
+    
     Output ONLY a valid JSON object. DO NOT wrap the output in markdown code blocks (\`\`\`json). Just the raw JSON format:
     {
       "videoTitle": "Catchy Clickbait Title",
@@ -39,9 +36,18 @@ export async function POST(req: Request) {
         {
           "scene": 1,
           "name": "Intro Hook",
-          "time": "00:00 - 02:00",
-          "vo": "Write massive paragraphs of voice over here...",
-          "visualPrompt": "Detailed cinematic 16:9 image prompt",
+          "time": "00:00 - 01:00",
+          "vo": "Write massive paragraphs of voice over here. Hundreds of words to fill the duration...",
+          "visuals": [
+            {
+              "time": "00:00 - 00:08",
+              "prompt": "Detailed 16:9 image prompt matching the exact first sentence. Premium dark green gaming style, cinematic lighting..."
+            },
+            {
+              "time": "00:08 - 00:15",
+              "prompt": "Next detailed 16:9 image prompt matching the next sentence..."
+            }
+          ],
           "editingDirection": "Professional editing style"
         }
       ]
@@ -56,23 +62,17 @@ export async function POST(req: Request) {
       body: JSON.stringify({
         model: aiModel,
         messages: [{ role: "user", content: prompt }]
-        // Kita hilangkan response_format strict agar Gemini via Koboi tidak error
       })
     });
 
     const data = await res.json();
-    
-    if (!res.ok) {
-       throw new Error(data.error?.message || JSON.stringify(data));
-    }
+    if (!res.ok) throw new Error(data.error?.message || JSON.stringify(data));
     
     let textResponse = data.choices[0].message.content;
-    
-    // PEMBERSIH SUPER: Membersihkan markdown jika AI bandel mengembalikan ```json
-    textResponse = textResponse.replace(/```json/gi, '').replace(/```/g, '').trim();
+    textResponse = textResponse.replace(/```json/gi, '').replace(/
+```/g, '').trim();
 
     const scriptData = JSON.parse(textResponse);
-
     return NextResponse.json({ success: true, result: scriptData });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
