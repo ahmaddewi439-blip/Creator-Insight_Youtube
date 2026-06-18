@@ -511,31 +511,42 @@ export default function CreatorInsightApp() {
       if (type === "tags") alert("🏷️ Hashtags berhasil diterapkan pada video! Jangan lupa klik 'Simpan Perubahan'.");
     };
 
- // FUNGSI TOMBOL SIMPAN KE YOUTUBE (Live Update API Asli)
+ // FUNGSI TOMBOL SIMPAN KE YOUTUBE (Tembus Tanpa Blokir Frontend)
     const handleSaveToYouTube = async (e: any) => {
       if (!selectedVideo) return;
       
       const btn = e.currentTarget;
       const originalText = btn.innerHTML;
-      btn.innerHTML = "⏳ Mengirim Tembakan ke Server YouTube...";
+      btn.innerHTML = "⏳ Mengirim Tembakan ke Server...";
       btn.disabled = true;
 
       try {
         const v = selectedVideo;
-        
-        // Gunakan radar canggih yang baru kita pasang di atas
-        const videoId = getVideoId(v);
+        let videoId = "";
+
+        // 1. Pemindai Jalur Normal
+        if (v.snippet?.resourceId?.videoId) videoId = v.snippet.resourceId.videoId;
+        else if (v.id?.videoId) videoId = v.id.videoId;
+        else if (typeof v.id === "string" && v.id.length === 11) videoId = v.id;
+        else if (v.videoId) videoId = v.videoId;
+
+        // 2. Pemindai Sinar-X (Mencari ID 11 Karakter di seluruh celah data)
+        if (!videoId || videoId.length > 11) {
+          const stringData = JSON.stringify(v);
+          // Cari pola string persis 11 karakter (Format baku ID YouTube)
+          const match = stringData.match(/"([a-zA-Z0-9_-]{11})"/);
+          if (match) videoId = match[1];
+          else videoId = v.id || v.videoId || ""; // Pasrah ambil ID apapun bentuknya
+        }
+
         const title = v.title || v.snippet?.title || "";
         const description = v.snippet?.description || "";
         const tags = v.snippet?.tags || v.tags || [];
         const categoryId = v.snippet?.categoryId || "20"; 
 
-        // Jika radar masih gagal menemukan ID 11 Karakter
-        if (!videoId || videoId.length < 11) {
-          throw new Error("Gagal mendeteksi ID asli Video. Pastikan Anda mengeklik video yang sudah Published/Scheduled.");
-        }
+        if (!title) throw new Error("Judul tidak terdeteksi. Silakan klik rekomendasi judul di atas sekali lagi.");
 
-        // Tembakkan langsung ke Google Server
+        // KITA HAPUS SEMUA BLOKIRAN FRONTEND! Biarkan menembak langsung ke API Google
         const res = await fetch("/api/youtube/update-video", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -544,15 +555,15 @@ export default function CreatorInsightApp() {
         
         const data = await res.json();
         
-        // Tangkap kode error khusus jika Google menolak izin (401/403)
+        // Tangkap jawaban ASLI dari Server Google
         if (!res.ok) {
            if (res.status === 401 || res.status === 403) {
-             throw new Error("Akses Ditolak oleh Google.\n\nSOLUSI: Tekan tombol 'Logout' di pojok kanan atas, lalu Login lagi. Saat muncul layar Google, Anda WAJIB MENCENTANG kotak izin 'Manage / Kelola Akun YouTube'.");
+             throw new Error("Izin Ditolak oleh Google.\n\nSOLUSI: Tekan tombol 'Logout', lalu Login kembali. Saat pop-up Google muncul, WAJIB CENTANG kotak 'Kelola Akun YouTube'.");
            }
-           throw new Error(data.error || "Gagal menghubungi Server YouTube.");
+           throw new Error(data.error || "Server YouTube menolak data video ini.");
         }
 
-        alert("🚀 SUKSES BESAR (LIVE YOUTUBE)!\n\nPerubahan Judul, Deskripsi, dan Hashtag sudah permanen di YouTube Studio Anda! Jika Anda me-refresh web ini sekarang, datanya tidak akan kembali ke awal!");
+        alert("🚀 SUKSES BESAR (LIVE YOUTUBE)!\n\nPerubahan Judul, Deskripsi, dan Hashtag sudah permanen di YouTube Studio Anda!");
       } catch (err: any) {
         alert("❌ GAGAL: " + err.message);
       } finally {
