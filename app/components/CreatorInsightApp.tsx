@@ -26,12 +26,6 @@ function compact(value?: string | number) {
   return new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 }).format(n);
 }
 
-function fullNumber(value?: string | number) {
-  const n = typeof value === "string" ? Number(value) : value || 0;
-  if (!Number.isFinite(n)) return "0";
-  return new Intl.NumberFormat("en").format(n);
-}
-
 function dateText(value?: string) {
   if (!value) return "-";
   const d = new Date(value);
@@ -151,16 +145,10 @@ export default function CreatorInsightApp() {
   const [selectedVideo, setSelectedVideo] = useState<any>(null);
   const [optimizer, setOptimizer] = useState<ApiState<any>>({ loading: false, error: "", data: null });
   
-  const [competitorQuery, setCompetitorQuery] = useState("");
-  const [competitors, setCompetitors] = useState<ApiState<any[]>>({ loading: false, error: "", data: [] });
-  const [competitorVideos, setCompetitorVideos] = useState<ApiState<any>>({ loading: false, error: "", data: null });
-
   const [dailyTarget, setDailyTarget] = useState<ApiState<any>>({ loading: false, error: "", data: null });
   const [dailyScripts, setDailyScripts] = useState<Record<number, any>>({});
   const [loadingDailyScript, setLoadingDailyScript] = useState<Record<number, boolean>>({});
   const [activeDailyTab, setActiveDailyTab] = useState<number>(0);
-
-  const uploadTimes = ["08:00 WIB", "13:00 WIB", "18:00 WIB", "20:00 WIB"];
 
   useEffect(() => {
     if (status !== "authenticated") return;
@@ -297,9 +285,9 @@ export default function CreatorInsightApp() {
     }
   }, [activeDailyTab, dailyTarget]);
 
-  // ---> FUNGSI OPTIMASI VIDEO (SUDAH DIPERBAIKI BUG-NYA) <---
+  // FUNGSI OPTIMASI VIDEO
   async function optimizeVideo(video: any) {
-    setSelectedVideo(video); // Hanya memilih 1 video secara unik
+    setSelectedVideo(video); 
     setOptimizer({ loading: true, error: "", data: null });
     try {
       const originalTitle = video?.snippet?.title || video?.title || "";
@@ -317,27 +305,6 @@ export default function CreatorInsightApp() {
       setOptimizer({ loading: false, error: "", data: data.result || data.raw });
     } catch (err: any) {
       setOptimizer({ loading: false, error: err.message, data: null });
-    }
-  }
-
-  async function searchCompetitors() {
-    setCompetitors({ loading: true, error: "", data: [] });
-    setCompetitorVideos({ loading: false, error: "", data: null });
-    try {
-      const data = await fetchJson(`/api/youtube/competitors?q=${encodeURIComponent(competitorQuery)}`);
-      setCompetitors({ loading: false, error: "", data: data.channels || [] });
-    } catch (err: any) {
-      setCompetitors({ loading: false, error: err.message, data: [] });
-    }
-  }
-
-  async function loadCompetitorVideos(channelId: string) {
-    setCompetitorVideos({ loading: true, error: "", data: null });
-    try {
-      const data = await fetchJson(`/api/youtube/channel-videos?channelId=${encodeURIComponent(channelId)}`);
-      setCompetitorVideos({ loading: false, error: "", data });
-    } catch (err: any) {
-      setCompetitorVideos({ loading: false, error: err.message, data: null });
     }
   }
 
@@ -372,7 +339,7 @@ export default function CreatorInsightApp() {
         {active === "overview" && renderOverview()}
         {active === "optimizer" && renderOptimizer()}
         {active === "competitors" && renderCompetitors()}
-        {active === "roblox" && <div className="card"><h2>Roblox Creator</h2><p className="muted">Silakan gunakan fitur <strong>Target Harian</strong> di tab Overview untuk membuat Roblox Shorts secara otomatis, atau klik tombol <strong>Sutradara AI Video</strong> di menu kiri bawah.</p></div>}
+        {active === "roblox" && <div className="card"><h2>Roblox Creator</h2><p className="muted">Silakan gunakan fitur <strong>Target Harian</strong> di tab Overview untuk membuat Roblox Shorts secara otomatis.</p></div>}
         {active === "reports" && renderReports()}
         {active === "settings" && renderSettings()}
       </main>
@@ -426,8 +393,6 @@ export default function CreatorInsightApp() {
         </section>
 
         <section className="grid" style={{ gridTemplateColumns: "1fr" }}>
-          
-          {/* ---- BANNER SUTRADARA AI TETAP ADA DI SINI ---- */}
           <div className="card" style={{ border: '2px solid #10b981', background: 'linear-gradient(to right, #064e3b, #022c22)', padding: '20px', borderRadius: '12px', marginBottom: '8px' }}>
              <h2 style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#34d399', margin: '0 0 8px 0', fontSize: '20px' }}>🎬 Sutradara AI (Full Video)</h2>
              <p style={{ color: '#a7f3d0', margin: '0 0 16px 0', fontSize: '14px', lineHeight: '1.5' }}>Buat naskah video panjang (5-20 Menit) dengan Voice Over spesifik, instruksi overlay teks, dan format gambar Micro-Pacing (Slide-by-Slide) untuk channel luar negeri.</p>
@@ -438,7 +403,7 @@ export default function CreatorInsightApp() {
 
           <div className="card" style={{ border: '2px solid #3b82f6' }}>
             <h2 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>🎯 TARGET HARIAN SEKARANG</h2>
-            <p className="muted" style={{ marginBottom: 20 }}>Sistem akan meriset 4 Topik Trending hari ini dan secara otomatis memproduksi Data Matang (SEO, Judul, Game Spesifik, Thumbnail 9:16, & Prompt per Scene) untuk setiap videonya.</p>
+            <p className="muted" style={{ marginBottom: 20 }}>Sistem akan meriset 4 Topik Trending hari ini dan secara otomatis memproduksi Data Matang untuk setiap videonya.</p>
             {!dailyTarget.data && (
               <button className="btn primary block" onClick={generateDailyTarget} disabled={dailyTarget.loading} style={{ width: '100%', padding: 16, fontSize: 16 }}>
                 {dailyTarget.loading ? "⏳ Mencari Topik Trending & Meracik Data..." : "Generate 4 Video Matang Hari Ini"}
@@ -492,26 +457,6 @@ export default function CreatorInsightApp() {
 
                           <OutputBlock title="🖼️ Prompt Thumbnail (9:16)" value={scriptData.thumbnailPrompt || scriptData.thumbnail_prompt || "-"} />
                           <OutputBlock title="🎙️ Full Voice Over Script" value={scriptData.fullVO || "-"} />
-                          
-                          {scriptData.scenes && scriptData.scenes.length > 0 && (
-                            <div style={{ marginTop: '32px', borderTop: '2px solid #1e293b', paddingTop: '24px' }}>
-                              <h3 style={{ fontSize: '18px', color: '#f8fafc', marginBottom: '16px' }}>🎬 Breakdown 5 Scene & Image Prompts</h3>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                {scriptData.scenes.map((scene: any, sIdx: number) => (
-                                  <div key={sIdx} style={{ backgroundColor: '#1e293b', borderRadius: '12px', padding: '20px', border: '1px solid #334155' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #334155', paddingBottom: '10px', marginBottom: '12px' }}>
-                                      <strong style={{ color: '#f8fafc', fontSize: '15px' }}>Scene {scene.scene || sIdx + 1} - {scene.name || 'Hook'}</strong>
-                                      <span style={{ backgroundColor: '#334155', padding: '2px 8px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold' }}>⌚ {scene.duration || "0:00"}</span>
-                                    </div>
-                                    <p style={{ fontSize: '14px', color: '#cbd5e1', marginBottom: '16px' }}><strong>VO:</strong> "{scene.vo || scene.voiceOver}"</p>
-                                    {scene.imagePrompts && scene.imagePrompts.map((prompt: string, pIdx: number) => (
-                                      <OutputBlock key={pIdx} title={`✨ Prompt Gambar ${pIdx + 1} (Rasio 9:16)`} value={prompt} compactBlock={true} />
-                                    ))}
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
                         </>
                       ) : <div style={{ color: 'red', textAlign: 'center' }}>Gagal memuat data script.</div>}
                     </div>
@@ -525,27 +470,26 @@ export default function CreatorInsightApp() {
     );
   }
 
- // METODE TUBEBUDDY/VIDIQ: Update UI secara instan berdasarkan ID Unik
+  function renderOptimizer() {
+    // FITUR LIVE PREVIEW TUBEBUDDY (Sudah Fix ganti 2 title sekaligus)
     const handleLivePreview = (newTitle: string) => {
       if (!selectedVideo) return;
       const currentId = getVideoId(selectedVideo);
       
-      // Update daftar video di tabel (Menimpa judul di root dan di snippet)
       setVideosState(prev => ({
         ...prev,
         data: prev.data?.map(v => {
           if (getVideoId(v) === currentId) {
             return { 
               ...v, 
-              title: newTitle, // Paksa ubah judul utama
-              snippet: { ...(v.snippet || {}), title: newTitle } // Paksa ubah judul snippet
+              title: newTitle, 
+              snippet: { ...(v.snippet || {}), title: newTitle } 
             };
           }
           return v;
         }) || []
       }));
       
-      // Update panel video yang sedang aktif
       setSelectedVideo((prev: any) => ({ 
         ...prev, 
         title: newTitle, 
@@ -611,7 +555,7 @@ export default function CreatorInsightApp() {
   function renderCompetitors() { return <div><h2 style={{color: 'white'}}>Competitor Research (Dalam Pengembangan)</h2></div>; }
   function renderReports() { return <div><h2 style={{color: 'white'}}>Reports (Dalam Pengembangan)</h2></div>; }
   function renderSettings() { return <div><h2 style={{color: 'white'}}>Settings (Dalam Pengembangan)</h2></div>; }
-} // INI ADALAH KURUNG PENUTUP UTAMA APLIKASI (JANGAN DIHAPUS)
+} 
 
 // --- KOMPONEN HASIL SEO (DESAIN BARU & ANTI ERROR VERCEL) ---
 function OptimizerResultView({ result, onLivePreview }: { result: any; onLivePreview: (title: string) => void }) {
