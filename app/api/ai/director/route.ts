@@ -18,7 +18,6 @@ export async function POST(req: Request) {
     baseUrl = baseUrl.replace(/\/+$/, "");
     const endpoint = baseUrl.endsWith("/chat/completions") ? baseUrl : `${baseUrl}/chat/completions`;
 
-    // INSTRUKSI SUPER KETAT: Slide-by-Slide & Durasi Akurat
     const prompt = `You are an elite YouTube Director and Master Scriptwriter.
     Topic: "${topic}"
     Language: ${language} (Write the Voice Over COMPLETELY in this language. Target audience is international. Ensure native-level storytelling).
@@ -29,7 +28,7 @@ export async function POST(req: Request) {
     2. SLIDE-BY-SLIDE VISUALS: Provide a visual presentation style. For every single sentence or concept in the VO, provide a specific image prompt. Use the "visuals" array to list multiple images per scene with exact timestamps (e.g., 00:00 - 00:05, 00:05 - 00:12) that synchronize perfectly with the spoken VO.
     3. AESTHETIC: All image prompts MUST seamlessly incorporate a premium dark green gaming aesthetic, cinematic lighting, high contrast, and sharp focus.
     
-    Output ONLY a valid JSON object. DO NOT wrap the output in markdown code blocks (\`\`\`json). Just the raw JSON format:
+    Output ONLY a valid JSON object. DO NOT wrap the output in markdown code blocks. Just the raw JSON format:
     {
       "videoTitle": "Catchy Clickbait Title",
       "scenes": [
@@ -69,8 +68,13 @@ export async function POST(req: Request) {
     if (!res.ok) throw new Error(data.error?.message || JSON.stringify(data));
     
     let textResponse = data.choices[0].message.content;
-    textResponse = textResponse.replace(/```json/gi, '').replace(/
-```/g, '').trim();
+    
+    // Pembersih Super Aman (Anti Error Vercel)
+    textResponse = textResponse.replace("```json", "").replace("
+```JSON", "").replace("```", "").trim();
+    if (textResponse.endsWith("```")) {
+        textResponse = textResponse.slice(0, -3).trim();
+    }
 
     const scriptData = JSON.parse(textResponse);
     return NextResponse.json({ success: true, result: scriptData });
