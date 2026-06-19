@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { useLocalStorage } from "../hooks/useLocalStorage";
+import { LineChart, Line, XAxis, Tooltip, ResponsiveContainer } from 'recharts';
 type TabId = "overview" | "optimizer" | "competitors" | "roblox" | "reports" | "settings";
 
 type ApiState<T> = {
@@ -154,7 +155,21 @@ export default function CreatorInsightApp() {
   const [dailyScripts, setDailyScripts] = useState<Record<number, any>>({});
   const [loadingDailyScript, setLoadingDailyScript] = useState<Record<number, boolean>>({});
   const [activeDailyTab, setActiveDailyTab] = useState<number>(0);
+  const [trendQuery, setTrendQuery] = useState("roblox");
+  const [trendData, setTrendData] = useState<any[]>([]);
+  const [loadingTrends, setLoadingTrends] = useState(false);
 
+  async function fetchTrends() {
+    setLoadingTrends(true);
+    try {
+      const res = await fetch(`/api/youtube/trends?q=${trendQuery}`);
+      const data = await res.json();
+      setTrendData(data.keywords || []);
+    } catch (e) {
+      console.error(e);
+    }
+    setLoadingTrends(false);
+  }
   useEffect(() => {
     if (status !== "authenticated") return;
     loadDashboard();
@@ -637,7 +652,55 @@ export default function CreatorInsightApp() {
     );
   }
 
-  function renderCompetitors() { return <div><h2 style={{color: 'white'}}>Competitor Research (Dalam Pengembangan)</h2></div>; }
+  function renderCompetitors() { 
+    return (
+      <div className="grid">
+        <div className="card">
+          <h2 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>📈 Riset Kata Kunci Tren Real-Time</h2>
+          <p className="muted">Data ditarik langsung dari algoritma pencarian YouTube saat ini.</p>
+          
+          <div style={{ display: 'flex', gap: '10px', marginBottom: '24px', marginTop: '16px' }}>
+            <input 
+              type="text" 
+              value={trendQuery} 
+              onChange={(e) => setTrendQuery(e.target.value)} 
+              placeholder="Ketik topik (contoh: roblox horror)"
+              style={{ flex: 1, padding: '12px 16px', borderRadius: '8px', border: '1px solid #334155', background: '#0f172a', color: 'white', fontSize: '15px' }}
+            />
+            <button className="btn primary" onClick={fetchTrends} disabled={loadingTrends}>
+              {loadingTrends ? "⏳ Menganalisis..." : "Cari Tren"}
+            </button>
+          </div>
+
+          {trendData.length > 0 && (
+            <div style={{ background: '#0f172a', padding: '20px', borderRadius: '12px', border: '1px solid #334155' }}>
+              <h3 style={{ color: '#60a5fa', marginBottom: '16px', fontSize: '16px' }}>Volume Pencarian & Ranking Teratas untuk: "{trendQuery}"</h3>
+              
+              {/* AREA GRAFIK ALA VIDIQ */}
+              <div style={{ height: 280, width: '100%', marginBottom: '20px' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={trendData}>
+                    <XAxis dataKey="keyword" stroke="#cbd5e1" fontSize={11} tickFormatter={(val) => val.substring(0, 12) + '...'} />
+                    <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #3b82f6', color: 'white', borderRadius: '8px' }} />
+                    <Line type="monotone" dataKey="score" stroke="#10b981" strokeWidth={4} dot={{ r: 5, fill: '#10b981' }} activeDot={{ r: 8, fill: '#34d399' }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+              
+              <h4 style={{ color: '#94a3b8', marginBottom: '10px', fontSize: '14px' }}>🔥 Top Keywords yang Sedang Diketik Orang:</h4>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {trendData.map((item, idx) => (
+                  <span key={idx} style={{ background: '#1e293b', color: '#f8fafc', padding: '8px 14px', borderRadius: '20px', fontSize: '13px', border: '1px solid #334155', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    {item.keyword} <strong style={{ color: '#10b981', background: '#064e3b', padding: '2px 6px', borderRadius: '4px' }}>Skor: {item.score}</strong>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    ); 
+  }
   function renderReports() { return <div><h2 style={{color: 'white'}}>Reports (Dalam Pengembangan)</h2></div>; }
   function renderSettings() { return <div><h2 style={{color: 'white'}}>Settings (Dalam Pengembangan)</h2></div>; }
 } 
