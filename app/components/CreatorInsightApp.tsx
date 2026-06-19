@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { signIn, signOut, useSession } from "next-auth/react";
-
+import { useLocalStorage } from "../hooks/useLocalStorage";
 type TabId = "overview" | "optimizer" | "competitors" | "roblox" | "reports" | "settings";
 
 type ApiState<T> = {
@@ -146,10 +146,9 @@ export default function CreatorInsightApp() {
   const { data: session, status } = useSession();
   const [active, setActive] = useState<TabId>("overview");
   const [channelState, setChannelState] = useState<ApiState<any>>({ loading: false, error: "", data: null });
-  const [videosState, setVideosState] = useState<ApiState<any[]>>({ loading: false, error: "", data: [] });
-  
-  const [selectedVideo, setSelectedVideo] = useState<any>(null);
-  const [optimizer, setOptimizer] = useState<ApiState<any>>({ loading: false, error: "", data: null });
+  const [videosState, setVideosState] = useLocalStorage<ApiState<any[]>>("simpanan_video", { loading: false, error: "", data: [] });
+  const [selectedVideo, setSelectedVideo] = useLocalStorage<any>("simpanan_pilihan_video", null);
+  const [optimizer, setOptimizer] = useLocalStorage<ApiState<any>>("simpanan_hasil_seo", { loading: false, error: "", data: null });
   
   const [dailyTarget, setDailyTarget] = useState<ApiState<any>>({ loading: false, error: "", data: null });
   const [dailyScripts, setDailyScripts] = useState<Record<number, any>>({});
