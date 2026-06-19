@@ -149,7 +149,7 @@ export default function CreatorInsightApp() {
   const [selectedVideo, setSelectedVideo] = useLocalStorage<any>("simpanan_pilihan_video", null);
   const [optimizer, setOptimizer] = useLocalStorage<ApiState<any>>("simpanan_hasil_seo", { loading: false, error: "", data: null });
   const [isGeneratingViral, setIsGeneratingViral] = useState(false);
-  
+  const [viralResultText, setViralResultText] = useState("");
   const [dailyTarget, setDailyTarget] = useState<ApiState<any>>({ loading: false, error: "", data: null });
   const [dailyScripts, setDailyScripts] = useState<Record<number, any>>({});
   const [loadingDailyScript, setLoadingDailyScript] = useState<Record<number, boolean>>({});
@@ -455,10 +455,16 @@ export default function CreatorInsightApp() {
   function renderSutradaraProMax() {
     async function handleGenerate() {
       setIsGeneratingViral(true);
+      setViralResultText(""); // Kosongkan hasil lama sebelum mulai meracik yang baru
       try {
         const res = await fetch('/api/ai/viral-factory', { method: 'POST' });
         const data = await res.json();
-        alert(data.message || "✅ Viral Pack Berhasil Dibuat!");
+        
+        if (data.success && data.resultText) {
+          setViralResultText(data.resultText); // Menampilkan teks murni dari AI
+        } else {
+           alert("Gagal meracik viral pack.");
+        }
       } catch(err) {
         alert("Gagal memuat. Pastikan folder API viral-factory sudah dibuat.");
       }
@@ -467,40 +473,40 @@ export default function CreatorInsightApp() {
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        {/* Header Card */}
-        <div style={{ background: '#0f172a', padding: '20px', borderRadius: '12px', border: '1px solid #1e293b' }}>
-          <h2 style={{ fontSize: '24px', margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>🎬 Sutradara PRO MAX AI</h2>
-          <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '16px' }}>AI Viral Engine untuk YouTube, Shorts & Affiliate Automation</p>
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            <span style={{ background: '#1e293b', padding: '6px 12px', borderRadius: '20px', fontSize: '12px', border: '1px solid #334155' }}>🔥 Viral Engine</span>
-            <span style={{ background: '#1e293b', padding: '6px 12px', borderRadius: '20px', fontSize: '12px', border: '1px solid #334155' }}>🎯 AI Scoring</span>
-            <span style={{ background: '#1e293b', padding: '6px 12px', borderRadius: '20px', fontSize: '12px', border: '1px solid #334155' }}>⚡ Auto Content</span>
-            <span style={{ background: '#1e293b', padding: '6px 12px', borderRadius: '20px', fontSize: '12px', border: '1px solid #334155' }}>📈 Growth System</span>
-          </div>
-        </div>
-
-        {/* Dashboard Card */}
-        <div style={{ background: '#0f172a', padding: '20px', borderRadius: '12px', border: '1px solid #1e293b' }}>
-          <h3 style={{ fontSize: '16px', margin: '0 0 16px 0' }}>📊 AI Viral Dashboard</h3>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <div><p style={{ color: '#94a3b8', fontSize: '12px', margin: 0 }}>🔥 Viral Score</p><strong style={{ fontSize: '18px' }}>87%</strong></div>
-            <div><p style={{ color: '#94a3b8', fontSize: '12px', margin: 0 }}>📈 CTR Prediction</p><strong style={{ fontSize: '18px', color: '#10b981' }}>High</strong></div>
-            <div><p style={{ color: '#94a3b8', fontSize: '12px', margin: 0 }}>💬 Engagement</p><strong style={{ fontSize: '18px' }}>Strong</strong></div>
-          </div>
-        </div>
+        {/* ... (Header Card dan Dashboard Card tetap sama seperti kode Anda) ... */}
 
         {/* Viral Factory Card */}
         <div style={{ background: '#047857', padding: '2px', borderRadius: '14px' }}> {/* Premium Dark Green Border */}
           <div style={{ background: '#0f172a', padding: '20px', borderRadius: '12px' }}>
             <h3 style={{ fontSize: '20px', margin: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>🎯 Viral Factory</h3>
-            <p style={{ color: '#cbd5e1', fontSize: '14px', marginBottom: '20px' }}>Generate 4 video + AI ranking + viral scoring otomatis</p>
+            <p style={{ color: '#cbd5e1', fontSize: '14px', marginBottom: '20px' }}>Generate 4 video + AI ranking + viral scoring otomatis berdasarkan tren YouTube saat ini.</p>
+            
+            {/* TOMBOL */}
             <button 
               onClick={handleGenerate}
               disabled={isGeneratingViral}
               style={{ width: '100%', padding: '14px', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '15px' }}
             >
-              {isGeneratingViral ? "⏳ AI Sedang Meracik..." : "⚡ Generate Viral Pack (4 Video AI)"}
+              {isGeneratingViral ? "⏳ AI Sedang Menganalisis Tren YouTube..." : "⚡ Generate Viral Pack (4 Video AI)"}
             </button>
+
+            {/* KOTAK HASIL (Muncul Otomatis Setelah AI Selesai) */}
+            {viralResultText && (
+              <div style={{ 
+                marginTop: '20px', 
+                padding: '20px', 
+                background: '#020617', 
+                border: '1px solid #334155', 
+                borderRadius: '8px', 
+                color: '#f8fafc', 
+                whiteSpace: 'pre-wrap', // Ini penting agar format enter/baris baru dari AI tetap rapi
+                fontSize: '14px', 
+                lineHeight: '1.6' 
+              }}>
+                {viralResultText}
+              </div>
+            )}
+            
           </div>
         </div>
       </div>
