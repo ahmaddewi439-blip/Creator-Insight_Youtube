@@ -155,8 +155,10 @@ export default function CreatorInsightApp() {
   const [dailyScripts, setDailyScripts] = useState<Record<number, any>>({});
   const [loadingDailyScript, setLoadingDailyScript] = useState<Record<number, boolean>>({});
   const [activeDailyTab, setActiveDailyTab] = useState<number>(0);
+  // --- STATE UNTUK GOOGLE TRENDS ASLI ---
   const [trendQuery, setTrendQuery] = useState("roblox");
   const [trendData, setTrendData] = useState<any[]>([]);
+  const [topKeywords, setTopKeywords] = useState<any[]>([]);
   const [loadingTrends, setLoadingTrends] = useState(false);
 
   async function fetchTrends() {
@@ -164,7 +166,8 @@ export default function CreatorInsightApp() {
     try {
       const res = await fetch(`/api/youtube/trends?q=${trendQuery}`);
       const data = await res.json();
-      setTrendData(data.keywords || []);
+      setTrendData(data.timelineData || []); // Data Grafik
+      setTopKeywords(data.topKeywords || []); // Data Kata Kunci
     } catch (e) {
       console.error(e);
     }
@@ -652,12 +655,12 @@ export default function CreatorInsightApp() {
     );
   }
 
-  function renderCompetitors() { 
+function renderCompetitors() { 
     return (
       <div className="grid">
         <div className="card">
-          <h2 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>📈 Riset Kata Kunci Tren Real-Time</h2>
-          <p className="muted">Data ditarik langsung dari algoritma pencarian YouTube saat ini.</p>
+          <h2 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>📈 Riset Tren Real-Time (Google & YouTube Data)</h2>
+          <p className="muted">Grafik fluktuasi pencarian 30 hari terakhir & kata kunci terkait (100% Asli).</p>
           
           <div style={{ display: 'flex', gap: '10px', marginBottom: '24px', marginTop: '16px' }}>
             <input 
@@ -668,32 +671,33 @@ export default function CreatorInsightApp() {
               style={{ flex: 1, padding: '12px 16px', borderRadius: '8px', border: '1px solid #334155', background: '#0f172a', color: 'white', fontSize: '15px' }}
             />
             <button className="btn primary" onClick={fetchTrends} disabled={loadingTrends}>
-              {loadingTrends ? "⏳ Menganalisis..." : "Cari Tren"}
+              {loadingTrends ? "⏳ Menarik Data Asli..." : "Cari Tren"}
             </button>
           </div>
 
           {trendData.length > 0 && (
             <div style={{ background: '#0f172a', padding: '20px', borderRadius: '12px', border: '1px solid #334155' }}>
-              <h3 style={{ color: '#60a5fa', marginBottom: '16px', fontSize: '16px' }}>Volume Pencarian & Ranking Teratas untuk: "{trendQuery}"</h3>
+              <h3 style={{ color: '#60a5fa', marginBottom: '16px', fontSize: '16px' }}>Fluktuasi Pencarian 30 Hari Terakhir: "{trendQuery}"</h3>
               
-              {/* AREA GRAFIK ALA VIDIQ */}
+              {/* AREA GRAFIK NAIK TURUN VIDIQ */}
               <div style={{ height: 280, width: '100%', marginBottom: '20px' }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={trendData}>
-                    <XAxis dataKey="keyword" stroke="#cbd5e1" fontSize={11} tickFormatter={(val) => val.substring(0, 12) + '...'} />
+                    <XAxis dataKey="date" stroke="#cbd5e1" fontSize={11} />
                     <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #3b82f6', color: 'white', borderRadius: '8px' }} />
-                    <Line type="monotone" dataKey="score" stroke="#10b981" strokeWidth={4} dot={{ r: 5, fill: '#10b981' }} activeDot={{ r: 8, fill: '#34d399' }} />
+                    <Line type="monotone" dataKey="score" stroke="#10b981" strokeWidth={4} dot={{ r: 2, fill: '#10b981' }} activeDot={{ r: 8, fill: '#34d399' }} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
               
-              <h4 style={{ color: '#94a3b8', marginBottom: '10px', fontSize: '14px' }}>🔥 Top Keywords yang Sedang Diketik Orang:</h4>
+              <h4 style={{ color: '#94a3b8', marginBottom: '10px', fontSize: '14px' }}>🔥 Top Keywords Terkait (Paling Banyak Dicari):</h4>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                {trendData.map((item, idx) => (
+                {topKeywords.map((item, idx) => (
                   <span key={idx} style={{ background: '#1e293b', color: '#f8fafc', padding: '8px 14px', borderRadius: '20px', fontSize: '13px', border: '1px solid #334155', display: 'flex', gap: '8px', alignItems: 'center' }}>
                     {item.keyword} <strong style={{ color: '#10b981', background: '#064e3b', padding: '2px 6px', borderRadius: '4px' }}>Skor: {item.score}</strong>
                   </span>
                 ))}
+                {topKeywords.length === 0 && <span style={{color: '#64748b'}}>Tidak ada data keyword terkait yang cukup.</span>}
               </div>
             </div>
           )}
