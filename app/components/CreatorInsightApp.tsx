@@ -157,7 +157,25 @@ export default function CreatorInsightApp() {
   const [activeDailyTab, setActiveDailyTab] = useState<number>(0);
   const [opportunityLoading, setOpportunityLoading] = useState(false);
   const [opportunityResults, setOpportunityResults] = useState<any[]>([]);
+  
+  // TAMBAHKAN KODE INI UNTUK EFEK VIDIQ:
+  const [expandedIdea, setExpandedIdea] = useState<number | null>(null);
+  const [scriptLoadingStep, setScriptLoadingStep] = useState<number>(0);
 
+  const handleExpandScript = (index: number) => {
+    if (expandedIdea === index) {
+      setExpandedIdea(null); // Tutup jika diklik lagi
+      return;
+    }
+    setExpandedIdea(index);
+    setScriptLoadingStep(1);
+    
+    // Simulasi efek loading bertahap ala vidIQ
+    setTimeout(() => setScriptLoadingStep(2), 1500); // Berpikir 1.5 detik
+    setTimeout(() => setScriptLoadingStep(3), 3500); // Berpikir 3.5 detik
+    setTimeout(() => setScriptLoadingStep(4), 5000); // Selesai, tampilkan naskah!
+  };
+  // -----------------------------------
   // --- STATE UNTUK GOOGLE TRENDS ASLI ---
   const [trendQuery, setTrendQuery] = useState("roblox");
   const [trendData, setTrendData] = useState<any[]>([]);
@@ -542,70 +560,36 @@ async function fetchCompetitionScore(keyword: string) {
 }
 
 async function generateOpportunities() {
-  setOpportunityLoading(true);
+    setOpportunityLoading(true);
+    setOpportunityResults([]); // Hapus hasil sebelumnya saat loading
 
-  const baseCategories = [
-    "Travel hidden places",
-    "Gaming lost worlds",
-    "Animals strange facts",
-    "Science impossible discoveries",
-    "Finance money disasters",
-    "Fashion historical secrets"
-  ];
+    try {
+      // Menembak ke API baru yang baru saja kita buat
+      const res = await fetch("/api/ai/opportunity-lab", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          category: "Gaming / Roblox", // Sementara kita patenkan dulu untuk tes
+          audience: "Worldwide",
+          style: "Fast-paced Shorts",
+          keyword: "Roblox trending myths"
+        })
+      });
 
-  const results = await Promise.all(
-    baseCategories.map(async (cat) => {
-
-      // 🔥 REAL KEYWORD FROM AUTOCOMPLETE
-      const suggestions = await fetchYouTubeSuggestions(cat);
-
-      const keyword =
-        suggestions.length > 0
-          ? suggestions[0]
-          : cat;
-
-      // 🌍 REAL TREND SCORE
-      const trend = await fetchTrendScore(keyword);
-
-      // ⚔️ REAL COMPETITION SCORE
-      const competition = await fetchCompetitionScore(keyword);
-
-      // 💡 DEMAND ENGINE (AI LOGIC HYBRID)
-      const demand =
-        keyword.includes("secret") ||
-        keyword.includes("hidden") ||
-        keyword.includes("lost")
-          ? 85
-          : 60;
-
-      // 🧠 VIRAL SCORE ENGINE (REAL VERSION)
-      const score = Math.round(
-        trend * 0.4 +
-        demand * 0.3 +
-        (100 - competition) * 0.3
-      );
-
-      return {
-        category: cat,
-        keyword,
-        trend,
-        demand,
-        competition,
-        score,
-
-        title: `This ${keyword} Looks Unreal`,
-        hook: `This looks fake… but it's real`,
-        script: `Cinematic documentary about ${keyword}`,
-        prompt: `ultra realistic cinematic AI scene of ${keyword}`
-      };
-    })
-  );
-
-  results.sort((a, b) => b.score - a.score);
-
-  setOpportunityResults(results);
-  setOpportunityLoading(false);
-}
+      const data = await res.json();
+      
+      if (data.success && data.results) {
+        setOpportunityResults(data.results); // Memasukkan data asli dari AI ke layar
+      } else {
+        alert("Gagal meracik ide: " + (data.error || "Unknown Error"));
+      }
+    } catch (error) {
+      console.error("API Error:", error);
+      alert("Gagal menghubungi server AI.");
+    }
+    
+    setOpportunityLoading(false);
+  }
 
   function renderSutradaraProMax() {
   async function handleGenerate() {
@@ -936,57 +920,164 @@ function renderCompetitors() {
       </div>
     ); 
   }
-  function renderOpportunityLab() {
+ function renderOpportunityLab() {
   return (
     <div className="grid">
+      {/* INJEKSI CSS ANIMASI MUTER (SPINNER) */}
+      <style>{`
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .spinner { animation: spin 1s linear infinite; display: inline-block; }
+        .vidiq-step { color: #94a3b8; font-size: 14px; margin: 8px 0; display: flex; alignItems: center; gap: 8px; }
+        .vidiq-step.done { color: #10b981; }
+      `}</style>
 
       {/* HEADER CARD */}
       <div className="card">
         <h2>🧠 Opportunity Lab AI Engine</h2>
-        <p className="muted">
-          Generate ide YouTube minim kompetitor berbasis AI scoring system.
-        </p>
-
-        <button
-          className="btn primary"
-          onClick={generateOpportunities}
-        >
-          🔥 Generate Opportunity Ideas
+        <p className="muted">Generate ide YouTube minim kompetitor berbasis AI scoring system.</p>
+        <button className="btn primary" onClick={generateOpportunities} disabled={opportunityLoading}>
+          {opportunityLoading ? (
+            <span style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
+              <span className="spinner">⚙️</span> Menganalisa Jutaan Data YouTube...
+            </span>
+          ) : "🔥 Generate Opportunity Ideas"}
         </button>
       </div>
 
-      {/* LOADING STATE */}
+      {/* EFEK LOADING AWAL MENCARI IDE */}
       {opportunityLoading && (
-        <div className="card">
-          ⏳ AI sedang mencari peluang terbaik...
+        <div className="card" style={{ border: '1px solid #3b82f6', background: '#0f172a' }}>
+          <div className="vidiq-step done"><span>✓</span> Trending topics ready</div>
+          <div className="vidiq-step done"><span>✓</span> Video data ready</div>
+          <div className="vidiq-step"><span className="spinner">⏳</span> Berpikir selama beberapa detik... mencari celah algoritma...</div>
         </div>
       )}
 
-      {/* RESULT LIST */}
-     {opportunityResults.map((item, i) => (
-  <div key={i} className="card">
+      {/* RESULT LIST ALA VIDIQ */}
+      {opportunityResults.map((item: any, i: number) => {
+        const isExpanded = expandedIdea === i;
+        const step = scriptLoadingStep;
 
-    <h3>{item.title}</h3>
-    <p className="muted">{item.niche}</p>
+        return (
+          <div key={i} className="card" style={{ marginBottom: '24px', border: '1px solid #334155', transition: 'all 0.3s' }}>
+            
+            {/* BAGIAN ATAS (SELALU TAMPIL) */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #334155', paddingBottom: '12px' }}>
+              <h3 style={{ color: '#fbbf24', fontSize: '18px', margin: 0 }}>{item.title}</h3>
+              <span style={{ background: '#10b981', color: 'white', padding: '4px 10px', borderRadius: '8px', fontWeight: 'bold', fontSize: '13px' }}>Skor: {item.score}/35</span>
+            </div>
 
-    <div>
-      📊 Score: <b>{item.score}/100</b>
-      <br />
-      Demand: {item.demand}
-      <br />
-      Competition: {item.competition}
-      <br />
-      AI Visual: {item.aiVisual}
-    </div>
+            <div style={{ margin: '16px 0', lineHeight: '1.6' }}>
+              <p style={{ margin: '0 0 10px 0' }}><strong>🔥 Kenapa: </strong> <span style={{ color: '#cbd5e1' }}>{item.kenapa}</span></p>
+              <p style={{ margin: '0 0 10px 0' }}><strong>🎯 Angle: </strong> <span style={{ color: '#cbd5e1' }}>{item.angle}</span></p>
+            </div>
 
-    <hr />
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '20px', alignItems: 'center' }}>
+              <strong style={{ fontSize: '14px' }}>Keywords:</strong>
+              {item.keywords?.map((kw: any, idx: number) => (
+                <span key={idx} style={{ background: '#1e293b', color: '#93c5fd', padding: '4px 10px', borderRadius: '16px', fontSize: '12px', border: '1px solid #3b82f6' }}>
+                  <span style={{ color: '#fbbf24', fontWeight: 'bold', marginRight: '4px' }}>{kw.power}</span> {kw.word}
+                </span>
+              ))}
+            </div>
 
-    <p><b>Hook:</b> {item.hook}</p>
-    <p><b>Script:</b> {item.script}</p>
-    <p><b>Prompt:</b> {item.prompt}</p>
+            {/* TOMBOL AKSI BERTAHAP (PROGRESSIVE DISCLOSURE) */}
+            {!isExpanded && (
+              <button 
+                onClick={() => handleExpandScript(i)}
+                style={{ background: 'transparent', border: '1px solid #60a5fa', color: '#60a5fa', padding: '10px 16px', borderRadius: '8px', fontSize: '14px', cursor: 'pointer', width: '100%', fontWeight: 'bold' }}
+              >
+                ✨ Bantu skrip Ide {i + 1}
+              </button>
+            )}
 
-  </div>
-))}  {/* <<< TUTUP map di sini */}
+            {/* AREA LOADING BERTAHAP (MUNCUL SAAT TOMBOL DIKLIK) */}
+            {isExpanded && step < 4 && (
+              <div style={{ background: '#020617', padding: '16px', borderRadius: '8px', border: '1px solid #1e293b', marginTop: '16px' }}>
+                <div className={step >= 1 ? "vidiq-step done" : "vidiq-step"}>
+                  {step > 1 ? "✓" : <span className="spinner">⏳</span>} Berpikir selama 2 detik... menganalisa pola viral...
+                </div>
+                {step >= 2 && (
+                  <div className={step >= 2 ? "vidiq-step done" : "vidiq-step"}>
+                    {step > 2 ? "✓" : <span className="spinner">⏳</span>} Tools sudah siap. Menarik transkrip video terbaik di niche ini...
+                  </div>
+                )}
+                {step >= 3 && (
+                  <div className={step >= 3 ? "vidiq-step done" : "vidiq-step"}>
+                    <span className="spinner">⏳</span> Meracik Voice Over style & Struktur Visual...
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* HASIL KESELURUHAN (MUNCUL SETELAH LOADING SELESAI) */}
+            {isExpanded && step === 4 && (
+              <div style={{ marginTop: '24px', animation: 'fadeIn 0.5s ease-in' }}>
+                
+                {/* TABEL STRUKTUR VISUAL */}
+                <div style={{ marginBottom: '20px', background: '#0f172a', padding: '16px', borderRadius: '8px', border: '1px solid #1e293b' }}>
+                  <strong style={{ color: '#38bdf8', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ color: '#ef4444' }}>◎</span> STRUKTUR VISUAL
+                  </strong>
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                      <thead>
+                        <tr style={{ background: '#1e293b', textAlign: 'left', color: '#cbd5e1' }}>
+                          <th style={{ padding: '8px', borderBottom: '1px solid #334155' }}>Layer</th>
+                          <th style={{ padding: '8px', borderBottom: '1px solid #334155' }}>Posisi</th>
+                          <th style={{ padding: '8px', borderBottom: '1px solid #334155' }}>Konten</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {item.visualStructure?.map((vs: any, idx: number) => (
+                          <tr key={idx}>
+                            <td style={{ padding: '8px', borderBottom: '1px solid #1e293b', color: '#f8fafc' }}>{vs.layer}</td>
+                            <td style={{ padding: '8px', borderBottom: '1px solid #1e293b', color: '#94a3b8' }}>{vs.posisi}</td>
+                            <td style={{ padding: '8px', borderBottom: '1px solid #1e293b', color: '#cbd5e1' }}>{vs.konten}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* SCRIPT TIMESTAMP */}
+                <div style={{ marginBottom: '20px', background: '#0f172a', padding: '16px', borderRadius: '8px', border: '1px solid #1e293b' }}>
+                  <strong style={{ color: '#10b981', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ color: '#10b981' }}>🎙️</span> VOICE-OVER SCRIPT
+                  </strong>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    {item.script?.map((sc: any, idx: number) => (
+                      <div key={idx} style={{ paddingLeft: '12px', borderLeft: '3px solid #10b981' }}>
+                        <strong style={{ color: '#a7f3d0', fontSize: '13px' }}>{sc.time}</strong>
+                        <p style={{ margin: '6px 0', color: '#f8fafc', fontSize: '15px' }}>"{sc.vo}"</p>
+                        <small style={{ color: '#64748b' }}>{sc.visual}</small>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* READY TO PASTE */}
+                <strong style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#c084fc', marginBottom: '12px' }}>
+                  📋 READY-TO-PASTE: DESCRIPTION + TAGS
+                </strong>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
+                  <OutputBlock title="Description" value={item.description} compactBlock={true} />
+                  <OutputBlock title="Tags" value={item.tags} compactBlock={true} />
+                </div>
+                
+                {/* TOMBOL TUTUP */}
+                <button 
+                  onClick={() => setExpandedIdea(null)}
+                  style={{ marginTop: '16px', background: '#1e293b', border: 'none', color: '#cbd5e1', padding: '8px 16px', borderRadius: '8px', fontSize: '13px', cursor: 'pointer', width: '100%' }}
+                >
+                  Tutup Panel Skrip
+                </button>
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
