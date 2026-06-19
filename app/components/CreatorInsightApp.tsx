@@ -150,6 +150,7 @@ export default function CreatorInsightApp() {
   const [optimizer, setOptimizer] = useLocalStorage<ApiState<any>>("simpanan_hasil_seo", { loading: false, error: "", data: null });
   const [isGeneratingViral, setIsGeneratingViral] = useState(false);
   const [viralResultText, setViralResultText] = useState("");
+  const [isCopied, setIsCopied] = useState(false);
   const [dailyTarget, setDailyTarget] = useState<ApiState<any>>({ loading: false, error: "", data: null });
   const [dailyScripts, setDailyScripts] = useState<Record<number, any>>({});
   const [loadingDailyScript, setLoadingDailyScript] = useState<Record<number, boolean>>({});
@@ -491,19 +492,36 @@ export default function CreatorInsightApp() {
             </button>
 
             {/* KOTAK HASIL (Muncul Otomatis Setelah AI Selesai) */}
+         {/* KOTAK HASIL + TOMBOL COPY */}
             {viralResultText && (
-              <div style={{ 
-                marginTop: '20px', 
-                padding: '20px', 
-                background: '#020617', 
-                border: '1px solid #334155', 
-                borderRadius: '8px', 
-                color: '#f8fafc', 
-                whiteSpace: 'pre-wrap', // Ini penting agar format enter/baris baru dari AI tetap rapi
-                fontSize: '14px', 
-                lineHeight: '1.6' 
-              }}>
-                {viralResultText}
+              <div style={{ marginTop: '20px', background: '#020617', border: '1px solid #334155', borderRadius: '8px', overflow: 'hidden' }}>
+                {/* Header Kotak Copy */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#1e293b', padding: '10px 16px', borderBottom: '1px solid #334155' }}>
+                  <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 'bold' }}>HASIL GENERATE (SIAP COPY)</span>
+                  <button 
+                    onClick={() => {
+                      navigator.clipboard.writeText(viralResultText);
+                      setIsCopied(true);
+                      setTimeout(() => setIsCopied(false), 2000);
+                    }}
+                    style={{ 
+                      background: isCopied ? '#059669' : '#3b82f6', 
+                      color: 'white', 
+                      border: 'none', 
+                      padding: '6px 12px', 
+                      borderRadius: '6px', 
+                      fontSize: '12px', 
+                      cursor: 'pointer',
+                      fontWeight: 'bold'
+                    }}
+                  >
+                    {isCopied ? "✅ Berhasil Dicopy!" : "📋 Copy Semua"}
+                  </button>
+                </div>
+                {/* Isi Teks */}
+                <div style={{ padding: '16px', color: '#f8fafc', whiteSpace: 'pre-wrap', fontSize: '14px', lineHeight: '1.6', maxHeight: '500px', overflowY: 'auto' }}>
+                  {viralResultText}
+                </div>
               </div>
             )}
             
