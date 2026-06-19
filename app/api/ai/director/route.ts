@@ -54,8 +54,7 @@ Overlay Text: [Short punchy text in ${language}]
     
     // Pembersihan markdown jika AI masih bandel
     if (textResponse.startsWith("```")) {
-       textResponse = textResponse.replace(/^
-```[a-z]*\s*/, "").replace(/\s*```$/, "");
+       textResponse = textResponse.replace(/^```[a-z]*\s*/, "").replace(/\s*```$/, "");
     }
 
     return NextResponse.json({ success: true, script: textResponse });
