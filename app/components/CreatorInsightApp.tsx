@@ -13,14 +13,12 @@ type ApiState<T> = {
 };
 
 const tabs: { id: TabId; label: string; icon: string }[] = [
-  { id: "overview", label: "Overview", icon: "🏠" },
-  { id: "optimizer", label: "Video Optimizer", icon: "▶️" },
-  { id: "competitors", label: "Competitors", icon: "👥" },
-  { id: "roblox", label: "Roblox Creator", icon: "🎮" },
-  { id: "reports", label: "Reports", icon: "📄" },
-  { id: "settings", label: "Settings", icon: "⚙️" }
-];
-
+    { id: "overview", label: "Dasbor", icon: "🏠" },
+    { id: "optimizer", label: "Optimasi", icon: "🪄" },
+    { id: "competitors", label: "Riset", icon: "📈" },
+    { id: "roblox", label: "Sutradara", icon: "🎬" },
+    { id: "settings", label: "Menu", icon: "☰" }
+  ];
 function compact(value?: string | number) {
   const n = typeof value === "string" ? Number(value) : value || 0;
   if (!Number.isFinite(n)) return "0";
@@ -335,37 +333,71 @@ export default function CreatorInsightApp() {
   if (status === "loading") return <div className="login-wrap"><div className="skeleton" style={{ width: 380 }} /></div>;
   if (!session) return <LoginScreen />;
 
-  return (
-    <div className="app-shell">
-      <aside className="sidebar">
-        <div className="logo"><div className="logo-badge">▶</div><div>Creator Insight<small>YouTube Analyzer</small></div></div>
-        <nav className="menu">
-          {tabs.map((tab) => (
-            <button key={tab.id} className={active === tab.id ? "active" : ""} onClick={() => setActive(tab.id)}>
-              <span>{tab.icon}</span>{tab.label}
-            </button>
-          ))}
-        </nav>
-        <div className="side-card">
-          <strong>AI Report Status ●</strong> Koboi/OpenAI-compatible gateway aktif.
-          <div style={{ marginTop: 12 }}><button className="btn block primary" onClick={() => window.location.href='/long-video'}>Sutradara AI Video</button></div>
+ return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: '#020617', color: '#f8fafc', overflow: 'hidden' }}>
+      
+      {/* HEADER ATAS (NAMA APP & LOGOUT) */}
+      <div style={{ padding: '16px 20px', borderBottom: '1px solid #1e293b', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#0f172a', zIndex: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '24px' }}>🚀</span>
+          <h1 style={{ fontSize: '18px', fontWeight: 'bold', margin: 0 }}>Creator Insight</h1>
         </div>
-      </aside>
+        <button onClick={() => signOut()} style={{ background: 'transparent', border: '1px solid #334155', color: '#cbd5e1', padding: '6px 12px', borderRadius: '6px', fontSize: '12px' }}>
+          Logout
+        </button>
+      </div>
 
-      <main className="main">
-        <div className="topbar">
-          <div><h2 style={{ margin: 0 }}>{tabs.find((t) => t.id === active)?.label}</h2></div>
-          <div className="form-row"><button className="btn" onClick={loadDashboard}>Refresh Data</button><button className="btn ghost" onClick={() => signOut()}>Logout</button></div>
-        </div>
-
-        {channelState.error && <div className="alert error">{channelState.error}</div>}
+   {/* AREA KONTEN UTAMA (BISA DI-SCROLL) */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '16px', paddingBottom: '90px' }}>
         {active === "overview" && renderOverview()}
         {active === "optimizer" && renderOptimizer()}
         {active === "competitors" && renderCompetitors()}
-        {active === "roblox" && <div className="card"><h2>Roblox Creator</h2><p className="muted">Silakan gunakan fitur <strong>Target Harian</strong> di tab Overview untuk membuat Roblox Shorts secara otomatis.</p></div>}
-        {active === "reports" && renderReports()}
-        {active === "settings" && renderSettings()}
-      </main>
+        {active === "roblox" && <div className="card"><h2>🎬 Sutradara AI</h2><p className="muted">Silakan gunakan fitur <strong>Target Harian</strong></p></div>}
+        {active === "reports" && <div><h2>Laporan</h2></div>}
+        {active === "settings" && <div><h2>Pengaturan</h2></div>}
+      </div>
+
+      {/* BOTTOM NAVIGATION BAR (GAYA VIDIQ) */}
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        width: '100%',
+        backgroundColor: '#0f172a',
+        borderTop: '1px solid #1e293b',
+        display: 'flex',
+        justifyContent: 'space-around',
+        padding: '12px 0',
+        paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
+        zIndex: 50,
+        boxShadow: '0 -4px 6px -1px rgba(0, 0, 0, 0.1)'
+      }}>
+        {tabs.map(tab => {
+          const isActive = active === tab.id;
+          return (
+            <div 
+              key={tab.id} 
+              onClick={() => setActive(tab.id)} 
+              style={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'center', 
+                gap: '4px',
+                cursor: 'pointer',
+                width: '20%',
+                color: isActive ? '#3b82f6' : '#64748b' // Biru nyala jika aktif
+              }}
+            >
+              <span style={{ fontSize: '22px', filter: isActive ? 'drop-shadow(0 0 8px rgba(59, 130, 246, 0.5))' : 'none' }}>
+                {tab.icon}
+              </span>
+              <span style={{ fontSize: '11px', fontWeight: isActive ? '600' : '400' }}>
+                {tab.label}
+              </span>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 
