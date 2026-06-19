@@ -149,8 +149,8 @@ export default function CreatorInsightApp() {
   const [selectedVideo, setSelectedVideo] = useLocalStorage<any>("simpanan_pilihan_video", null);
   const [optimizer, setOptimizer] = useLocalStorage<ApiState<any>>("simpanan_hasil_seo", { loading: false, error: "", data: null });
   const [isGeneratingViral, setIsGeneratingViral] = useState(false);
-  const [viralResultText, setViralResultText] = useState("");
-  const [isCopied, setIsCopied] = useState(false);
+  const [viralVideos, setViralVideos] = useState<any[]>([]);
+  const [copiedId, setCopiedId] = useState<number | null>(null);
   const [dailyTarget, setDailyTarget] = useState<ApiState<any>>({ loading: false, error: "", data: null });
   const [dailyScripts, setDailyScripts] = useState<Record<number, any>>({});
   const [loadingDailyScript, setLoadingDailyScript] = useState<Record<number, boolean>>({});
@@ -454,20 +454,20 @@ export default function CreatorInsightApp() {
   }
   
   function renderSutradaraProMax() {
-    async function handleGenerate() {
+  async function handleGenerate() {
       setIsGeneratingViral(true);
-      setViralResultText(""); // Kosongkan hasil lama sebelum mulai meracik yang baru
+      setViralVideos([]); 
       try {
         const res = await fetch('/api/ai/viral-factory', { method: 'POST' });
         const data = await res.json();
         
-        if (data.success && data.resultText) {
-          setViralResultText(data.resultText); // Menampilkan teks murni dari AI
+        if (data.success && data.videos) {
+          setViralVideos(data.videos); 
         } else {
            alert("Gagal meracik viral pack.");
         }
       } catch(err) {
-        alert("Gagal memuat. Pastikan folder API viral-factory sudah dibuat.");
+        alert("Gagal memuat API.");
       }
       setIsGeneratingViral(false);
     }
@@ -492,36 +492,51 @@ export default function CreatorInsightApp() {
             </button>
 
             {/* KOTAK HASIL (Muncul Otomatis Setelah AI Selesai) */}
-         {/* KOTAK HASIL + TOMBOL COPY */}
-            {viralResultText && (
-              <div style={{ marginTop: '20px', background: '#020617', border: '1px solid #334155', borderRadius: '8px', overflow: 'hidden' }}>
-                {/* Header Kotak Copy */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#1e293b', padding: '10px 16px', borderBottom: '1px solid #334155' }}>
-                  <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 'bold' }}>HASIL GENERATE (SIAP COPY)</span>
-                  <button 
-                    onClick={() => {
-                      navigator.clipboard.writeText(viralResultText);
-                      setIsCopied(true);
-                      setTimeout(() => setIsCopied(false), 2000);
-                    }}
-                    style={{ 
-                      background: isCopied ? '#059669' : '#3b82f6', 
-                      color: 'white', 
-                      border: 'none', 
-                      padding: '6px 12px', 
-                      borderRadius: '6px', 
-                      fontSize: '12px', 
-                      cursor: 'pointer',
-                      fontWeight: 'bold'
-                    }}
-                  >
-                    {isCopied ? "✅ Berhasil Dicopy!" : "📋 Copy Semua"}
-                  </button>
-                </div>
-                {/* Isi Teks */}
-                <div style={{ padding: '16px', color: '#f8fafc', whiteSpace: 'pre-wrap', fontSize: '14px', lineHeight: '1.6', maxHeight: '500px', overflowY: 'auto' }}>
-                  {viralResultText}
-                </div>
+         {/* HASIL 4 VIDEO TERPISAH */}
+            {viralVideos.length > 0 && (
+              <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {viralVideos.map((video, idx) => {
+                  // Format teks rapi khusus untuk di-copy
+                  const copyText = `🔥 VIDEO ${idx + 1}\nTitle: ${video.title}\nDescription: ${video.description}\nHashtags: ${video.hashtags}\nBest Upload Time: ${video.uploadTime}\n\n🎬 Grok AI Video Prompts (Vertical 9:16):\n${video.prompts.map((p: string, i: number) => `- Prompt ${i + 1}: "${p}"`).join("\n")}`;
+
+                  return (
+                    <div key={idx} style={{ background: '#020617', border: '1px solid #334155', borderRadius: '8px', overflow: 'hidden' }}>
+                      
+                      {/* Header Tiap Video + Tombol Copy */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#1e293b', padding: '12px 16px', borderBottom: '1px solid #334155' }}>
+                        <span style={{ fontSize: '14px', color: '#f8fafc', fontWeight: 'bold' }}>🔥 VIDEO {idx + 1}</span>
+                        <button 
+                          onClick={() => {
+                            navigator.clipboard.writeText(copyText);
+                            setCopiedId(idx);
+                            setTimeout(() => setCopiedId(null), 2000);
+                          }}
+                          style={{ background: copiedId === idx ? '#059669' : '#3b82f6', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', cursor: 'pointer', fontWeight: 'bold' }}
+                        >
+                          {copiedId === idx ? "✅ Berhasil Dicopy!" : `📋 Copy Video ${idx + 1}`}
+                        </button>
+                      </div>
+
+                      {/* Isi Teks Tiap Video */}
+                      <div style={{ padding: '16px', color: '#cbd5e1', fontSize: '14px', lineHeight: '1.6' }}>
+                        <p><strong>Title:</strong> <span style={{color: '#f8fafc'}}>{video.title}</span></p>
+                        <p><strong>Description:</strong> {video.description}</p>
+                        <p><strong>Hashtags:</strong> <span style={{color: '#38bdf8'}}>{video.hashtags}</span></p>
+                        <p><strong>Upload Time:</strong> {video.uploadTime}</p>
+                        
+                        <div style={{ marginTop: '12px', background: '#0f172a', padding: '12px', borderRadius: '6px', border: '1px solid #1e293b' }}>
+                          <strong style={{ display: 'block', marginBottom: '8px', color: '#f8fafc' }}>🎬 Grok AI Prompts:</strong>
+                          <ul style={{ margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {video.prompts.map((p: string, i: number) => (
+                              <li key={i}>{p}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+
+                    </div>
+                  );
+                })}
               </div>
             )}
             
