@@ -645,7 +645,7 @@ function renderSutradara() {
               <thead><tr><th>#</th><th>Video</th><th>Views</th><th>Likes</th><th>Status</th><th>Aksi</th></tr></thead>
               <tbody>
                 {sortedVideos.map((v, i) => {
-                  const isSelected = selectedVideo && getVideoId(selectedVideo) === getVideoId(v);
+                  const isSelected = selectedVideo && getVideoId(selectedVideo) && getVideoId(selectedVideo) === getVideoId(v);
                   
                   return (
                     <React.Fragment key={getVideoId(v) || i}>

@@ -22,26 +22,23 @@ export async function POST(req: Request) {
     const originalTitle = video?.snippet?.title || video?.title || "Video Tanpa Judul";
     const originalDesc = video?.snippet?.description || "";
 
-   const prompt = `You are an elite YouTube SEO Expert and Viral Content Strategist.
-    I have a video currently titled: "${originalTitle}"
-    Description: "${originalDesc.substring(0, 500)}"
+  const prompt = `You are an elite YouTube SEO Expert and Viral Content Strategist. 
+Analyze the following video content and provide highly optimized, high-CTR recommendations.
 
-    TASK: Optimize this video for MAXIMUM YouTube Algorithm reach, high Click-Through-Rate (CTR), and top search ranking.
-    Language: AUTO-DETECT. You MUST detect the language of the original title ("${originalTitle}") and write ALL outputs (titles, description, keywords, caption) in that EXACT SAME language. If the original title is English, output in English. If Indonesian, output in Indonesian. Do not mix languages.
+LANGUAGE INSTRUCTION: 
+Detect the language of the video title and description provided below. 
+You MUST respond in the SAME LANGUAGE as the input video.
 
-    REQUIREMENTS:
-    1. recommendedTitles: Provide 3 highly engaging, clickbait (but accurate) titles. Keep them under 70 characters for best visibility. Use emojis strategically.
-    2. description: Write a full SEO-optimized description. First 2 lines must hook the viewer. Include a brief summary, CTA to subscribe, and relevant keywords naturally woven in.
-    3. keywords: Provide an array of 15-20 highly searched tags/keywords related to the topic.
-    4. caption: A short 2-sentence version of the description for quick sharing.
+Berikan output dengan aturan ketat berikut dalam format JSON:
+1. "recommendedTitles": [5 viral & clickbait-style titles, under 60 characters, use emojis].
+2. "description": "SEO-friendly description. First 3 lines must contain a powerful hook. Include a brief summary, CTA to subscribe, and relevant keywords."
+3. "keywords": [15-20 trending tags/hashtags related to the video topic].
+4. "caption": "Short 3-sentence caption for quick sharing."
 
-    Respond ONLY with a valid JSON object. DO NOT wrap in markdown.
-    {
-      "recommendedTitles": ["Viral Title 1", "Viral Title 2", "Viral Title 3"],
-      "description": "Full SEO description here...",
-      "keywords": ["tag1", "tag2", "tag3"],
-      "caption": "Short hook caption..."
-    }`;
+Respond ONLY with a valid JSON object. DO NOT wrap in markdown.
+Video yang dianalisis:
+Judul: "${originalTitle}"
+Deskripsi: "${originalDesc.substring(0, 500)}"`;
 
     const res = await fetch(endpoint, {
       method: "POST",
