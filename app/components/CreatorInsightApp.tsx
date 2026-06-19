@@ -451,7 +451,8 @@ export default function CreatorInsightApp() {
         </div>
     );
   }
-  function renderSutradara() {
+  
+  function renderSutradaraProMax() {
     async function handleGenerate() {
       setIsGeneratingViral(true);
       try {
@@ -508,8 +509,13 @@ export default function CreatorInsightApp() {
 
 function renderSutradara() {
     return (
-      <section className="grid" style={{ gridTemplateColumns: "1fr" }}>
-        <div className="card" style={{ border: '2px solid #10b981', background: 'linear-gradient(to right, #064e3b, #022c22)', padding: '24px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        
+        {/* Panggil Tampilan PRO MAX di atas */}
+        {renderSutradaraProMax()}
+
+        <section className="grid" style={{ gridTemplateColumns: "1fr" }}>
+          <div className="card" style={{ border: '2px solid #10b981', background: 'linear-gradient(to right, #064e3b, #022c22)', padding: '24px' }}>
           <h2 style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#34d399', margin: '0 0 8px 0', fontSize: '20px' }}>🎬 Sutradara AI (Full Video)</h2>
           <p style={{ color: '#a7f3d0', margin: '0 0 16px 0', fontSize: '14px', lineHeight: '1.5' }}>Buat naskah video panjang (5-20 Menit) dengan Voice Over spesifik, instruksi overlay teks, dan format gambar Micro-Pacing (Slide-by-Slide) untuk channel luar negeri.</p>
           <button onClick={() => window.location.href='/long-video'} style={{ width: '100%', background: '#10b981', color: 'white', fontWeight: 'bold', padding: '12px', borderRadius: '8px', border: 'none', cursor: 'pointer' }}>
@@ -587,6 +593,7 @@ function renderSutradara() {
           )}
         </div>
       </section>
+      </div>
     );
   }
       
