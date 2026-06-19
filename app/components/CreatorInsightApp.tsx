@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { LineChart, Line, XAxis, Tooltip, ResponsiveContainer } from 'recharts';
-type TabId = "overview" | "optimizer" | "competitors" | "roblox" | "reports" | "settings";
+type TabId = "overview" | "optimizer" | "competitors" | "roblox" | "reports" | "opportunity";
 
 type ApiState<T> = {
   loading: boolean;
@@ -17,7 +17,7 @@ const tabs: { id: TabId; label: string; icon: string }[] = [
     { id: "optimizer", label: "Optimasi", icon: "🪄" },
     { id: "competitors", label: "Riset", icon: "📈" },
     { id: "roblox", label: "Sutradara", icon: "🎬" },
-    { id: "settings", label: "Menu", icon: "☰" }
+    { id: "opportunity", label: "Lab", icon: "🧠" }
   ];
 function compact(value?: string | number) {
   const n = typeof value === "string" ? Number(value) : value || 0;
@@ -155,6 +155,9 @@ export default function CreatorInsightApp() {
   const [dailyScripts, setDailyScripts] = useState<Record<number, any>>({});
   const [loadingDailyScript, setLoadingDailyScript] = useState<Record<number, boolean>>({});
   const [activeDailyTab, setActiveDailyTab] = useState<number>(0);
+  const [opportunityLoading, setOpportunityLoading] = useState(false);
+  const [opportunityResults, setOpportunityResults] = useState<any[]>([]);
+
   // --- STATE UNTUK GOOGLE TRENDS ASLI ---
   const [trendQuery, setTrendQuery] = useState("roblox");
   const [trendData, setTrendData] = useState<any[]>([]);
@@ -356,7 +359,7 @@ export default function CreatorInsightApp() {
         {active === "competitors" && renderCompetitors()}
         {active === "roblox" && renderSutradara()}
         {active === "reports" && <div><h2>Laporan</h2></div>}
-        {active === "settings" && <div><h2>Pengaturan</h2></div>}
+        {active === "opportunity" && renderOpportunityLab()}
         
       </div>
 
@@ -453,6 +456,60 @@ export default function CreatorInsightApp() {
     );
   }
   
+ async function generateOpportunities() {
+  setOpportunityLoading(true);
+
+
+  const mockCategories = [
+    "Travel & Events",
+    "Gaming",
+    "Animals",
+    "Science",
+    "Finance",
+    "Fashion"
+  ];
+
+  const results = mockCategories.map((cat) => {
+
+    const microNiches: any = {
+      "Travel & Events": "Real places that look AI-generated",
+      "Gaming": "Deleted Roblox games that vanished",
+      "Animals": "Animals that look fake but are real",
+      "Science": "Impossible science discoveries explained",
+      "Finance": "Strange money disasters in history",
+      "Fashion": "Historical fashion that looks futuristic"
+    };
+
+    const niche = microNiches[cat];
+
+    const demand = Math.floor(Math.random() * 40) + 60;
+    const competition = Math.floor(Math.random() * 50) + 20;
+    const aiVisual = Math.floor(Math.random() * 30) + 70;
+
+    const score = Math.round(
+      demand * 0.4 +
+      (100 - competition) * 0.4 +
+      aiVisual * 0.2
+    );
+
+    return {
+      category: cat,
+      niche,
+      demand,
+      competition,
+      aiVisual,
+      score,
+      title: `This ${niche} Looks Unreal`,
+      hook: "This looks fake… but it’s 100% real",
+      script: "Short cinematic AI documentary script here...",
+      prompt: "cinematic ultra realistic AI scene..."
+    };
+  });
+
+  setOpportunityResults(results);
+  setOpportunityLoading(false);
+}
+
   function renderSutradaraProMax() {
   async function handleGenerate() {
       setIsGeneratingViral(true);
@@ -782,6 +839,60 @@ function renderCompetitors() {
       </div>
     ); 
   }
+  function renderOpportunityLab() {
+  return (
+    <div className="grid">
+
+      {/* HEADER CARD */}
+      <div className="card">
+        <h2>🧠 Opportunity Lab AI Engine</h2>
+        <p className="muted">
+          Generate ide YouTube minim kompetitor berbasis AI scoring system.
+        </p>
+
+        <button
+          className="btn primary"
+          onClick={generateOpportunities}
+        >
+          🔥 Generate Opportunity Ideas
+        </button>
+      </div>
+
+      {/* LOADING STATE */}
+      {opportunityLoading && (
+        <div className="card">
+          ⏳ AI sedang mencari peluang terbaik...
+        </div>
+      )}
+
+      {/* RESULT LIST */}
+     {opportunityResults.map((item, i) => (
+  <div key={i} className="card">
+
+    <h3>{item.title}</h3>
+    <p className="muted">{item.niche}</p>
+
+    <div>
+      📊 Score: <b>{item.score}/100</b>
+      <br />
+      Demand: {item.demand}
+      <br />
+      Competition: {item.competition}
+      <br />
+      AI Visual: {item.aiVisual}
+    </div>
+
+    <hr />
+
+    <p><b>Hook:</b> {item.hook}</p>
+    <p><b>Script:</b> {item.script}</p>
+    <p><b>Prompt:</b> {item.prompt}</p>
+
+  </div>
+))}  {/* <<< TUTUP map di sini */}
+    </div>
+  );
+}
   function renderReports() { return <div><h2 style={{color: 'white'}}>Reports (Dalam Pengembangan)</h2></div>; }
   function renderSettings() { return <div><h2 style={{color: 'white'}}>Settings (Dalam Pengembangan)</h2></div>; }
 } 
@@ -857,6 +968,7 @@ function OptimizerResultView({ result, onLivePreview }: { result: any; onLivePre
     </div>
   );
 }
+
 
 function OutputBlock({ title, value, compactBlock = false }: { title: string; value: any; compactBlock?: boolean }) {
   const text = Array.isArray(value) ? value.join("\n") : String(value || "-");
