@@ -148,6 +148,7 @@ export default function CreatorInsightApp() {
   const [videosState, setVideosState] = useLocalStorage<ApiState<any[]>>("simpanan_video", { loading: false, error: "", data: [] });
   const [selectedVideo, setSelectedVideo] = useLocalStorage<any>("simpanan_pilihan_video", null);
   const [optimizer, setOptimizer] = useLocalStorage<ApiState<any>>("simpanan_hasil_seo", { loading: false, error: "", data: null });
+  const [isGeneratingViral, setIsGeneratingViral] = useState(false);
   
   const [dailyTarget, setDailyTarget] = useState<ApiState<any>>({ loading: false, error: "", data: null });
   const [dailyScripts, setDailyScripts] = useState<Record<number, any>>({});
@@ -355,6 +356,7 @@ export default function CreatorInsightApp() {
         {active === "roblox" && renderSutradara()}
         {active === "reports" && <div><h2>Laporan</h2></div>}
         {active === "settings" && <div><h2>Pengaturan</h2></div>}
+        
       </div>
 
       {/* BOTTOM NAVIGATION BAR (GAYA VIDIQ) */}
@@ -449,167 +451,144 @@ export default function CreatorInsightApp() {
         </div>
     );
   }
-const [activeVideo, setActiveVideo] = useState(0)
+  function renderSutradara() {
+    async function handleGenerate() {
+      setIsGeneratingViral(true);
+      try {
+        const res = await fetch('/api/ai/viral-factory', { method: 'POST' });
+        const data = await res.json();
+        alert(data.message || "✅ Viral Pack Berhasil Dibuat!");
+      } catch(err) {
+        alert("Gagal memuat. Pastikan folder API viral-factory sudah dibuat.");
+      }
+      setIsGeneratingViral(false);
+    }
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        {/* Header Card */}
+        <div style={{ background: '#0f172a', padding: '20px', borderRadius: '12px', border: '1px solid #1e293b' }}>
+          <h2 style={{ fontSize: '24px', margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>🎬 Sutradara PRO MAX AI</h2>
+          <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '16px' }}>AI Viral Engine untuk YouTube, Shorts & Affiliate Automation</p>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            <span style={{ background: '#1e293b', padding: '6px 12px', borderRadius: '20px', fontSize: '12px', border: '1px solid #334155' }}>🔥 Viral Engine</span>
+            <span style={{ background: '#1e293b', padding: '6px 12px', borderRadius: '20px', fontSize: '12px', border: '1px solid #334155' }}>🎯 AI Scoring</span>
+            <span style={{ background: '#1e293b', padding: '6px 12px', borderRadius: '20px', fontSize: '12px', border: '1px solid #334155' }}>⚡ Auto Content</span>
+            <span style={{ background: '#1e293b', padding: '6px 12px', borderRadius: '20px', fontSize: '12px', border: '1px solid #334155' }}>📈 Growth System</span>
+          </div>
+        </div>
+
+        {/* Dashboard Card */}
+        <div style={{ background: '#0f172a', padding: '20px', borderRadius: '12px', border: '1px solid #1e293b' }}>
+          <h3 style={{ fontSize: '16px', margin: '0 0 16px 0' }}>📊 AI Viral Dashboard</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div><p style={{ color: '#94a3b8', fontSize: '12px', margin: 0 }}>🔥 Viral Score</p><strong style={{ fontSize: '18px' }}>87%</strong></div>
+            <div><p style={{ color: '#94a3b8', fontSize: '12px', margin: 0 }}>📈 CTR Prediction</p><strong style={{ fontSize: '18px', color: '#10b981' }}>High</strong></div>
+            <div><p style={{ color: '#94a3b8', fontSize: '12px', margin: 0 }}>💬 Engagement</p><strong style={{ fontSize: '18px' }}>Strong</strong></div>
+          </div>
+        </div>
+
+        {/* Viral Factory Card */}
+        <div style={{ background: '#047857', padding: '2px', borderRadius: '14px' }}> {/* Premium Dark Green Border */}
+          <div style={{ background: '#0f172a', padding: '20px', borderRadius: '12px' }}>
+            <h3 style={{ fontSize: '20px', margin: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>🎯 Viral Factory</h3>
+            <p style={{ color: '#cbd5e1', fontSize: '14px', marginBottom: '20px' }}>Generate 4 video + AI ranking + viral scoring otomatis</p>
+            <button 
+              onClick={handleGenerate}
+              disabled={isGeneratingViral}
+              style={{ width: '100%', padding: '14px', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '15px' }}
+            >
+              {isGeneratingViral ? "⏳ AI Sedang Meracik..." : "⚡ Generate Viral Pack (4 Video AI)"}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
 function renderSutradara() {
-
-   const video = dailyTarget?.data?.videos?.[activeVideo] || {}
-    dailyTarget?.data?.videos?.[activeVideo]
-
-  return (
-    <div style={{ padding: 16, display: "grid", gap: 16 }}>
-
-      {/* HEADER */}
-      <div style={{
-        background: "linear-gradient(135deg,#020617,#0f172a)",
-        padding: 20,
-        borderRadius: 16,
-        border: "1px solid #1e293b"
-      }}>
-        <h1 style={{ color: "white", margin: 0 }}>🎬 Sutradara PRO MAX AI</h1>
-        <p style={{ color: "#94a3b8" }}>
-          AI Viral Engine untuk YouTube, Shorts & Affiliate Automation
-        </p>
-
-        <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
-          <span className="badge">🔥 Viral Engine</span>
-          <span className="badge">🎯 AI Scoring</span>
-          <span className="badge">⚡ Auto Content</span>
-          <span className="badge">📈 Growth System</span>
+    return (
+      <section className="grid" style={{ gridTemplateColumns: "1fr" }}>
+        <div className="card" style={{ border: '2px solid #10b981', background: 'linear-gradient(to right, #064e3b, #022c22)', padding: '24px' }}>
+          <h2 style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#34d399', margin: '0 0 8px 0', fontSize: '20px' }}>🎬 Sutradara AI (Full Video)</h2>
+          <p style={{ color: '#a7f3d0', margin: '0 0 16px 0', fontSize: '14px', lineHeight: '1.5' }}>Buat naskah video panjang (5-20 Menit) dengan Voice Over spesifik, instruksi overlay teks, dan format gambar Micro-Pacing (Slide-by-Slide) untuk channel luar negeri.</p>
+          <button onClick={() => window.location.href='/long-video'} style={{ width: '100%', background: '#10b981', color: 'white', fontWeight: 'bold', padding: '12px', borderRadius: '8px', border: 'none', cursor: 'pointer' }}>
+            Masuk ke Sutradara AI 🚀
+          </button>
         </div>
-      </div>
 
-      {/* VIRAL DASHBOARD */}
-      <div className="card">
-        <h3>📊 AI Viral Dashboard</h3>
-
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr 1fr",
-          gap: 10
-        }}>
-          <div className="mini-card">🔥 Viral Score<br /><b>87%</b></div>
-          <div className="mini-card">📈 CTR Prediction<br /><b>High</b></div>
-          <div className="mini-card">💬 Engagement<br /><b>Strong</b></div>
-        </div>
-      </div>
-
-      {/* TARGET HARIAN */}
-      <div style={{
-        border: "2px solid #10b981",
-        padding: 16,
-        borderRadius: 12
-      }}>
-        <h2>🎯 Viral Factory</h2>
-        <p>Generate 4 video + AI ranking + viral scoring otomatis</p>
-
-        <button
-          onClick={() => generateDailyTarget()}
-          style={{
-            width: "100%",
-            padding: 14,
-            background: "#10b981",
-            color: "white",
-            borderRadius: 10,
-            fontWeight: "bold",
-            border: "none"
-          }}
-        >
-          ⚡ Generate Viral Pack (4 Video AI)
-        </button>
-      </div>
-
-      {/* VIDEO LIST + AI RANKING */}
-      {dailyTarget?.data?.videos && (
-        <div className="card">
-          <h3>🎥 AI Video Ranking System</h3>
-
-          {dailyTarget.data.videos
-            .map((v: any, i: number) => ({
-              ...v,
-              score: Math.floor(Math.random() * 40 + 60) // simulasi AI score
-            }))
-            .sort((a: any, b: any) => b.score - a.score)
-            .map((v: any, i: number) => (
-              <div
-                key={i}
-                style={{
-                  padding: 12,
-                  marginBottom: 10,
-                  borderRadius: 10,
-                  border: i === 0 ? "2px solid gold" : "1px solid #334155",
-                  background: i === 0 ? "#1f2937" : "#0f172a",
-                  color: "white"
-                }}
-              >
-                <b>
-                  {i === 0 ? "👑 MOST VIRAL POTENTIAL" : `Video ${i + 1}`}
-                </b>
-
-                <p style={{ margin: 5, color: "#94a3b8" }}>
-                  Viral Score: {v.score}%
-                </p>
-
-                <p>{v.hook}</p>
-
-                <button
-                  onClick={() => setActiveVideo(i)}
-                  style={{
-                    padding: 8,
-                    background: "#3b82f6",
-                    color: "white",
-                    borderRadius: 8,
-                    border: "none"
-                  }}
-                >
-                  Buka Detail
-                </button>
+        <div className="card" style={{ border: '2px solid #3b82f6', padding: '24px' }}>
+          <h2 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>🎯 TARGET HARIAN SEKARANG</h2>
+          <p className="muted" style={{ marginBottom: 20 }}>Sistem akan meriset 4 Topik Trending hari ini dan secara otomatis memproduksi Data Matang untuk setiap topiknya.</p>
+          {!dailyTarget.data && (
+            <button className="btn primary block" onClick={generateDailyTarget} disabled={dailyTarget.loading} style={{ width: '100%', padding: '16px', fontSize: '16px' }}>
+              {dailyTarget.loading ? "⏳ Mencari Topik Trending & Meracik Data..." : "Generate 4 Video Matang Hari Ini"}
+            </button>
+          )}
+          {dailyTarget.error && <div className="alert error">{dailyTarget.error}</div>}
+          
+          {dailyTarget.data && dailyTarget.data.videos && (
+            <div style={{ marginTop: 20 }}>
+              <div style={{ backgroundColor: '#1e293b', border: '1px solid #334155', padding: 16, borderRadius: 12, marginBottom: 20 }}>
+                <strong style={{ color: '#38bdf8', fontSize: 18, display: 'block', marginBottom: 8 }}>✅ Strategi {dailyTarget.data.videos.length} Video Hari Ini</strong>
+                <p style={{ margin: 0, color: '#e2e8f0', lineHeight: 1.5 }}>{dailyTarget.data.strategyReason}</p>
               </div>
-            ))}
+              
+              <div className="tabs" style={{ marginBottom: 20, overflowX: 'auto', display: 'flex' }}>
+                {dailyTarget.data.videos.map((vid: any, idx: number) => (
+                  <button key={idx} className={activeDailyTab === idx ? "active" : ""} onClick={() => setActiveDailyTab(idx)} style={{ padding: '10px 16px', whiteSpace: 'nowrap' }}>
+                    Video {idx + 1}
+                  </button>
+                ))}
+              </div>
+              
+              {(() => {
+                const topicData = dailyTarget.data.videos[activeDailyTab];
+                const scriptData = dailyScripts[activeDailyTab];
+                const isGenerating = loadingDailyScript[activeDailyTab];
+                
+                const getSpecificGames = (data: any) => {
+                  const raw = data?.specificGameplay || data?.gameplayPlan?.recommendedRobloxGamesOrMaps?.join(", ") || "";
+                  if (!raw || raw.toLowerCase().includes("relevant")) return "Tower of Hell, Blade Ball, Anime Defenders, atau Death Ball.";
+                  return raw;
+                };
+
+                return (
+                  <div style={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', padding: 24, borderRadius: 16, minHeight: '300px' }}>
+                    {isGenerating ? (
+                      <div style={{ textAlign: 'center', color: '#94a3b8', padding: '50px 0' }}><span style={{ fontSize: '30px', display: 'block', marginBottom: 16 }}>⚙️</span>Meracik script, SEO, & instruksi visual...</div>
+                    ) : scriptData ? (
+                      <>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20, borderBottom: '1px solid #334155', paddingBottom: 16 }}>
+                          <div>
+                            <strong style={{ display: 'block', fontSize: 13, color: '#94a3b8', marginBottom: 4 }}>📌 Judul Video (Clickbait & SEO)</strong>
+                            <CopyButton text={scriptData.youtubeTitle || scriptData.videoTitle || topicData.title} label="Copy Judul" />
+                          </div>
+                        </div>
+                        <div className="grid grid-2" style={{ marginBottom: 16 }}>
+                          <OutputBlock title="📝 Deskripsi Video" value={scriptData.youtubeDescription || scriptData.description || "-"} />
+                          <OutputBlock title="🏷️ Hashtags (FYP Target)" value={Array.isArray(scriptData.youtubeHashtags) ? scriptData.youtubeHashtags.join(", ") : scriptData.youtubeHashtags || "-"} />
+                        </div>
+                        
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', borderBottom: '1px dashed #334155', paddingBottom: '12px' }}>
+                          <strong style={{ color: '#818cf8', fontSize: '16px', margin: 0 }}>🎮 Judul Game Roblox Asli:</strong>
+                          <CopyButton text={getSpecificGames(scriptData)} label="Copy Game" />
+                        </div>
+                        <p style={{ margin: 0, fontSize: '15px', color: '#c7d2fe', lineHeight: '1.6', fontWeight: '600', marginBottom: 16 }}>{getSpecificGames(scriptData)}</p>
+
+                        <OutputBlock title="🖼️ Prompt Thumbnail (9:16)" value={scriptData.thumbnailPrompt || scriptData.thumbnail_prompt || "-"} />
+                        <OutputBlock title="🎙️ Full Voice Over Script" value={scriptData.fullVO || "-"} />
+                      </>
+                    ) : <div style={{ color: 'red', textAlign: 'center' }}>Gagal memuat data script.</div>}
+                  </div>
+                );
+              })()}
+            </div>
+          )}
         </div>
-      )}
-
-      {/* DETAIL PANEL */}
-      {dailyTarget?.data?.videos?.[activeVideo] && (
-        <div className="card">
-          <h3>📄 AI Production Detail</h3>
-
-          <div>
-            <b>🔥 Hook Viral</b>
-            <p>{video?.hook}</p>
-          </div>
-
-          <div>
-            <b>🎙 Voice Over AI</b>
-            <p>{dailyTarget?.data?.videos?.[activeVideo].voiceOver}</p>
-          </div>
-
-          <div>
-            <b>🖼 Thumbnail AI Prompt</b>
-            <p>{dailyTarget?.data?.videos?.[activeVideo].thumbnailPrompt}</p>
-          </div>
-
-          <div>
-            <b>🎬 Video Prompt (Gemini/Veo)</b>
-            <p>{dailyTarget?.data?.videos?.[activeVideo].videoPrompt}</p>
-          </div>
-
-          <div>
-            <b>📢 CTA Viral</b>
-            <p>{dailyTarget?.data?.videos?.[activeVideo].cta}</p>
-          </div>
-
-          {/* ACTION BAR */}
-          <div style={{ display: "flex", gap: 8, marginTop: 15 }}>
-            <button>📋 Copy All</button>
-            <button>⚡ Copy VO</button>
-            <button>🎬 Copy Prompt</button>
-            <button>🔁 Regenerate AI</button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
+      </section>
+    );
+  }
       
 
   function renderOptimizer() {
