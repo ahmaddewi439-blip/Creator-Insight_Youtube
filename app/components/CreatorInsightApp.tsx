@@ -562,75 +562,8 @@ function renderSutradara() {
           </button>
         </div>
 
-        <div className="card" style={{ border: '2px solid #3b82f6', padding: '24px' }}>
-          <h2 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>🎯 TARGET HARIAN SEKARANG</h2>
-          <p className="muted" style={{ marginBottom: 20 }}>Sistem akan meriset 4 Topik Trending hari ini dan secara otomatis memproduksi Data Matang untuk setiap topiknya.</p>
-          {!dailyTarget.data && (
-            <button className="btn primary block" onClick={generateDailyTarget} disabled={dailyTarget.loading} style={{ width: '100%', padding: '16px', fontSize: '16px' }}>
-              {dailyTarget.loading ? "⏳ Mencari Topik Trending & Meracik Data..." : "Generate 4 Video Matang Hari Ini"}
-            </button>
-          )}
-          {dailyTarget.error && <div className="alert error">{dailyTarget.error}</div>}
-          
-          {dailyTarget.data && dailyTarget.data.videos && (
-            <div style={{ marginTop: 20 }}>
-              <div style={{ backgroundColor: '#1e293b', border: '1px solid #334155', padding: 16, borderRadius: 12, marginBottom: 20 }}>
-                <strong style={{ color: '#38bdf8', fontSize: 18, display: 'block', marginBottom: 8 }}>✅ Strategi {dailyTarget.data.videos.length} Video Hari Ini</strong>
-                <p style={{ margin: 0, color: '#e2e8f0', lineHeight: 1.5 }}>{dailyTarget.data.strategyReason}</p>
-              </div>
-              
-              <div className="tabs" style={{ marginBottom: 20, overflowX: 'auto', display: 'flex' }}>
-                {dailyTarget.data.videos.map((vid: any, idx: number) => (
-                  <button key={idx} className={activeDailyTab === idx ? "active" : ""} onClick={() => setActiveDailyTab(idx)} style={{ padding: '10px 16px', whiteSpace: 'nowrap' }}>
-                    Video {idx + 1}
-                  </button>
-                ))}
-              </div>
-              
-              {(() => {
-                const topicData = dailyTarget.data.videos[activeDailyTab];
-                const scriptData = dailyScripts[activeDailyTab];
-                const isGenerating = loadingDailyScript[activeDailyTab];
-                
-                const getSpecificGames = (data: any) => {
-                  const raw = data?.specificGameplay || data?.gameplayPlan?.recommendedRobloxGamesOrMaps?.join(", ") || "";
-                  if (!raw || raw.toLowerCase().includes("relevant")) return "Tower of Hell, Blade Ball, Anime Defenders, atau Death Ball.";
-                  return raw;
-                };
-
-                return (
-                  <div style={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', padding: 24, borderRadius: 16, minHeight: '300px' }}>
-                    {isGenerating ? (
-                      <div style={{ textAlign: 'center', color: '#94a3b8', padding: '50px 0' }}><span style={{ fontSize: '30px', display: 'block', marginBottom: 16 }}>⚙️</span>Meracik script, SEO, & instruksi visual...</div>
-                    ) : scriptData ? (
-                      <>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20, borderBottom: '1px solid #334155', paddingBottom: 16 }}>
-                          <div>
-                            <strong style={{ display: 'block', fontSize: 13, color: '#94a3b8', marginBottom: 4 }}>📌 Judul Video (Clickbait & SEO)</strong>
-                            <CopyButton text={scriptData.youtubeTitle || scriptData.videoTitle || topicData.title} label="Copy Judul" />
-                          </div>
-                        </div>
-                        <div className="grid grid-2" style={{ marginBottom: 16 }}>
-                          <OutputBlock title="📝 Deskripsi Video" value={scriptData.youtubeDescription || scriptData.description || "-"} />
-                          <OutputBlock title="🏷️ Hashtags (FYP Target)" value={Array.isArray(scriptData.youtubeHashtags) ? scriptData.youtubeHashtags.join(", ") : scriptData.youtubeHashtags || "-"} />
-                        </div>
-                        
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', borderBottom: '1px dashed #334155', paddingBottom: '12px' }}>
-                          <strong style={{ color: '#818cf8', fontSize: '16px', margin: 0 }}>🎮 Judul Game Roblox Asli:</strong>
-                          <CopyButton text={getSpecificGames(scriptData)} label="Copy Game" />
-                        </div>
-                        <p style={{ margin: 0, fontSize: '15px', color: '#c7d2fe', lineHeight: '1.6', fontWeight: '600', marginBottom: 16 }}>{getSpecificGames(scriptData)}</p>
-
-                        <OutputBlock title="🖼️ Prompt Thumbnail (9:16)" value={scriptData.thumbnailPrompt || scriptData.thumbnail_prompt || "-"} />
-                        <OutputBlock title="🎙️ Full Voice Over Script" value={scriptData.fullVO || "-"} />
-                      </>
-                    ) : <div style={{ color: 'red', textAlign: 'center' }}>Gagal memuat data script.</div>}
-                  </div>
-                );
-              })()}
-            </div>
-          )}
-        </div>
+      
+        
       </section>
       </div>
     );
