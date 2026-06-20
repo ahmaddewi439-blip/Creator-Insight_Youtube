@@ -815,22 +815,34 @@ function renderSutradara() {
         btn.disabled = true;
 
         try {
-            // JURUS PAKEM: Kita ambil data langsung dari selectedVideo
-            const vidId = getVideoId(selectedVideo);
-            const title = selectedVideo?.snippet?.title || selectedVideo?.title;
-            const desc = selectedVideo?.snippet?.description || "";
+            // 1. Fungsi Anti-Gagal untuk menemukan Video ID dari berbagai format data YouTube
+            const getSafeId = (v: any) => {
+                if (!v) return null;
+                if (typeof v.id === 'string') return v.id;
+                if (typeof v.id === 'object' && v.id?.videoId) return v.id.videoId;
+                if (v.snippet?.resourceId?.videoId) return v.snippet.resourceId.videoId;
+                return null;
+            };
 
-            // CEK KEAMANAN: Kalau masih kosong, kita berhenti
-            if (!vidId || !title) {
-                throw new Error("Video ID dan Judul tidak boleh kosong");
-            }
+            const selectedId = getSafeId(selectedVideo);
+            if (!selectedId) throw new Error("Sistem kehilangan jejak Video ID. Coba refresh halaman.");
 
+            // 2. Ambil data yang paling update dari state (setelah Anda mengklik judul AI)
+            const activeVideo = videosState?.data?.find((v: any) => getSafeId(v) === selectedId) || selectedVideo;
+            
+            const title = activeVideo?.snippet?.title || activeVideo?.title;
+            const desc = activeVideo?.snippet?.description || "";
+            const tags = activeVideo?.snippet?.tags || [];
+
+            if (!title) throw new Error("Judul tidak boleh kosong! Pastikan Anda sudah mengklik hasil AI.");
+
+            // 3. Bungkus data dan kirim ke YouTube
             const payload = {
-                videoId: vidId,
+                videoId: selectedId,
                 title: title,
                 description: desc,
-                tags: selectedVideo?.snippet?.tags || [],
-                categoryId: "20"
+                tags: tags,
+                categoryId: activeVideo?.snippet?.categoryId || "20"
             };
 
             const res = await fetch("/api/youtube/update-video", {
@@ -840,9 +852,11 @@ function renderSutradara() {
             });
 
             const result = await res.json();
-            if (!res.ok) throw new Error(result.error || "Gagal simpan ke YouTube");
             
-            alert("🚀 SUKSES! Data sudah terupdate!");
+            // Jika Google masih menolak, tangkap pesan error ASLI dari Google
+            if (!res.ok) throw new Error(result.error || "Server YouTube menolak data ini.");
+            
+            alert("🚀 SUKSES BESAR! Perubahan sudah tembus ke YouTube Studio Anda!");
         } catch (err: any) {
             alert("❌ GAGAL: " + err.message);
         } finally {
