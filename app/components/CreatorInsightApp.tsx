@@ -563,27 +563,27 @@ async function fetchCompetitionScore(keyword: string) {
   }
 }
 
-async function generateOpportunities() {
+// Fungsi dipanggil otomatis saat kartu Niche diklik
+  async function handleSelectNicheAndGenerate(selectedNiche: string) {
+    setOptCategory(selectedNiche); // Simpan niche yang diklik
+    setOpportunityResults([]);
     setOpportunityLoading(true);
-    setOpportunityResults([]); // Hapus hasil sebelumnya saat loading
 
     try {
-      // Menembak ke API baru yang baru saja kita buat
       const res = await fetch("/api/ai/opportunity-lab", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          category: "Gaming / Roblox", // Sementara kita patenkan dulu untuk tes
-          audience: "Worldwide",
-          style: "Fast-paced Shorts",
-          keyword: "Roblox trending myths"
+          category: selectedNiche,
+          audience: "Worldwide", // Default paten agar user tidak repot
+          style: "AI Cinematic Documentary", // Default paten
+          keyword: "" // AI yang akan mencari ide terbaik secara otomatis
         })
       });
 
       const data = await res.json();
-      
       if (data.success && data.results) {
-        setOpportunityResults(data.results); // Memasukkan data asli dari AI ke layar
+        setOpportunityResults(data.results);
       } else {
         alert("Gagal meracik ide: " + (data.error || "Unknown Error"));
       }
@@ -591,7 +591,6 @@ async function generateOpportunities() {
       console.error("API Error:", error);
       alert("Gagal menghubungi server AI.");
     }
-    
     setOpportunityLoading(false);
   }
 
@@ -925,37 +924,71 @@ function renderCompetitors() {
     ); 
   }
  function renderOpportunityLab() {
+  // Daftar Niche Premium
+  const niches = [
+    { name: "Gaming / Roblox", icon: "🎮", desc: "Misteri game, mitos, dan sejarah fitur yang dihapus." },
+    { name: "Travel & Events", icon: "🌍", desc: "Tempat nyata di bumi yang terlihat seperti buatan AI." },
+    { name: "Pets & Animals", icon: "🐾", desc: "Hewan dengan kemampuan aneh atau dikira punah." },
+    { name: "Science & Technology", icon: "🔭", desc: "Penemuan mustahil dan fakta sains yang mencekam." },
+    { name: "Finance / History", icon: "💰", desc: "Sejarah uang yang hancur dan penipuan terbesar." }
+  ];
+
   return (
     <div className="grid">
-      {/* INJEKSI CSS ANIMASI MUTER (SPINNER) */}
       <style>{`
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .spinner { animation: spin 1s linear infinite; display: inline-block; }
         .vidiq-step { color: #94a3b8; font-size: 14px; margin: 8px 0; display: flex; alignItems: center; gap: 8px; }
         .vidiq-step.done { color: #10b981; }
+        .niche-card { background: #1e293b; border: 1px solid #334155; padding: 20px; border-radius: 12px; cursor: pointer; transition: all 0.2s; text-align: center; }
+        .niche-card:hover { border-color: #38bdf8; transform: translateY(-3px); background: #0f172a; }
       `}</style>
 
-      {/* HEADER CARD */}
-      <div className="card">
-        <h2>🧠 Opportunity Lab AI Engine</h2>
-        <p className="muted">Generate ide YouTube minim kompetitor berbasis AI scoring system.</p>
-        <button className="btn primary" onClick={generateOpportunities} disabled={opportunityLoading}>
-          {opportunityLoading ? (
-            <span style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
-              <span className="spinner">⚙️</span> Menganalisa Jutaan Data YouTube...
-            </span>
-          ) : "🔥 Generate Opportunity Ideas"}
-        </button>
-      </div>
+      {/* TAMPILAN AWAL: PILIH NICHE (Hanya muncul jika belum ada hasil dan tidak loading) */}
+      {opportunityResults.length === 0 && !opportunityLoading && (
+        <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+          <h2 style={{ fontSize: '24px', color: '#f8fafc', marginBottom: '10px' }}>🧠 Pilih Niche Channel Anda</h2>
+          <p style={{ color: '#94a3b8', marginBottom: '30px' }}>Pilih kategori di bawah ini. AI akan otomatis mencarikan 3 ide konten dengan skor peluang tertinggi untuk Anda eksekusi.</p>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+            {niches.map((niche, idx) => (
+              <div key={idx} className="niche-card" onClick={() => handleSelectNicheAndGenerate(niche.name)}>
+                <div style={{ fontSize: '40px', marginBottom: '12px' }}>{niche.icon}</div>
+                <h3 style={{ color: '#e2e8f0', fontSize: '16px', margin: '0 0 8px 0' }}>{niche.name}</h3>
+                <p style={{ color: '#64748b', fontSize: '12px', margin: '0', lineHeight: '1.4' }}>{niche.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* EFEK LOADING AWAL MENCARI IDE */}
       {opportunityLoading && (
-        <div className="card" style={{ border: '1px solid #3b82f6', background: '#0f172a' }}>
-          <div className="vidiq-step done"><span>✓</span> Trending topics ready</div>
-          <div className="vidiq-step done"><span>✓</span> Video data ready</div>
-          <div className="vidiq-step"><span className="spinner">⏳</span> Berpikir selama beberapa detik... mencari celah algoritma...</div>
+        <div className="card" style={{ border: '1px solid #3b82f6', background: '#0f172a', textAlign: 'center', padding: '40px 20px' }}>
+          <div style={{ fontSize: '40px', marginBottom: '16px' }} className="spinner">⚙️</div>
+          <h3 style={{ color: '#38bdf8', marginBottom: '16px' }}>Menganalisa Algoritma untuk Niche "{optCategory}"...</h3>
+          <div style={{ display: 'inline-block', textAlign: 'left' }}>
+            <div className="vidiq-step done"><span>✓</span> Memindai tren global terbaru</div>
+            <div className="vidiq-step done"><span>✓</span> Menyaring ide dengan kompetisi terendah</div>
+            <div className="vidiq-step"><span className="spinner">⏳</span> Meracik 3 ide dengan skor di atas 30/35...</div>
+          </div>
         </div>
       )}
+
+      {/* TOMBOL KEMBALI KE MENU (Muncul saat hasil sudah ada) */}
+      {opportunityResults.length > 0 && !opportunityLoading && (
+        <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h2 style={{ margin: 0, color: '#f8fafc' }}>🎯 Top Peluang: {optCategory}</h2>
+          <button 
+            onClick={() => setOpportunityResults([])} 
+            style={{ background: '#334155', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer' }}
+          >
+            🔙 Kembali ke Pilihan Niche
+          </button>
+        </div>
+      )}
+
+      {/* RESULT LIST ALA VIDIQ (Biarkan kode {opportunityResults.map...} Anda di bawah ini tetap utuh) */}
 
       {/* RESULT LIST ALA VIDIQ */}
       {opportunityResults.map((item: any, i: number) => {

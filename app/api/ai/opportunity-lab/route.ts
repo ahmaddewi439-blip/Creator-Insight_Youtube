@@ -16,25 +16,24 @@ export async function POST(req: Request) {
     baseUrl = baseUrl.replace(/\/+$/, "");
     const endpoint = baseUrl.endsWith("/chat/completions") ? baseUrl : `${baseUrl}/chat/completions`;
 
-    // PROMPT BARU: FOKUS PADA SCENE-BY-SCENE FULL VIDEO PACK ALA VIRAL FACTORY
-    const prompt = `You are an elite AI YouTube Strategist. Find low-competition, high-demand content opportunities.
+    // PROMPT BARU: PAKSA SKOR TINGGI (>30) SESUAI NICHE
+    const prompt = `You are an elite AI YouTube Strategist. Your task is to find the absolute BEST, low-competition, high-demand content opportunities for a specific niche.
 Target Audience: ${audience || "Worldwide"}
-Category: ${category || "Travel & Events"}
+Category: ${category}
 Style: ${style || "AI Cinematic Documentary"}
-Topic: ${keyword || "Find a hidden opportunity"}
 
-Analyze the market and return EXACTLY 3 highly profitable content ideas in Indonesian language (except for the English VO Script and AI Prompts). 
+Analyze the market and return EXACTLY 3 highly profitable content ideas for the "${category}" category. 
+CRITICAL: Only provide ideas that have a Very High Opportunity Score (Must be between 32 to 35 out of 35). 
+
 You MUST format the output as a valid JSON array of objects. Do NOT use markdown code blocks.
-
-CRITICAL REQUIREMENT: The video must be a FULL 45-60 seconds. You must break it down into 5 to 7 specific Scenes. 
-For EACH scene, provide the Voice Over, Visual Action, and highly detailed AI Prompts for Grok (both Image and Video).
+The video must be a FULL 45-60 seconds, broken down into 5 to 7 specific Scenes. 
 
 Use this EXACT JSON structure for each of the 3 ideas:
 [
   {
     "title": "Ide 1: [JUDUL CLICKBAIT HURUF KAPITAL]",
     "score": 34,
-    "kenapa": "Penjelasan detail...",
+    "kenapa": "Penjelasan detail mengapa demand tinggi dan kompetisi rendah...",
     "angle": "Sudut pandang spesifik...",
     "keywords": [ {"word": "keyword 1", "power": 85} ],
     "scenes": [
@@ -50,7 +49,7 @@ Use this EXACT JSON structure for each of the 3 ideas:
     "tags": "#shorts, #mystery"
   }
 ]
-Ensure the "scenes" array has enough objects to reach up to 60 seconds. Return ONLY raw JSON.`;
+Return ONLY raw JSON.`;
 
     const res = await fetch(endpoint, {
       method: "POST",
