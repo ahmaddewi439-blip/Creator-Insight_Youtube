@@ -565,7 +565,6 @@ async function fetchCompetitionScore(keyword: string) {
 
 // Fungsi dipanggil otomatis saat kartu Niche diklik
  // FUNGSI V2: GENERATE IDE LALU FILTER DENGAN YOUTUBE LIVE DATA
-  // FUNGSI V2: GENERATE IDE LALU FILTER DENGAN YOUTUBE LIVE DATA
   async function handleSelectNicheAndGenerate(selectedNiche: string) {
     setOptCategory(selectedNiche);
     setOpportunityResults([]);
@@ -590,12 +589,11 @@ async function fetchCompetitionScore(keyword: string) {
         throw new Error(dataAI.error || "AI gagal memberikan ide.");
       }
 
-      let rawIdeas = dataAI.results;
-      any[]
-let finalApprovedIdeas: any[] = [];
+      let rawIdeas: any[] = dataAI.results || [];
+      let finalApprovedIdeas: any[] = [];
 
       // TAHAP 2: Mengecek Fakta Kompetitor ke YouTube API
-      for (const idea of rawIdeas) {
+      for (let idea of rawIdeas) {
         const mainKeyword = idea.keywords && idea.keywords.length > 0 ? idea.keywords[0].word : "Roblox Mystery";
         
         const resYT = await fetch("/api/youtube-competition", {
