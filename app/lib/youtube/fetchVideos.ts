@@ -21,13 +21,9 @@ export type ChannelInfo = {
   totalVideos: number;
 };
 
-type SearchItem = {
-  id?: {
+type PlaylistItem = {
+  contentDetails?: {
     videoId?: string;
-  };
-  snippet?: {
-    title?: string;
-    publishedAt?: string;
   };
 };
 
@@ -70,6 +66,11 @@ type ChannelItem = {
     subscriberCount?: string;
     viewCount?: string;
     videoCount?: string;
+  };
+  contentDetails?: {
+    relatedPlaylists?: {
+      uploads?: string;
+    };
   };
 };
 
@@ -130,100 +131,85 @@ export async function fetchPublicChannelVideos(): Promise<VideoItem[]> {
   const apiKey = process.env.YOUTUBE_API_KEY;
   const channelId = process.env.YOUTUBE_CHANNEL_ID;
 
-  if (!apiKey) {
-    throw new Error("YOUTUBE_API_KEY belum diisi di Vercel.");
-  }
+  if (!apiKey) throw new Error("YOUTUBE_API_KEY belum diisi di Vercel.");
+  if (!channelId) throw new Error("YOUTUBE_CHANNEL_ID belum diisi di Vercel.");
 
-  if (!channelId) {
-    throw new Error("YOUTUBE_CHANNEL_ID belum diisi di Vercel.");
-  }
+  // 1. Cari ID Playlist "Uploads" (Hemat Kuota: 1 Poin)
+  const channelUrl = new URL("https://www.googleapis.com/youtube/v3/channels");
+  channelUrl.searchParams.set("part", "contentDetails");
+  channelUrl.searchParams.set("id", channelId);
+  channelUrl.searchParams.set("key", apiKey);
 
-  const searchUrl = new URL("https://www.googleapis.com/youtube/v3/search");
-  searchUrl.searchParams.set("part", "snippet");
-  searchUrl.searchParams.set("channelId", channelId);
-  searchUrl.searchParams.set("type", "video");
-  searchUrl.searchParams.set("order", "date");
-  searchUrl.searchParams.set("maxResults", "50");
-  searchUrl.searchParams.set("key", apiKey);
+  const channelData = await fetchJson<{ items?: ChannelItem[] }>(channelUrl);
+  const uploadsPlaylistId = channelData.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
 
-  const searchData = await fetchJson<{ items?: SearchItem[] }>(searchUrl);
+  if (!uploadsPlaylistId) return [];
 
-  const videoIds =
-    searchData.items
-      ?.map((item) => item.id?.videoId)
-      .filter(Boolean)
-      .join(",") ?? "";
+  // 2. Ambil ID Video dari Playlist (Hemat Kuota: 1 Poin)
+  const playlistUrl = new URL("https://www.googleapis.com/youtube/v3/playlistItems");
+  playlistUrl.searchParams.set("part", "contentDetails");
+  playlistUrl.searchParams.set("playlistId", uploadsPlaylistId);
+  playlistUrl.searchParams.set("maxResults", "50");
+  playlistUrl.searchParams.set("key", apiKey);
 
-  if (!videoIds) {
-    return [];
-  }
+  const playlistData = await fetchJson<{ items?: PlaylistItem[] }>(playlistUrl);
+  const videoIds = playlistData.items?.map((item) => item.contentDetails?.videoId).filter(Boolean).join(",") ?? "";
 
+  if (!videoIds) return [];
+
+  // 3. Ambil Detail Lengkap Video (Hemat Kuota: 1 Poin)
   const detailUrl = new URL("https://www.googleapis.com/youtube/v3/videos");
   detailUrl.searchParams.set("part", "snippet,statistics,status");
   detailUrl.searchParams.set("id", videoIds);
   detailUrl.searchParams.set("key", apiKey);
 
   const detailData = await fetchJson<{ items?: VideoDetailItem[] }>(detailUrl);
-
   return detailData.items?.map(mapVideo) ?? [];
 }
 
-export async function fetchChannelVideos(
-  accessToken?: string
-): Promise<VideoItem[]> {
+export async function fetchChannelVideos(accessToken?: string): Promise<VideoItem[]> {
   if (!accessToken || accessToken.startsWith("AIza")) {
     return fetchPublicChannelVideos();
   }
 
-  const searchUrl = new URL("https://www.googleapis.com/youtube/v3/search");
-  searchUrl.searchParams.set("part", "id,snippet");
-  searchUrl.searchParams.set("forMine", "true");
-  searchUrl.searchParams.set("type", "video");
-  searchUrl.searchParams.set("order", "date");
-  searchUrl.searchParams.set("maxResults", "50");
+  // 1. Cari ID Playlist "Uploads" milik user yang login (Hemat Kuota: 1 Poin)
+  const channelUrl = new URL("https://www.googleapis.com/youtube/v3/channels");
+  channelUrl.searchParams.set("part", "contentDetails");
+  channelUrl.searchParams.set("mine", "true");
 
-  const searchData = await fetchJson<{ items?: SearchItem[] }>(searchUrl, {
-    accessToken,
-  });
+  const channelData = await fetchJson<{ items?: ChannelItem[] }>(channelUrl, { accessToken });
+  const uploadsPlaylistId = channelData.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
 
-  const videoIds =
-    searchData.items
-      ?.map((item) => item.id?.videoId)
-      .filter(Boolean)
-      .join(",") ?? "";
+  if (!uploadsPlaylistId) return fetchPublicChannelVideos();
 
-  if (!videoIds) {
-    return fetchPublicChannelVideos();
-  }
+  // 2. Ambil ID Video dari Playlist (Hemat Kuota: 1 Poin)
+  const playlistUrl = new URL("https://www.googleapis.com/youtube/v3/playlistItems");
+  playlistUrl.searchParams.set("part", "contentDetails");
+  playlistUrl.searchParams.set("playlistId", uploadsPlaylistId);
+  playlistUrl.searchParams.set("maxResults", "50");
 
+  const playlistData = await fetchJson<{ items?: PlaylistItem[] }>(playlistUrl, { accessToken });
+  const videoIds = playlistData.items?.map((item) => item.contentDetails?.videoId).filter(Boolean).join(",") ?? "";
+
+  if (!videoIds) return fetchPublicChannelVideos();
+
+  // 3. Ambil Detail Lengkap Video (Hemat Kuota: 1 Poin)
   const detailUrl = new URL("https://www.googleapis.com/youtube/v3/videos");
   detailUrl.searchParams.set("part", "snippet,statistics,status");
   detailUrl.searchParams.set("id", videoIds);
 
-  const detailData = await fetchJson<{ items?: VideoDetailItem[] }>(detailUrl, {
-    accessToken,
-  });
-
+  const detailData = await fetchJson<{ items?: VideoDetailItem[] }>(detailUrl, { accessToken });
   const videos = detailData.items?.map(mapVideo) ?? [];
 
-  if (videos.length > 0) {
-    return videos;
-  }
-
-  return fetchPublicChannelVideos();
+  return videos.length > 0 ? videos : fetchPublicChannelVideos();
 }
 
 export async function fetchChannelInfo(): Promise<ChannelInfo> {
   const apiKey = process.env.YOUTUBE_API_KEY;
   const channelId = process.env.YOUTUBE_CHANNEL_ID;
 
-  if (!apiKey) {
-    throw new Error("YOUTUBE_API_KEY belum diisi di Vercel.");
-  }
-
-  if (!channelId) {
-    throw new Error("YOUTUBE_CHANNEL_ID belum diisi di Vercel.");
-  }
+  if (!apiKey) throw new Error("YOUTUBE_API_KEY belum diisi di Vercel.");
+  if (!channelId) throw new Error("YOUTUBE_CHANNEL_ID belum diisi di Vercel.");
 
   const url = new URL("https://www.googleapis.com/youtube/v3/channels");
   url.searchParams.set("part", "snippet,statistics");
@@ -233,9 +219,7 @@ export async function fetchChannelInfo(): Promise<ChannelInfo> {
   const data = await fetchJson<{ items?: ChannelItem[] }>(url);
   const channel = data.items?.[0];
 
-  if (!channel) {
-    throw new Error("Channel tidak ditemukan. Cek YOUTUBE_CHANNEL_ID.");
-  }
+  if (!channel) throw new Error("Channel tidak ditemukan. Cek YOUTUBE_CHANNEL_ID.");
 
   return {
     id: channel.id ?? "",
