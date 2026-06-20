@@ -6,7 +6,8 @@ export const runtime = "nodejs";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { category, audience, style, keyword } = body;
+    // Menangkap parameter bahasa dari web Anda
+    const { category, audience, style, keyword, language } = body; 
     
     const apiKey = process.env.AI_API_KEYS;
     let baseUrl = process.env.AI_BASE_URL || "https://lite.koboillm.com/v1";
@@ -16,44 +17,50 @@ export async function POST(req: Request) {
     baseUrl = baseUrl.replace(/\/+$/, "");
     const endpoint = baseUrl.endsWith("/chat/completions") ? baseUrl : `${baseUrl}/chat/completions`;
 
-    // PROMPT BARU: PENGUNCI BAHASA INDONESIA & TAMBAHAN RESEP THUMBNAIL/AUDIO
+    // PROMPT BARU: MULTI-BAHASA & PERHITUNGAN DURASI KATA YANG SANGAT KETAT
     const prompt = `You are an elite AI YouTube Strategist. Find the BEST, low-competition, high-demand content opportunities.
-Target Audience: ${audience || "Worldwide"}
 Category: ${category}
-Style: ${style || "AI Cinematic Documentary"}
+Target Audience: ${audience || "Worldwide"}
+Target Content Language: ${language || "English"}
 
-Analyze the market and return EXACTLY 3 highly profitable content ideas for "${category}". 
 CRITICAL LANGUAGE RULES: 
-- "kenapa", "angle", "audioMood" MUST be in strict Indonesian.
-- The "vo" (Voice Over) and all Prompts (Image, Video, Thumbnail) MUST be in English.
+1. The "title", "vo" (Voice Over), "description", and "tags" MUST be written completely in ${language || "English"}.
+2. "kenapa", "angle", and "audioMood" MUST be in strict Indonesian.
+3. All "imagePrompt", "videoPrompt", and "thumbnailPrompt" MUST be in English.
 
-Only provide ideas with a Very High Opportunity Score (32 to 35).
-Format the output as a valid JSON array of objects. Do NOT use markdown code blocks.
+CRITICAL PACING & TIMING RULES (MUST OBEY):
+Assuming a normal speaking rate of 2.5 words per second. You MUST match the word count of the "vo" to the timestamp duration perfectly! 
+- A 5-second scene MUST contain exactly 12 to 15 words in the "vo".
+- A 10-second scene MUST contain exactly 22 to 25 words in the "vo".
+Do NOT write short sentences for long timestamps. Fill the time block completely! The total script must be around 130-150 words for a 60-second Shorts.
+
+Analyze the market and return EXACTLY 3 highly profitable content ideas (Score 32-35).
+Format the output as a valid JSON array of objects. Do NOT use markdown code blocks. Keep the JSON keys exactly as shown.
 
 Use this EXACT JSON structure:
 [
   {
-    "title": "Ide 1: [JUDUL CLICKBAIT HURUF KAPITAL]",
+    "title": "Ide 1: [CLICKBAIT TITLE IN ${language || "English"}]",
     "score": 34,
-    "kenapa": "Penjelasan rinci dalam BAHASA INDONESIA mengapa demand tinggi dan kompetisi rendah...",
+    "kenapa": "Penjelasan rinci dalam BAHASA INDONESIA mengapa demand tinggi...",
     "angle": "Sudut pandang spesifik dalam BAHASA INDONESIA...",
     "keywords": [ {"word": "keyword 1", "power": 85} ],
-    "thumbnailPrompt": "Grok Image Prompt: A YouTube Shorts thumbnail showing... premium dark green aesthetic, high contrast, highly clickable.",
-    "audioMood": "Instruksi BAHASA INDONESIA untuk musik latar dan SFX (contoh: Gunakan musik dark synthwave yang pelan, tambahkan efek detak jantung...).",
+    "thumbnailPrompt": "Grok Image Prompt: A YouTube Shorts thumbnail...",
+    "audioMood": "Instruksi BAHASA INDONESIA untuk musik latar...",
     "scenes": [
       {
         "waktu": "[0:00-0:05]",
-        "vo": "English Voice Over here...",
+        "vo": "[Strictly 12-15 words in ${language || "English"}]...",
         "visual": "Description of visual action...",
         "imagePrompt": "Grok Image Prompt: A vertical 9:16 highly detailed...",
         "videoPrompt": "Grok Video Prompt: Smooth camera pan over..."
       }
     ],
-    "description": "Draft deskripsi siap copy...",
-    "tags": "#shorts, #mystery"
+    "description": "Draft description in ${language || "English"}...",
+    "tags": "#shorts, #tagsin${language || "English"}"
   }
 ]
-Ensure the scenes cover 45-60 seconds. Return ONLY raw JSON.`;
+Return ONLY raw JSON.`;
 
     const res = await fetch(endpoint, {
       method: "POST",

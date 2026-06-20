@@ -165,7 +165,7 @@ export default function CreatorInsightApp() {
   const [optAudience, setOptAudience] = useState("Worldwide");
   const [optStyle, setOptStyle] = useState("AI Cinematic Documentary");
   const [optKeyword, setOptKeyword] = useState("");
-
+  const [optLanguage, setOptLanguage] = useState("English");
   const handleExpandScript = (index: number) => {
     if (expandedIdea === index) {
       setExpandedIdea(null); // Tutup jika diklik lagi
@@ -575,12 +575,12 @@ async function fetchCompetitionScore(keyword: string) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           category: selectedNiche,
-          audience: "Worldwide", // Default paten agar user tidak repot
-          style: "AI Cinematic Documentary", // Default paten
-          keyword: "" // AI yang akan mencari ide terbaik secara otomatis
+          audience: "Worldwide",
+          style: "AI Cinematic Documentary",
+          keyword: "",
+          language: optLanguage // <--- TAMBAHKAN INI AGAR AI TAHU BAHASA YANG DIPILIH
         })
       });
-
       const data = await res.json();
       if (data.success && data.results) {
         setOpportunityResults(data.results);
@@ -923,6 +923,38 @@ function renderCompetitors() {
       </div>
     ); 
   }
+  // FUNGSI COPY SEMUA PROMPT GROK SEKALIGUS
+  const handleCopyAllPrompts = (item: any) => {
+    let allPrompts = `THUMBNAIL PROMPT:\n${item.thumbnailPrompt}\n\n`;
+    item.scenes.forEach((scene: any, idx: number) => {
+      allPrompts += `--- SCENE ${idx + 1} ---\n`;
+      allPrompts += `IMAGE: ${scene.imagePrompt}\n`;
+      allPrompts += `VIDEO: ${scene.videoPrompt}\n\n`;
+    });
+    navigator.clipboard.writeText(allPrompts);
+    alert("✅ Semua Grok Prompts berhasil di-copy!");
+  };
+
+  // FUNGSI DOWNLOAD SCRIPT SEBAGAI FILE TXT
+  const handleDownloadScript = (item: any) => {
+    let txtContent = `JUDUL: ${item.title}\nNICHE: ${optCategory}\nSKOR: ${item.score}/35\n\n`;
+    txtContent += `AUDIO MOOD: ${item.audioMood}\n\n`;
+    txtContent += `--- VOICE OVER SCRIPT ---\n`;
+    item.scenes.forEach((scene: any) => {
+      txtContent += `${scene.waktu}: ${scene.vo}\n`;
+    });
+    txtContent += `\n--- DESCRIPTION ---\n${item.description}\n\nTAGS: ${item.tags}`;
+    
+    const blob = new Blob([txtContent], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `Script_${item.title.substring(0, 20)}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
  function renderOpportunityLab() {
   // Daftar Niche Premium
   const niches = [
@@ -949,7 +981,23 @@ function renderCompetitors() {
         <div style={{ textAlign: 'center', marginBottom: '30px' }}>
           <h2 style={{ fontSize: '24px', color: '#f8fafc', marginBottom: '10px' }}>🧠 Pilih Niche Channel Anda</h2>
           <p style={{ color: '#94a3b8', marginBottom: '30px' }}>Pilih kategori di bawah ini. AI akan otomatis mencarikan 3 ide konten dengan skor peluang tertinggi untuk Anda eksekusi.</p>
-          
+          {/* MENU PILIHAN BAHASA GLOBAL */}
+          <div style={{ marginBottom: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+            <label style={{ color: '#fbbf24', fontWeight: 'bold', fontSize: '16px' }}>🌐 Pilih Bahasa Video Utama Anda:</label>
+            <select 
+              value={optLanguage} 
+              onChange={(e) => setOptLanguage(e.target.value)} 
+              style={{ padding: '10px 20px', borderRadius: '8px', background: '#1e293b', color: 'white', border: '1px solid #3b82f6', fontSize: '15px', outline: 'none', cursor: 'pointer' }}
+            >
+              <option value="English">🇺🇸 English (Global/US)</option>
+              <option value="Indonesian">🇮🇩 Indonesia</option>
+              <option value="Spanish">🇪🇸 Spanish (Spanyol/Amerika Latin)</option>
+              <option value="Portuguese">🇧🇷 Portuguese (Brasil/Portugal)</option>
+              <option value="German">🇩🇪 German (Jerman)</option>
+              <option value="Japanese">🇯🇵 Japanese (Jepang)</option>
+              <option value="Arabic">🇸🇦 Arabic (Timur Tengah)</option>
+            </select>
+          </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
             {niches.map((niche, idx) => (
               <div key={idx} className="niche-card" onClick={() => handleSelectNicheAndGenerate(niche.name)}>
@@ -1050,7 +1098,27 @@ function renderCompetitors() {
             {/* HASIL KESELURUHAN (MUNCUL SETELAH LOADING SELESAI) */}
             {isExpanded && step === 4 && (
               <div style={{ marginTop: '24px', animation: 'fadeIn 0.5s ease-in' }}>
-                
+                {/* 🎵 AUDIO MOOD & 🖼️ THUMBNAIL (FITUR PRO) */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px', marginBottom: '20px' }}>
+                  <div style={{ background: '#1e293b', padding: '16px', borderRadius: '8px', border: '1px solid #334155', borderLeft: '4px solid #f59e0b' }}>
+                    <strong style={{ color: '#f59e0b', display: 'block', marginBottom: '8px' }}>🎧 Rekomendasi Audio & Musik</strong>
+                    <p style={{ color: '#cbd5e1', fontSize: '14px', margin: 0 }}>{item.audioMood}</p>
+                  </div>
+                  <div style={{ background: '#1e293b', padding: '16px', borderRadius: '8px', border: '1px solid #334155', borderLeft: '4px solid #ef4444' }}>
+                    <strong style={{ color: '#ef4444', display: 'block', marginBottom: '8px' }}>🖼️ Grok Thumbnail Prompt</strong>
+                    <code style={{ color: '#e2e8f0', fontSize: '12px', whiteSpace: 'pre-wrap', display: 'block' }}>{item.thumbnailPrompt}</code>
+                  </div>
+                </div>
+
+                {/* 📥 TOMBOL ACTION PRO */}
+                <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
+                  <button onClick={() => handleDownloadScript(item)} style={{ flex: 1, background: '#10b981', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                    📥 Download Script Naskah (.txt)
+                  </button>
+                  <button onClick={() => handleCopyAllPrompts(item)} style={{ flex: 1, background: '#8b5cf6', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                    📋 Copy Semua Grok Prompt
+                  </button>
+                </div>
                 {/* 🎬 FULL VIDEO PACK: SCENE-BY-SCENE */}
                 <div style={{ marginBottom: '20px', background: '#0f172a', padding: '16px', borderRadius: '8px', border: '1px solid #1e293b' }}>
                   <strong style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#10b981', marginBottom: '20px', fontSize: '16px' }}>
