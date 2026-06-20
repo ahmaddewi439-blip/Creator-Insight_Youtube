@@ -1,5 +1,18 @@
 import { NextResponse } from "next/server";
 
+// ==========================================
+// JALUR GET: KHUSUS UNTUK TES BROWSER
+// ==========================================
+export async function GET() {
+  return NextResponse.json({ 
+    status: "SUKSES!", 
+    pesan: "Jalur API YouTube Competition Berhasil Ditemukan dan Aktif!" 
+  });
+}
+
+// ==========================================
+// JALUR POST: MESIN ASLI UNTUK WEB V2 KITA
+// ==========================================
 export async function POST(req: Request) {
   try {
     const body = await req.json();
