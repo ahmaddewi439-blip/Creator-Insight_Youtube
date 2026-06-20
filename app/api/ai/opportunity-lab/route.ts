@@ -18,21 +18,26 @@ export async function POST(req: Request) {
     const endpoint = baseUrl.endsWith("/chat/completions") ? baseUrl : `${baseUrl}/chat/completions`;
 
     // PROMPT BARU: MULTI-BAHASA & PERHITUNGAN DURASI KATA YANG SANGAT KETAT
-   const prompt = `KAMU ADALAH "🎯 VIRAL FACTORY", SEORANG SUTRADARA DAN COPYWRITER YOUTUBE SHORTS TINGKAT DEWA. 
-Tugasmu adalah meracik ide konten yang 100% siap produksi dengan aturan mutlak berikut:
-1. BAHASA & TONE MENGGIGIT: Seluruh Voice Over (vo) dan On-Screen Text WAJIB menggunakan bahasa ${language || "Indonesia"}. Gunakan gaya bahasa lokal yang asik, mengundang rasa penasaran, ala UGC-style, dan tidak kaku!
-2. HOOK 3 DETIK: Kalimat pertama harus sangat kuat, langsung memancing emosi atau membongkar rahasia.
-3. KUNCI VISUAL 9:16: Pada bagian imagePrompt dan videoPrompt, WAJIB selalu sertakan "Vertical 9:16 aspect ratio, mobile-first composition".
-4. ESTETIKA SINEMATIK: Khusus untuk niche Gaming/Roblox, deskripsi visual WAJIB menyertakan "premium dark green aesthetic, cinematic lighting, high contrast, sharp focus".
+const prompt = `KAMU ADALAH "🎯 VIRAL FACTORY", SEORANG SUTRADARA DAN COPYWRITER YOUTUBE SHORTS TINGKAT DEWA. 
+Tugasmu adalah meracik 3 ide konten low-competition yang 100% siap produksi berdasarkan kategori yang dipilih.
 
-Category: ${category}
+ATURAN MUTLAK NASKAH & DURASI (WAJIB DIIKUTI 100%):
+1. DURASI PANJANG (45-60 DETIK): Naskah WAJIB memiliki tepat 9 hingga 12 scene berurutan (masing-masing berdurasi 5 detik, contoh: [0:00-0:05], [0:05-0:10], dst).
+2. KEPADATAN VO PRESISI: Dalam 1 scene (5 detik), teks Voice Over (vo) WAJIB berisi tepat 12 hingga 15 kata. Jangan kurang karena akan terasa lambat, dan jangan lebih dari 15 kata agar mudah diucapkan.
+3. HOOK "KAMU TAU NGA" DI AWAL VIDEO: Teks "vo" pada scene pertama [0:00-0:05] WAJIB selalu dibuka dengan frasa pancingan yang bermakna "Kamu tau nga?" atau "Tahukah kamu?". Frasa ini WAJIB diterjemahkan ke dalam bahasa ${language} dengan gaya yang paling natural, asik, dan bikin penasaran (contoh jika bahasa Inggris: "Did you know?", "You won't believe this", dll).
+4. RELEVANSI NICHE & KEYWORD: Ide cerita, angle, tag, dan semua "keywords" WAJIB 100% akurat, spesifik, dan relevan HANYA dengan kategori [${category}]. Dilarang keras menyimpang ke topik lain!
+5. BAHASA LOKAL (${language}): Seluruh "title", "vo", "description", "kenapa", dan "angle" WAJIB menggunakan bahasa ${language}. Gunakan gaya penyampaian ala kreator UGC lokal di negara tersebut yang asik, mengundang penasaran, dan memancing interaksi.
+6. KUNCI VISUAL & ESTETIKA 9:16: Seluruh "imagePrompt" dan "videoPrompt" (dalam bahasa Inggris) WAJIB menyertakan: "Vertical 9:16 aspect ratio, mobile-first composition". Pastikan gaya visual OTOMATIS MENYESUAIKAN dengan karakter kategori [${category}].
+
+Category/Niche: ${category}
 Target Audience: ${audience || "Worldwide"}
-Target Content Language: ${language || "English"}
+Target Content Language: ${language}
 
-CRITICAL LANGUAGE RULES: 
-1. The "title", "vo" (Voice Over), "description", and "tags" MUST be written completely in ${language || "English"}.
-2. "kenapa", "angle", and "audioMood" MUST be in strict Indonesian.
+CRITICAL LANGUAGE RULES:
+1. The "title", "vo", "description", and "tags" MUST be written completely in ${language}.
+2. "kenapa", "angle", and "audioMood" MUST be in strict ${language}.
 3. All "imagePrompt", "videoPrompt", and "thumbnailPrompt" MUST be in English.
+
 
 CRITICAL PACING & TIMING RULES (MUST OBEY):
 Assuming a normal speaking rate of 2.5 words per second. You MUST match the word count of the "vo" to the timestamp duration perfectly! 
