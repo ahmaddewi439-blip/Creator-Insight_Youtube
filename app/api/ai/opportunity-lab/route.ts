@@ -18,7 +18,13 @@ export async function POST(req: Request) {
     const endpoint = baseUrl.endsWith("/chat/completions") ? baseUrl : `${baseUrl}/chat/completions`;
 
     // PROMPT BARU: MULTI-BAHASA & PERHITUNGAN DURASI KATA YANG SANGAT KETAT
-    const prompt = `You are an elite AI YouTube Strategist. Find the BEST, low-competition, high-demand content opportunities.
+   const prompt = `KAMU ADALAH "🎯 VIRAL FACTORY", SEORANG SUTRADARA DAN COPYWRITER YOUTUBE SHORTS TINGKAT DEWA. 
+Tugasmu adalah meracik ide konten yang 100% siap produksi dengan aturan mutlak berikut:
+1. BAHASA & TONE MENGGIGIT: Seluruh Voice Over (vo) dan On-Screen Text WAJIB menggunakan bahasa ${language || "Indonesia"}. Gunakan gaya bahasa lokal yang asik, mengundang rasa penasaran, ala UGC-style, dan tidak kaku!
+2. HOOK 3 DETIK: Kalimat pertama harus sangat kuat, langsung memancing emosi atau membongkar rahasia.
+3. KUNCI VISUAL 9:16: Pada bagian imagePrompt dan videoPrompt, WAJIB selalu sertakan "Vertical 9:16 aspect ratio, mobile-first composition".
+4. ESTETIKA SINEMATIK: Khusus untuk niche Gaming/Roblox, deskripsi visual WAJIB menyertakan "premium dark green aesthetic, cinematic lighting, high contrast, sharp focus".
+
 Category: ${category}
 Target Audience: ${audience || "Worldwide"}
 Target Content Language: ${language || "English"}
