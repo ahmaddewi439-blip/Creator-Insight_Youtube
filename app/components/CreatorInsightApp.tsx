@@ -882,13 +882,18 @@ function renderSutradara() {
               <thead><tr><th>#</th><th>Video</th><th>Views</th><th>Likes</th><th>Status</th><th>Aksi</th></tr></thead>
               <tbody>
                 {sortedVideos.map((v, i) => {
-                  const currentId = getVideoId(v);
+              const currentId = getVideoId(v);
         const selectedId = getVideoId(selectedVideo);
-        // Bandingkan ID secara akurat, atau gunakan Judul sebagai cadangan jika ID disembunyikan YouTube
-        const isSelected = selectedVideo && (
+        
+        // Ambil judul dengan aman, pastikan tidak mengambil nilai kosong
+        const currentTitle = v?.snippet?.title || v?.title;
+        const selectedTitle = selectedVideo?.snippet?.title || selectedVideo?.title;
+
+        // Satpam Super Ketat: Harus ada isinya (tidak kosong) DAN harus sama persis!
+        const isSelected = selectedVideo ? (
             (currentId && selectedId && currentId === selectedId) || 
-            (selectedVideo?.snippet?.title === v?.snippet?.title)
-        );
+            (currentTitle && selectedTitle && currentTitle === selectedTitle)
+        ) : false;
                   
                   return (
                     <React.Fragment key={getVideoId(v) || i}>
