@@ -564,13 +564,16 @@ async function fetchCompetitionScore(keyword: string) {
 }
 
 // Fungsi dipanggil otomatis saat kartu Niche diklik
+ // FUNGSI V2: GENERATE IDE LALU FILTER DENGAN YOUTUBE LIVE DATA
+  // FUNGSI V2: GENERATE IDE LALU FILTER DENGAN YOUTUBE LIVE DATA
   async function handleSelectNicheAndGenerate(selectedNiche: string) {
-    setOptCategory(selectedNiche); // Simpan niche yang diklik
+    setOptCategory(selectedNiche);
     setOpportunityResults([]);
     setOpportunityLoading(true);
 
     try {
-      const res = await fetch("/api/ai/opportunity-lab", {
+      // TAHAP 1: Minta AI Meracik Ide
+      const resAI = await fetch("/api/ai/opportunity-lab", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -578,18 +581,56 @@ async function fetchCompetitionScore(keyword: string) {
           audience: "Worldwide",
           style: "AI Cinematic Documentary",
           keyword: "",
-          language: optLanguage // <--- TAMBAHKAN INI AGAR AI TAHU BAHASA YANG DIPILIH
+          language: optLanguage
         })
       });
-      const data = await res.json();
-      if (data.success && data.results) {
-        setOpportunityResults(data.results);
-      } else {
-        alert("Gagal meracik ide: " + (data.error || "Unknown Error"));
+
+      const dataAI = await resAI.json();
+      if (!dataAI.success || !dataAI.results) {
+        throw new Error(dataAI.error || "AI gagal memberikan ide.");
       }
+
+      let rawIdeas = dataAI.results;
+      any[]
+let finalApprovedIdeas: any[] = [];
+
+      // TAHAP 2: Mengecek Fakta Kompetitor ke YouTube API
+      for (const idea of rawIdeas) {
+        const mainKeyword = idea.keywords && idea.keywords.length > 0 ? idea.keywords[0].word : "Roblox Mystery";
+        
+        const resYT = await fetch("/api/youtube-competition", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ keyword: mainKeyword })
+        });
+
+        const dataYT = await resYT.json();
+        
+        if (dataYT.success) {
+          const totalCompetitors = dataYT.totalResults;
+          if (totalCompetitors < 500000) {
+            idea.youtubeData = {
+              liveCompetitors: totalCompetitors,
+              status: "VERIFIED LOW COMPETITION",
+              topCompetitor: dataYT.competitors && dataYT.competitors.length > 0 ? dataYT.competitors[0].title : "Tidak ada"
+            };
+            finalApprovedIdeas.push(idea);
+          }
+        } else {
+          finalApprovedIdeas.push(idea);
+        }
+      }
+
+      // TAHAP 3: Tampilkan Hasil yang Lolos Sensor
+      if (finalApprovedIdeas.length > 0) {
+        setOpportunityResults(finalApprovedIdeas);
+      } else {
+        alert("Semua ide dari AI ternyata sudah terlalu ramai di YouTube! Silakan coba klik kategori lagi untuk mencari celah lain.");
+      }
+
     } catch (error) {
-      console.error("API Error:", error);
-      alert("Gagal menghubungi server AI.");
+      console.error("Pipeline V2 Error:", error);
+      alert("Terjadi kesalahan sistem saat meracik ide V2.");
     }
     setOpportunityLoading(false);
   }
@@ -1051,6 +1092,19 @@ function renderCompetitors() {
               <h3 style={{ color: '#fbbf24', fontSize: '18px', margin: 0 }}>{item.title}</h3>
               <span style={{ background: '#10b981', color: 'white', padding: '4px 10px', borderRadius: '8px', fontWeight: 'bold', fontSize: '13px' }}>Skor: {item.score}/35</span>
             </div>
+            {/* STEMPEL BUKTI YOUTUBE DATA API (V2) */}
+        {item.youtubeData && (
+          <div style={{ marginTop: '12px', padding: '10px', background: 'rgba(16, 185, 129, 0.1)', border: '1px dashed #10b981', borderRadius: '6px', display: 'flex', gap: '16px', alignItems: 'center' }}>
+            <div style={{ flex: 1 }}>
+              <span style={{ fontSize: '12px', color: '#10b981', fontWeight: 'bold', display: 'block' }}>✓ {item.youtubeData.status}</span>
+              <span style={{ fontSize: '11px', color: '#94a3b8' }}>Berdasarkan pengecekan API Real-time</span>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <span style={{ fontSize: '14px', color: '#f8fafc', fontWeight: 'bold', display: 'block' }}>{item.youtubeData.liveCompetitors.toLocaleString()}</span>
+              <span style={{ fontSize: '11px', color: '#94a3b8' }}>Video Kompetitor Aktif</span>
+            </div>
+          </div>
+        )}
 
             <div style={{ margin: '16px 0', lineHeight: '1.6' }}>
               <p style={{ margin: '0 0 10px 0' }}><strong>🔥 Kenapa: </strong> <span style={{ color: '#cbd5e1' }}>{item.kenapa}</span></p>
