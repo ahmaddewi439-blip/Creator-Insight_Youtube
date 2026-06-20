@@ -163,9 +163,9 @@ export default function CreatorInsightApp() {
     localStorage.setItem(ACTIVE_TAB_KEY, tab); // Simpan ke ingatan permanen
   };
   const [channelState, setChannelState] = useState<ApiState<any>>({ loading: false, error: "", data: null });
-  const [videosState, setVideosState] = useLocalStorage<ApiState<any[]>>("simpanan_video", { loading: false, error: "", data: [] });
-  const [selectedVideo, setSelectedVideo] = useLocalStorage<any>("simpanan_pilihan_video", null);
-  const [optimizer, setOptimizer] = useLocalStorage<ApiState<any>>("simpanan_hasil_seo", { loading: false, error: "", data: null });
+  const [videosState, setVideosState] = useState<ApiState<any[]>>({ loading: false, error: "", data: [] });
+  const [selectedVideo, setSelectedVideo] = useState<any>(null);
+  const [optimizer, setOptimizer] = useState<ApiState<any>>({ loading: false, error: "", data: null });
   const [isGeneratingViral, setIsGeneratingViral] = useState(false);
   const [viralVideos, setViralVideos] = useState<any[]>([]);
   const [copiedId, setCopiedId] = useState<number | null>(null);
