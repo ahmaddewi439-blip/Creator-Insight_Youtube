@@ -6,7 +6,7 @@ export const runtime = "nodejs";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { video } = body;
+    const { video, targetLanguage} = body;
 
     const apiKey = process.env.AI_API_KEYS;
     let baseUrl = process.env.AI_BASE_URL || "https://lite.koboillm.com/v1";
@@ -34,9 +34,17 @@ Berikan output dengan aturan ketat berikut dalam format JSON:
 2. "description": "SEO-friendly description. First 3 lines must contain a powerful hook. Include a brief summary, CTA to subscribe, and relevant keywords."
 3. "keywords": [15-20 trending tags/hashtags related to the video topic].
 4. "caption": "Short 3-sentence caption for quick sharing."
+5. "hashtag": Sertakan 10 hashtag relevan dan trending sesuai topik.
+6. "judul_referensi": Berikan 3 pilihan judul yang sangat 'clickbait' dan memikat untuk audiens [target_bahasa] yang dipilih.
+7. "jadwal_upload_wib": Berikan saran jam upload terbaik dalam format WIB berdasarkan target negara yang dipilih (contoh: 22:00 - 05:00 WIB untuk pasar US)."
 
-Respond ONLY with a valid JSON object. DO NOT wrap in markdown.
-Video yang dianalisis:
+Rules:
+1. All text content (titles, description, etc.) MUST be in ${targetLanguage || "English"}.
+2. Use slang, tone, and style suitable for ${targetLanguage || "English"}.
+3. DO NOT use markdown code blocks like \`\`\`json.
+4. Respond ONLY with valid JSON.
+
+Video to analyze:
 Judul: "${originalTitle}"
 Deskripsi: "${originalDesc.substring(0, 500)}"`;
 
