@@ -1230,9 +1230,57 @@ function renderCompetitors() {
                     ))}
                   </div>
                 </div>
-
+{/* --- KARTU BARU: FULL VO & VISUAL SCRIPT --- */}
+          <div style={{ backgroundColor: "#111827", border: "1px solid #374151", borderRadius: 8, padding: 16, marginBottom: 20 }}>
+              <h4 style={{ color: "#10B981", margin: "0 0 12px 0", display: "flex", alignItems: "center", gap: 8, fontSize: "14px", textTransform: "uppercase", fontWeight: "bold" }}>
+                  <span>📝</span> READY-TO-PASTE: FULL VO & VISUAL (UNTUK NOTES)
+              </h4>
+              <div style={{ display: "flex", gap: 12, alignItems: "flex-start", flexDirection: "column" }}>
+                  <textarea
+                      readOnly
+                      value={item.scenes?.map((s: any, i: number) => `Scene ${i + 1} [${s.waktu}]\n🎙️ VO: "${s.vo}"\n🎥 VISUAL: ${s.visual}\n`).join('\n')}
+                      style={{ 
+                          width: "100%", 
+                          height: 150, 
+                          backgroundColor: "#1F2937", 
+                          color: "#E5E7EB", 
+                          border: "1px solid #4B5563", 
+                          borderRadius: 6, 
+                          padding: 12, 
+                          fontSize: 13, 
+                          fontFamily: "monospace",
+                          resize: "vertical" 
+                      }}
+                  />
+                  <button
+                      onClick={() => {
+                          const fullText = item.scenes?.map((s: any, i: number) => `Scene ${i + 1} [${s.waktu}]\n🎙️ VO: "${s.vo}"\n🎥 VISUAL: ${s.visual}\n`).join('\n');
+                          navigator.clipboard.writeText(fullText);
+                          alert("✅ Full VO & Visual berhasil dicopy ke Clipboard!");
+                      }}
+                      style={{ 
+                          backgroundColor: "#3B82F6", 
+                          color: "white", 
+                          border: "none", 
+                          padding: "10px 20px", 
+                          borderRadius: 6, 
+                          cursor: "pointer", 
+                          fontWeight: "bold", 
+                          width: "100%",
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          gap: 8
+                      }}
+                  >
+                      📋 Copy Seluruh Naskah ke Note
+                  </button>
+              </div>
+          </div>
+          {/* --- END KARTU BARU --- */}
                 {/* READY TO PASTE */}
                 <strong style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#c084fc', marginBottom: '12px' }}>
+
                   📋 READY-TO-PASTE: DESCRIPTION + TAGS
                 </strong>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
