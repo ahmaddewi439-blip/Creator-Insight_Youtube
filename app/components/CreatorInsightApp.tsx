@@ -596,7 +596,7 @@ async function fetchCompetitionScore(keyword: string) {
       for (let idea of rawIdeas) {
         const mainKeyword = idea.keywords && idea.keywords.length > 0 ? idea.keywords[0].word : "Roblox Mystery";
         
-        const resYT = await fetch("/api/youtube-competition", {
+        const resYT = await fetch("/api/youtube/youtube-competition", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ keyword: mainKeyword })
