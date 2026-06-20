@@ -1018,44 +1018,43 @@ function renderCompetitors() {
             {isExpanded && step === 4 && (
               <div style={{ marginTop: '24px', animation: 'fadeIn 0.5s ease-in' }}>
                 
-                {/* TABEL STRUKTUR VISUAL */}
+                {/* 🎬 FULL VIDEO PACK: SCENE-BY-SCENE */}
                 <div style={{ marginBottom: '20px', background: '#0f172a', padding: '16px', borderRadius: '8px', border: '1px solid #1e293b' }}>
-                  <strong style={{ color: '#38bdf8', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ color: '#ef4444' }}>◎</span> STRUKTUR VISUAL
+                  <strong style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#10b981', marginBottom: '20px', fontSize: '16px' }}>
+                    <span>🎬</span> FULL VIDEO PACK: SCRIPT & GROK PROMPTS
                   </strong>
-                  <div style={{ overflowX: 'auto' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-                      <thead>
-                        <tr style={{ background: '#1e293b', textAlign: 'left', color: '#cbd5e1' }}>
-                          <th style={{ padding: '8px', borderBottom: '1px solid #334155' }}>Layer</th>
-                          <th style={{ padding: '8px', borderBottom: '1px solid #334155' }}>Posisi</th>
-                          <th style={{ padding: '8px', borderBottom: '1px solid #334155' }}>Konten</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {item.visualStructure?.map((vs: any, idx: number) => (
-                          <tr key={idx}>
-                            <td style={{ padding: '8px', borderBottom: '1px solid #1e293b', color: '#f8fafc' }}>{vs.layer}</td>
-                            <td style={{ padding: '8px', borderBottom: '1px solid #1e293b', color: '#94a3b8' }}>{vs.posisi}</td>
-                            <td style={{ padding: '8px', borderBottom: '1px solid #1e293b', color: '#cbd5e1' }}>{vs.konten}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    {item.scenes?.map((scene: any, idx: number) => (
+                      <div key={idx} style={{ background: '#1e293b', borderRadius: '8px', padding: '16px', borderLeft: '4px solid #38bdf8' }}>
+                        
+                        {/* Judul Scene & Waktu */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #334155', paddingBottom: '8px', marginBottom: '12px' }}>
+                          <strong style={{ color: '#fbbf24', fontSize: '15px' }}>Scene {idx + 1} • {scene.waktu}</strong>
+                        </div>
+                        
+                        {/* Narasi dan Visual */}
+                        <div style={{ marginBottom: '12px' }}>
+                          <strong style={{ color: '#94a3b8', fontSize: '13px', display: 'block', marginBottom: '4px' }}>🗣️ VOICE OVER (English):</strong>
+                          <p style={{ color: '#f8fafc', margin: '0', fontSize: '16px', fontStyle: 'italic', background: '#020617', padding: '10px', borderRadius: '6px' }}>"{scene.vo}"</p>
+                        </div>
+                        <div style={{ marginBottom: '16px' }}>
+                          <strong style={{ color: '#94a3b8', fontSize: '13px', display: 'block', marginBottom: '4px' }}>🎥 VISUAL ACTION:</strong>
+                          <p style={{ color: '#cbd5e1', margin: '0', fontSize: '14px' }}>{scene.visual}</p>
+                        </div>
 
-                {/* SCRIPT TIMESTAMP */}
-                <div style={{ marginBottom: '20px', background: '#0f172a', padding: '16px', borderRadius: '8px', border: '1px solid #1e293b' }}>
-                  <strong style={{ color: '#10b981', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ color: '#10b981' }}>🎙️</span> VOICE-OVER SCRIPT
-                  </strong>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    {item.script?.map((sc: any, idx: number) => (
-                      <div key={idx} style={{ paddingLeft: '12px', borderLeft: '3px solid #10b981' }}>
-                        <strong style={{ color: '#a7f3d0', fontSize: '13px' }}>{sc.time}</strong>
-                        <p style={{ margin: '6px 0', color: '#f8fafc', fontSize: '15px' }}>"{sc.vo}"</p>
-                        <small style={{ color: '#64748b' }}>{sc.visual}</small>
+                        {/* Box Prompt Grok */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '12px' }}>
+                          <div style={{ background: '#020617', padding: '12px', borderRadius: '6px', border: '1px solid #334155' }}>
+                            <strong style={{ color: '#c084fc', fontSize: '12px', display: 'block', marginBottom: '8px' }}>🖼️ GROK IMAGE PROMPT</strong>
+                            <code style={{ color: '#e2e8f0', fontSize: '13px', whiteSpace: 'pre-wrap', wordBreak: 'break-word', display: 'block', lineHeight: '1.5' }}>{scene.imagePrompt}</code>
+                          </div>
+                          <div style={{ background: '#020617', padding: '12px', borderRadius: '6px', border: '1px solid #334155' }}>
+                            <strong style={{ color: '#f472b6', fontSize: '12px', display: 'block', marginBottom: '8px' }}>🎞️ GROK VIDEO PROMPT</strong>
+                            <code style={{ color: '#e2e8f0', fontSize: '13px', whiteSpace: 'pre-wrap', wordBreak: 'break-word', display: 'block', lineHeight: '1.5' }}>{scene.videoPrompt}</code>
+                          </div>
+                        </div>
+
                       </div>
                     ))}
                   </div>

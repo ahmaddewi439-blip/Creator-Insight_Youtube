@@ -16,17 +16,18 @@ export async function POST(req: Request) {
     baseUrl = baseUrl.replace(/\/+$/, "");
     const endpoint = baseUrl.endsWith("/chat/completions") ? baseUrl : `${baseUrl}/chat/completions`;
 
-    // PROMPT YANG SUDAH DIPERBARUI UNTUK NASKAH 60 DETIK FULL
+    // PROMPT BARU: FOKUS PADA SCENE-BY-SCENE FULL VIDEO PACK ALA VIRAL FACTORY
     const prompt = `You are an elite AI YouTube Strategist. Find low-competition, high-demand content opportunities.
 Target Audience: ${audience || "Worldwide"}
 Category: ${category || "Travel & Events"}
 Style: ${style || "AI Cinematic Documentary"}
 Topic: ${keyword || "Find a hidden opportunity"}
 
-Analyze the market and return EXACTLY 3 highly profitable content ideas in Indonesian language (except for the English VO Script). 
+Analyze the market and return EXACTLY 3 highly profitable content ideas in Indonesian language (except for the English VO Script and AI Prompts). 
 You MUST format the output as a valid JSON array of objects. Do NOT use markdown code blocks.
 
-CRITICAL REQUIREMENT: The "script" array MUST cover a FULL 45 to 60 seconds video. Do not stop at 15 seconds. You must include at least 4-5 segments (Hook, Build up, The Reveal, Outro & Call to Action).
+CRITICAL REQUIREMENT: The video must be a FULL 45-60 seconds. You must break it down into 5 to 7 specific Scenes. 
+For EACH scene, provide the Voice Over, Visual Action, and highly detailed AI Prompts for Grok (both Image and Video).
 
 Use this EXACT JSON structure for each of the 3 ideas:
 [
@@ -36,21 +37,20 @@ Use this EXACT JSON structure for each of the 3 ideas:
     "kenapa": "Penjelasan detail...",
     "angle": "Sudut pandang spesifik...",
     "keywords": [ {"word": "keyword 1", "power": 85} ],
-    "visualStructure": [
-      {"layer": "Background", "posisi": "Layar Penuh 9:16", "konten": "[Grok AI Prompt for the scene, premium dark green aesthetic]"}
-    ],
-    "script": [
-      {"time": "[0:00-0:05] HOOK", "vo": "English Voice Over hook here...", "visual": "Visual instruction..."},
-      {"time": "[0:05-0:20] BUILD UP", "vo": "English Voice Over continuing the story...", "visual": "Visual instruction..."},
-      {"time": "[0:20-0:40] THE REVEAL", "vo": "English Voice Over revealing the secret...", "visual": "Visual instruction..."},
-      {"time": "[0:40-0:55] OUTRO & CTA", "vo": "English Voice Over call to action...", "visual": "Visual instruction..."}
+    "scenes": [
+      {
+        "waktu": "[0:00-0:05]",
+        "vo": "English Voice Over here...",
+        "visual": "Description of what happens on screen...",
+        "imagePrompt": "Grok Image Prompt: A vertical 9:16 highly detailed cinematic image of... premium dark green aesthetic, dramatic lighting.",
+        "videoPrompt": "Grok Video Prompt: Smooth camera pan over... realistic motion, vertical 9:16 cinematic."
+      }
     ],
     "description": "Draft deskripsi siap copy...",
-    "tags": "#shorts, #mystery",
-    "quickNotes": ["Catatan 1", "Catatan 2"]
+    "tags": "#shorts, #mystery"
   }
 ]
-Return ONLY raw JSON.`;
+Ensure the "scenes" array has enough objects to reach up to 60 seconds. Return ONLY raw JSON.`;
 
     const res = await fetch(endpoint, {
       method: "POST",
