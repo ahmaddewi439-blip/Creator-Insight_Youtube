@@ -143,32 +143,25 @@ function getVideoId(video: any) {
 
 export default function CreatorInsightApp() {
   const { data: session, status } = useSession();
-  const ACTIVE_TAB_KEY = "creator_insight_active_tab";
+ const ACTIVE_TAB_KEY = "creator_insight_active_tab";
 
-function getInitialActiveTab(): TabId {
-  if (typeof window === "undefined") return "overview";
-
-  const nav = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
-
-  // Kalau user refresh manual, balik ke Dasbor
-  if (nav?.type === "reload") {
-    sessionStorage.removeItem(ACTIVE_TAB_KEY);
-    return "overview";
+  function getInitialActiveTab(): TabId {
+    if (typeof window === "undefined") return "overview";
+    
+    // Kita hapus logika "reload" agar web tidak pernah reset otomatis.
+    // Kita ganti pakai localStorage agar ingatannya permanen.
+    const savedTab = localStorage.getItem(ACTIVE_TAB_KEY) as TabId | null;
+    const validTabs: TabId[] = ["overview", "optimizer", "competitors", "roblox", "reports", "opportunity"];
+    
+    return savedTab && validTabs.includes(savedTab) ? savedTab : "overview";
   }
 
-  // Kalau user cuma keluar tab lalu balik lagi, tetap di menu terakhir
-  const savedTab = sessionStorage.getItem(ACTIVE_TAB_KEY) as TabId | null;
-  const validTabs: TabId[] = ["overview", "optimizer", "competitors", "roblox", "reports", "opportunity"];
+  const [active, setActiveRaw] = useState<TabId>(getInitialActiveTab);
 
-  return savedTab && validTabs.includes(savedTab) ? savedTab : "overview";
-}
-
-const [active, setActiveRaw] = useState<TabId>(getInitialActiveTab);
-
-const setActive = (tab: TabId) => {
-  setActiveRaw(tab);
-  sessionStorage.setItem(ACTIVE_TAB_KEY, tab);
-};
+  const setActive = (tab: TabId) => {
+    setActiveRaw(tab);
+    localStorage.setItem(ACTIVE_TAB_KEY, tab); // Simpan ke ingatan permanen
+  };
   const [channelState, setChannelState] = useState<ApiState<any>>({ loading: false, error: "", data: null });
   const [videosState, setVideosState] = useLocalStorage<ApiState<any[]>>("simpanan_video", { loading: false, error: "", data: [] });
   const [selectedVideo, setSelectedVideo] = useLocalStorage<any>("simpanan_pilihan_video", null);
@@ -181,16 +174,16 @@ const setActive = (tab: TabId) => {
   const [loadingDailyScript, setLoadingDailyScript] = useState<Record<number, boolean>>({});
   const [activeDailyTab, setActiveDailyTab] = useState<number>(0);
   const [opportunityLoading, setOpportunityLoading] = useState(false);
-  const [opportunityResults, setOpportunityResults] = useState<any[]>([]);
-  
+  const [opportunityResults, setOpportunityResults] = useLocalStorage<any[]>("simpanan_hasil_ai", []);
+
   // TAMBAHKAN KODE INI UNTUK EFEK VIDIQ:
-  const [expandedIdea, setExpandedIdea] = useState<number | null>(null);
+  const [expandedIdea, setExpandedIdea] = useLocalStorage<number | null>("simpanan_ide_terbuka", null);
   const [scriptLoadingStep, setScriptLoadingStep] = useState<number>(0);
-  const [optCategory, setOptCategory] = useState("Travel & Events");
-  const [optAudience, setOptAudience] = useState("Worldwide");
-  const [optStyle, setOptStyle] = useState("AI Cinematic Documentary");
-  const [optKeyword, setOptKeyword] = useState("");
-  const [optLanguage, setOptLanguage] = useState("English");
+  const [optCategory, setOptCategory] = useLocalStorage("simpanan_opt_kategori", "Travel & Events");
+  const [optAudience, setOptAudience] = useLocalStorage("simpanan_opt_audience", "Worldwide");
+  const [optStyle, setOptStyle] = useLocalStorage("simpanan_opt_style", "AI Cinematic Documentary");
+  const [optKeyword, setOptKeyword] = useLocalStorage("simpanan_opt_keyword", "");
+  const [optLanguage, setOptLanguage] = useLocalStorage("simpanan_opt_language", "English");
   const handleExpandScript = (index: number) => {
     if (expandedIdea === index) {
       setExpandedIdea(null); // Tutup jika diklik lagi
