@@ -808,41 +808,41 @@ function renderSutradara() {
     };
 
  // FUNGSI TOMBOL SIMPAN KE YOUTUBE (Tembus Tanpa Blokir Frontend)
-    const handleSaveToYouTube = async (e: any) => {
+    const handleSaveToYouTube = async (e: any, currentVideo: any) => {
         const btn = e.target;
         const originalText = btn.innerHTML;
         btn.innerHTML = "Menyimpan...";
         btn.disabled = true;
 
         try {
-            // 1. Fungsi Anti-Gagal untuk menemukan Video ID dari berbagai format data YouTube
-            const getSafeId = (v: any) => {
-                if (!v) return null;
-                if (typeof v.id === 'string') return v.id;
-                if (typeof v.id === 'object' && v.id?.videoId) return v.id.videoId;
-                if (v.snippet?.resourceId?.videoId) return v.snippet.resourceId.videoId;
-                return null;
-            };
+            // 1. Ekstrak ID langsung dari video yang diklik (Anti-Rabun)
+            let vidId = null;
+            if (typeof currentVideo?.id === 'string') vidId = currentVideo.id;
+            else if (currentVideo?.id?.videoId) vidId = currentVideo.id.videoId;
+            else if (currentVideo?.snippet?.resourceId?.videoId) vidId = currentVideo.snippet.resourceId.videoId;
 
-            const selectedId = getSafeId(selectedVideo);
-            if (!selectedId) throw new Error("Sistem kehilangan jejak Video ID. Coba refresh halaman.");
+            if (!vidId) {
+                console.error("Data aneh:", currentVideo);
+                throw new Error("ID Video tersembunyi! Buka Inspect Element (F12) -> Console.");
+            }
 
-            // 2. Ambil data yang paling update dari state (setelah Anda mengklik judul AI)
-            const activeVideo = videosState?.data?.find((v: any) => getSafeId(v) === selectedId) || selectedVideo;
-            
-            const title = activeVideo?.snippet?.title || activeVideo?.title;
-            const desc = activeVideo?.snippet?.description || "";
-            const tags = activeVideo?.snippet?.tags || [];
+            // 2. Ambil data terbaru dari state yang sudah tercampur dengan hasil AI
+            const freshVideo = videosState?.data?.find((vid: any) => {
+                const tempId = typeof vid?.id === 'string' ? vid.id : (vid?.id?.videoId || vid?.snippet?.resourceId?.videoId);
+                return tempId === vidId;
+            }) || currentVideo;
 
-            if (!title) throw new Error("Judul tidak boleh kosong! Pastikan Anda sudah mengklik hasil AI.");
+            const title = freshVideo?.snippet?.title || freshVideo?.title;
+            const desc = freshVideo?.snippet?.description || "";
+            const tags = freshVideo?.snippet?.tags || [];
 
-            // 3. Bungkus data dan kirim ke YouTube
+            // 3. Kirim ke YouTube dengan Gembok yang sudah terbuka
             const payload = {
-                videoId: selectedId,
+                videoId: vidId,
                 title: title,
                 description: desc,
                 tags: tags,
-                categoryId: activeVideo?.snippet?.categoryId || "20"
+                categoryId: freshVideo?.snippet?.categoryId || "20"
             };
 
             const res = await fetch("/api/youtube/update-video", {
@@ -852,11 +852,9 @@ function renderSutradara() {
             });
 
             const result = await res.json();
-            
-            // Jika Google masih menolak, tangkap pesan error ASLI dari Google
-            if (!res.ok) throw new Error(result.error || "Server YouTube menolak data ini.");
-            
-            alert("🚀 SUKSES BESAR! Perubahan sudah tembus ke YouTube Studio Anda!");
+            if (!res.ok) throw new Error(result.error || "Ditolak server YouTube");
+
+            alert("🚀 SUKSES BESAR! Data berhasil masuk ke YouTube Studio Anda!");
         } catch (err: any) {
             alert("❌ GAGAL: " + err.message);
         } finally {
@@ -918,12 +916,12 @@ function renderSutradara() {
                                   />
                                   {/* TOMBOL SIMPAN DITAMBAHKAN DI SINI */}
                                   <div style={{ marginTop: '24px', borderTop: '1px solid #334155', paddingTop: '20px', display: 'flex', justifyContent: 'flex-end' }}>
-                                    <button 
-                                      onClick={handleSaveToYouTube} 
-                                      style={{ padding: '12px 24px', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.2)' }}
-                                    >
-                                      💾 Simpan Perubahan Video
-                                    </button>
+                                    <button
+    onClick={(e) => handleSaveToYouTube(e, v)}
+    style={{ /* ... style bawaan Anda jangan diubah ... */ }}
+>
+    💾 Simpan Perubahan Video
+</button>
                                   </div>
                                 </>
                               )}
