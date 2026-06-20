@@ -1058,13 +1058,27 @@ function renderCompetitors() {
                 onChange={(e) => setOptLanguage(e.target.value)}
                 style={{ padding: '10px 20px', borderRadius: '8px', background: '#1e293b', color: 'white', border: '1px solid #3b82f6', fontSize: '14px', outline: 'none', cursor: 'pointer' }}
               >
-                <option value="English (US/Canada). Gunakan ejaan Amerika, gaya bahasa gaul (slang) Amerika yang sedang tren, sangat kasual, dan hook yang agresif untuk menahan retensi audiens US.">🇺🇸 English (US/Canada) - Gaya Gaul Amerika</option>
-                <option value="English (UK/Ireland). Gunakan ejaan British (contoh: colour, realise), istilah khas Inggris Raya (mate, bloke, dll), gaya kasual, dan hook yang relevan dengan budaya UK.">🇬🇧 English (UK/Ireland) - Gaya British</option>
-                <option value="English (Australia/New Zealand). Gunakan gaya bahasa Inggris Australia yang sangat santai, gunakan slang Aussie jika cocok, dan hook yang menarik untuk audiens Australia.">🇦🇺 English (Australia/NZ) - Gaya Santai Aussie</option>
-                <option value="Bahasa Jerman (German). Gunakan gaya bahasa Jerman yang kasual, modern, dan sangat memikat, relevan dengan budaya pop dan gaming di Jerman serta Swiss.">🇩🇪 German (Jerman/Swiss) - RPM Tertinggi Eropa</option>
-                <option value="Bahasa Belanda (Dutch). Gunakan bahasa Belanda dengan gaya modern, kasual, dan hook yang sangat kuat untuk audiens Belanda yang memiliki daya beli tinggi.">🇳🇱 Dutch (Belanda) - Daya Beli Kuat</option>
-                <option value="Bahasa Prancis (French). Gunakan tata bahasa Prancis yang natural, gaya kasual anak muda, dan hook yang memikat untuk audiens Prancis.">🇫🇷 French (Prancis) - Pasar Masif Eropa</option>
-                <option value="Bahasa Swedia (Swedish). Gunakan bahasa Swedia dengan gaya modern, kasual, dan relevan dengan audiens Skandinavia (Norwegia/Denmark/Swedia).">🇸🇪 Swedish (Skandinavia) - Target Premium</option>
+                <option value="English (US/Canada). Gunakan ejaan Amerika, gaya bahasa gaul (slang) Amerika yang sedang tren, sangat kasual, dan hook yang agresif untuk menahan retensi audiens US.">
+                  🇺🇸 English (US/Canada) | ⏰ Jadwal: 22:00 - 05:00 WIB
+                </option>
+                <option value="English (UK/Ireland). Gunakan ejaan British (contoh: colour, realise), istilah khas Inggris Raya (mate, bloke, dll), gaya kasual, dan hook yang relevan dengan budaya UK.">
+                  🇬🇧 English (UK/Ireland) | ⏰ Jadwal: 23:00 - 02:00 WIB
+                </option>
+                <option value="English (Australia/New Zealand). Gunakan gaya bahasa Inggris Australia yang sangat santai, gunakan slang Aussie jika cocok, dan hook yang menarik untuk audiens Australia.">
+                  🇦🇺 English (Australia/NZ) | ⏰ Jadwal: 11:00 - 17:00 WIB
+                </option>
+                <option value="Bahasa Jerman (German). Gunakan gaya bahasa Jerman yang kasual, modern, dan sangat memikat, relevan dengan budaya pop dan gaming di Jerman serta Swiss.">
+                  🇩🇪 German (Jerman/Swiss) | ⏰ Jadwal: 22:00 - 01:00 WIB
+                </option>
+                <option value="Bahasa Belanda (Dutch). Gunakan bahasa Belanda dengan gaya modern, kasual, dan hook yang sangat kuat untuk audiens Belanda yang memiliki daya beli tinggi.">
+                  🇳🇱 Dutch (Belanda) | ⏰ Jadwal: 22:00 - 01:00 WIB
+                </option>
+                <option value="Bahasa Prancis (French). Gunakan tata bahasa Prancis yang natural, gaya kasual anak muda, dan hook yang memikat untuk audiens Prancis.">
+                  🇫🇷 French (Prancis) | ⏰ Jadwal: 22:00 - 01:00 WIB
+                </option>
+                <option value="Bahasa Swedia (Swedish). Gunakan bahasa Swedia dengan gaya modern, kasual, dan relevan dengan audiens Skandinavia (Norwegia/Denmark/Swedia).">
+                  🇸🇪 Swedish (Skandinavia) | ⏰ Jadwal: 22:00 - 01:00 WIB
+                </option>
               </select>
             </div>
             <p style={{ color: '#94a3b8', fontSize: '12px', marginTop: '4px' }}>*AI akan otomatis menyesuaikan slang, gaya bahasa, dan ejaan sesuai dengan negara yang dipilih.</p>
