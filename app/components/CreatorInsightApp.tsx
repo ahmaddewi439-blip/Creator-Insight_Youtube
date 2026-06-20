@@ -161,6 +161,10 @@ export default function CreatorInsightApp() {
   // TAMBAHKAN KODE INI UNTUK EFEK VIDIQ:
   const [expandedIdea, setExpandedIdea] = useState<number | null>(null);
   const [scriptLoadingStep, setScriptLoadingStep] = useState<number>(0);
+  const [optCategory, setOptCategory] = useState("Travel & Events");
+  const [optAudience, setOptAudience] = useState("Worldwide");
+  const [optStyle, setOptStyle] = useState("AI Cinematic Documentary");
+  const [optKeyword, setOptKeyword] = useState("");
 
   const handleExpandScript = (index: number) => {
     if (expandedIdea === index) {

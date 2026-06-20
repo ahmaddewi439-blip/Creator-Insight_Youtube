@@ -16,41 +16,38 @@ export async function POST(req: Request) {
     baseUrl = baseUrl.replace(/\/+$/, "");
     const endpoint = baseUrl.endsWith("/chat/completions") ? baseUrl : `${baseUrl}/chat/completions`;
 
-    // PROMPT MASTER: GAYA VIDIQ + RISET CONTENT GAP
+    // PROMPT YANG SUDAH DIPERBARUI UNTUK NASKAH 60 DETIK FULL
     const prompt = `You are an elite AI YouTube Strategist. Find low-competition, high-demand content opportunities.
 Target Audience: ${audience || "Worldwide"}
-Category: ${category || "Gaming / Roblox"}
-Style: ${style || "Fast-paced Shorts"}
+Category: ${category || "Travel & Events"}
+Style: ${style || "AI Cinematic Documentary"}
 Topic: ${keyword || "Find a hidden opportunity"}
 
 Analyze the market and return EXACTLY 3 highly profitable content ideas in Indonesian language (except for the English VO Script). 
 You MUST format the output as a valid JSON array of objects. Do NOT use markdown code blocks.
 
+CRITICAL REQUIREMENT: The "script" array MUST cover a FULL 45 to 60 seconds video. Do not stop at 15 seconds. You must include at least 4-5 segments (Hook, Build up, The Reveal, Outro & Call to Action).
+
 Use this EXACT JSON structure for each of the 3 ideas:
 [
   {
     "title": "Ide 1: [JUDUL CLICKBAIT HURUF KAPITAL]",
-    "score": 33,
-    "kenapa": "Penjelasan detail kenapa topik ini berpeluang tinggi (sebutkan demand tinggi, kompetisi rendah/format usang).",
-    "angle": "Sudut pandang spesifik yang membedakan video ini dari kompetitor.",
-    "keywords": [
-      {"word": "keyword terkait 1", "power": 85},
-      {"word": "keyword terkait 2", "power": 72}
-    ],
+    "score": 34,
+    "kenapa": "Penjelasan detail...",
+    "angle": "Sudut pandang spesifik...",
+    "keywords": [ {"word": "keyword 1", "power": 85} ],
     "visualStructure": [
-      {"layer": "Background", "posisi": "Layar Penuh 9:16", "konten": "Deskripsi visual AI. Prompt: [Grok AI Prompt for the scene, premium dark green aesthetic]"},
-      {"layer": "Text Overlay", "posisi": "Tengah", "konten": "Teks hook kapital"}
+      {"layer": "Background", "posisi": "Layar Penuh 9:16", "konten": "[Grok AI Prompt for the scene, premium dark green aesthetic]"}
     ],
     "script": [
-      {"time": "[0:00-0:05] HOOK", "vo": "English Voice Over hook here...", "visual": "Visual: Fast zoom in. SFX: Boom sound."},
-      {"time": "[0:05-0:15] STORY", "vo": "English Voice Over continuing the story...", "visual": "Visual: Quick cuts. SFX: Mysterious ambient."}
+      {"time": "[0:00-0:05] HOOK", "vo": "English Voice Over hook here...", "visual": "Visual instruction..."},
+      {"time": "[0:05-0:20] BUILD UP", "vo": "English Voice Over continuing the story...", "visual": "Visual instruction..."},
+      {"time": "[0:20-0:40] THE REVEAL", "vo": "English Voice Over revealing the secret...", "visual": "Visual instruction..."},
+      {"time": "[0:40-0:55] OUTRO & CTA", "vo": "English Voice Over call to action...", "visual": "Visual instruction..."}
     ],
-    "description": "Ranking momen-momen paling gila... [Draft deskripsi siap copy]",
-    "tags": "#shorts, #roblox, #mystery, #gaming",
-    "quickNotes": [
-      "Gunakan musik background tipe suspense.",
-      "Pastikan suara VO berat dan misterius."
-    ]
+    "description": "Draft deskripsi siap copy...",
+    "tags": "#shorts, #mystery",
+    "quickNotes": ["Catatan 1", "Catatan 2"]
   }
 ]
 Return ONLY raw JSON.`;
