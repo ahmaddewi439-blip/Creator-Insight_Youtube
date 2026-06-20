@@ -143,7 +143,32 @@ function getVideoId(video: any) {
 
 export default function CreatorInsightApp() {
   const { data: session, status } = useSession();
-  const [active, setActive] = useState<TabId>("overview");
+  const ACTIVE_TAB_KEY = "creator_insight_active_tab";
+
+function getInitialActiveTab(): TabId {
+  if (typeof window === "undefined") return "overview";
+
+  const nav = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
+
+  // Kalau user refresh manual, balik ke Dasbor
+  if (nav?.type === "reload") {
+    sessionStorage.removeItem(ACTIVE_TAB_KEY);
+    return "overview";
+  }
+
+  // Kalau user cuma keluar tab lalu balik lagi, tetap di menu terakhir
+  const savedTab = sessionStorage.getItem(ACTIVE_TAB_KEY) as TabId | null;
+  const validTabs: TabId[] = ["overview", "optimizer", "competitors", "roblox", "reports", "opportunity"];
+
+  return savedTab && validTabs.includes(savedTab) ? savedTab : "overview";
+}
+
+const [active, setActiveRaw] = useState<TabId>(getInitialActiveTab);
+
+const setActive = (tab: TabId) => {
+  setActiveRaw(tab);
+  sessionStorage.setItem(ACTIVE_TAB_KEY, tab);
+};
   const [channelState, setChannelState] = useState<ApiState<any>>({ loading: false, error: "", data: null });
   const [videosState, setVideosState] = useLocalStorage<ApiState<any[]>>("simpanan_video", { loading: false, error: "", data: [] });
   const [selectedVideo, setSelectedVideo] = useLocalStorage<any>("simpanan_pilihan_video", null);
