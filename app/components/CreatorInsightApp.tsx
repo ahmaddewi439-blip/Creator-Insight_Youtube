@@ -815,17 +815,22 @@ function renderSutradara() {
         btn.disabled = true;
 
         try {
-            // Kita ambil data dari state yang sudah di-update oleh handleLivePreview
-            const videoToUpdate = videosState.data?.find((v: any) => getVideoId(v) === getVideoId(selectedVideo));
-            
-            if (!videoToUpdate) throw new Error("Data video tidak ditemukan!");
+            // JURUS PAKEM: Kita ambil data langsung dari selectedVideo
+            const vidId = getVideoId(selectedVideo);
+            const title = selectedVideo?.snippet?.title || selectedVideo?.title;
+            const desc = selectedVideo?.snippet?.description || "";
+
+            // CEK KEAMANAN: Kalau masih kosong, kita berhenti
+            if (!vidId || !title) {
+                throw new Error("Video ID dan Judul tidak boleh kosong");
+            }
 
             const payload = {
-                videoId: getVideoId(videoToUpdate),
-                title: videoToUpdate.snippet?.title || videoToUpdate.title,
-                description: videoToUpdate.snippet?.description || "",
-                tags: videoToUpdate.snippet?.tags || [],
-                categoryId: videoToUpdate.snippet?.categoryId || "20"
+                videoId: vidId,
+                title: title,
+                description: desc,
+                tags: selectedVideo?.snippet?.tags || [],
+                categoryId: "20"
             };
 
             const res = await fetch("/api/youtube/update-video", {
@@ -837,7 +842,7 @@ function renderSutradara() {
             const result = await res.json();
             if (!res.ok) throw new Error(result.error || "Gagal simpan ke YouTube");
             
-            alert("🚀 SUKSES! Perubahan sudah tersimpan di YouTube Studio.");
+            alert("🚀 SUKSES! Data sudah terupdate!");
         } catch (err: any) {
             alert("❌ GAGAL: " + err.message);
         } finally {
