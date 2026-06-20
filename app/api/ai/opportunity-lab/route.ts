@@ -16,40 +16,44 @@ export async function POST(req: Request) {
     baseUrl = baseUrl.replace(/\/+$/, "");
     const endpoint = baseUrl.endsWith("/chat/completions") ? baseUrl : `${baseUrl}/chat/completions`;
 
-    // PROMPT BARU: PAKSA SKOR TINGGI (>30) SESUAI NICHE
-    const prompt = `You are an elite AI YouTube Strategist. Your task is to find the absolute BEST, low-competition, high-demand content opportunities for a specific niche.
+    // PROMPT BARU: PENGUNCI BAHASA INDONESIA & TAMBAHAN RESEP THUMBNAIL/AUDIO
+    const prompt = `You are an elite AI YouTube Strategist. Find the BEST, low-competition, high-demand content opportunities.
 Target Audience: ${audience || "Worldwide"}
 Category: ${category}
 Style: ${style || "AI Cinematic Documentary"}
 
-Analyze the market and return EXACTLY 3 highly profitable content ideas for the "${category}" category. 
-CRITICAL: Only provide ideas that have a Very High Opportunity Score (Must be between 32 to 35 out of 35). 
+Analyze the market and return EXACTLY 3 highly profitable content ideas for "${category}". 
+CRITICAL LANGUAGE RULES: 
+- "kenapa", "angle", "audioMood" MUST be in strict Indonesian.
+- The "vo" (Voice Over) and all Prompts (Image, Video, Thumbnail) MUST be in English.
 
-You MUST format the output as a valid JSON array of objects. Do NOT use markdown code blocks.
-The video must be a FULL 45-60 seconds, broken down into 5 to 7 specific Scenes. 
+Only provide ideas with a Very High Opportunity Score (32 to 35).
+Format the output as a valid JSON array of objects. Do NOT use markdown code blocks.
 
-Use this EXACT JSON structure for each of the 3 ideas:
+Use this EXACT JSON structure:
 [
   {
     "title": "Ide 1: [JUDUL CLICKBAIT HURUF KAPITAL]",
     "score": 34,
-    "kenapa": "Penjelasan detail mengapa demand tinggi dan kompetisi rendah...",
-    "angle": "Sudut pandang spesifik...",
+    "kenapa": "Penjelasan rinci dalam BAHASA INDONESIA mengapa demand tinggi dan kompetisi rendah...",
+    "angle": "Sudut pandang spesifik dalam BAHASA INDONESIA...",
     "keywords": [ {"word": "keyword 1", "power": 85} ],
+    "thumbnailPrompt": "Grok Image Prompt: A YouTube Shorts thumbnail showing... premium dark green aesthetic, high contrast, highly clickable.",
+    "audioMood": "Instruksi BAHASA INDONESIA untuk musik latar dan SFX (contoh: Gunakan musik dark synthwave yang pelan, tambahkan efek detak jantung...).",
     "scenes": [
       {
         "waktu": "[0:00-0:05]",
         "vo": "English Voice Over here...",
-        "visual": "Description of what happens on screen...",
-        "imagePrompt": "Grok Image Prompt: A vertical 9:16 highly detailed cinematic image of... premium dark green aesthetic, dramatic lighting.",
-        "videoPrompt": "Grok Video Prompt: Smooth camera pan over... realistic motion, vertical 9:16 cinematic."
+        "visual": "Description of visual action...",
+        "imagePrompt": "Grok Image Prompt: A vertical 9:16 highly detailed...",
+        "videoPrompt": "Grok Video Prompt: Smooth camera pan over..."
       }
     ],
     "description": "Draft deskripsi siap copy...",
     "tags": "#shorts, #mystery"
   }
 ]
-Return ONLY raw JSON.`;
+Ensure the scenes cover 45-60 seconds. Return ONLY raw JSON.`;
 
     const res = await fetch(endpoint, {
       method: "POST",
