@@ -1048,22 +1048,26 @@ function renderCompetitors() {
         <div style={{ textAlign: 'center', marginBottom: '30px' }}>
           <h2 style={{ fontSize: '24px', color: '#f8fafc', marginBottom: '10px' }}>🧠 Pilih Niche Channel Anda</h2>
           <p style={{ color: '#94a3b8', marginBottom: '30px' }}>Pilih kategori di bawah ini. AI akan otomatis mencarikan 3 ide konten dengan skor peluang tertinggi untuk Anda eksekusi.</p>
-          {/* MENU PILIHAN BAHASA GLOBAL */}
-          <div style={{ marginBottom: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
-            <label style={{ color: '#fbbf24', fontWeight: 'bold', fontSize: '16px' }}>🌐 Pilih Bahasa Video Utama Anda:</label>
-            <select 
-              value={optLanguage} 
-              onChange={(e) => setOptLanguage(e.target.value)} 
-              style={{ padding: '10px 20px', borderRadius: '8px', background: '#1e293b', color: 'white', border: '1px solid #3b82f6', fontSize: '15px', outline: 'none', cursor: 'pointer' }}
-            >
-              <option value="English">🇺🇸 English (Global/US)</option>
-              <option value="Indonesian">🇮🇩 Indonesia</option>
-              <option value="Spanish">🇪🇸 Spanish (Spanyol/Amerika Latin)</option>
-              <option value="Portuguese">🇧🇷 Portuguese (Brasil/Portugal)</option>
-              <option value="German">🇩🇪 German (Jerman)</option>
-              <option value="Japanese">🇯🇵 Japanese (Jepang)</option>
-              <option value="Arabic">🇸🇦 Arabic (Timur Tengah)</option>
-            </select>
+          
+          {/* MENU PILIHAN BAHASA GLOBAL TIER-1 */}
+          <div style={{ marginBottom: '30px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <label style={{ color: '#fbbf24', fontWeight: 'bold', fontSize: '16px' }}>🌎 Pilih Target Negara Tier 1 (High RPM):</label>
+              <select
+                value={optLanguage}
+                onChange={(e) => setOptLanguage(e.target.value)}
+                style={{ padding: '10px 20px', borderRadius: '8px', background: '#1e293b', color: 'white', border: '1px solid #3b82f6', fontSize: '14px', outline: 'none', cursor: 'pointer' }}
+              >
+                <option value="English (US/Canada). Gunakan ejaan Amerika, gaya bahasa gaul (slang) Amerika yang sedang tren, sangat kasual, dan hook yang agresif untuk menahan retensi audiens US.">🇺🇸 English (US/Canada) - Gaya Gaul Amerika</option>
+                <option value="English (UK/Ireland). Gunakan ejaan British (contoh: colour, realise), istilah khas Inggris Raya (mate, bloke, dll), gaya kasual, dan hook yang relevan dengan budaya UK.">🇬🇧 English (UK/Ireland) - Gaya British</option>
+                <option value="English (Australia/New Zealand). Gunakan gaya bahasa Inggris Australia yang sangat santai, gunakan slang Aussie jika cocok, dan hook yang menarik untuk audiens Australia.">🇦🇺 English (Australia/NZ) - Gaya Santai Aussie</option>
+                <option value="Bahasa Jerman (German). Gunakan gaya bahasa Jerman yang kasual, modern, dan sangat memikat, relevan dengan budaya pop dan gaming di Jerman serta Swiss.">🇩🇪 German (Jerman/Swiss) - RPM Tertinggi Eropa</option>
+                <option value="Bahasa Belanda (Dutch). Gunakan bahasa Belanda dengan gaya modern, kasual, dan hook yang sangat kuat untuk audiens Belanda yang memiliki daya beli tinggi.">🇳🇱 Dutch (Belanda) - Daya Beli Kuat</option>
+                <option value="Bahasa Prancis (French). Gunakan tata bahasa Prancis yang natural, gaya kasual anak muda, dan hook yang memikat untuk audiens Prancis.">🇫🇷 French (Prancis) - Pasar Masif Eropa</option>
+                <option value="Bahasa Swedia (Swedish). Gunakan bahasa Swedia dengan gaya modern, kasual, dan relevan dengan audiens Skandinavia (Norwegia/Denmark/Swedia).">🇸🇪 Swedish (Skandinavia) - Target Premium</option>
+              </select>
+            </div>
+            <p style={{ color: '#94a3b8', fontSize: '12px', marginTop: '4px' }}>*AI akan otomatis menyesuaikan slang, gaya bahasa, dan ejaan sesuai dengan negara yang dipilih.</p>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
             {niches.map((niche, idx) => (
