@@ -368,7 +368,10 @@ export default function CreatorInsightApp() {
           instruction: `CRITICAL: Judul asli video ini adalah "${originalTitle}". Tolong optimasi SEO untuk video ini agar lebih clickbait dan mudah ditemukan di pencarian. Berikan JSON (recommendedTitles, caption, description, keywords).`
         })
       });
-      setOptimizer({ loading: false, error: "", data: data.result || data.raw });
+     // Pastikan kita menangkap datanya, entah dibungkus "result", "data", atau tanpa bungkus
+    const finalData = data?.result || data?.data || data;
+    console.log("CEK ISI DATA:", finalData); // Log ini untuk mengintip jika masih bandel
+    setOptimizer({ loading: false, error: "", data: finalData });
     } catch (err: any) {
       setOptimizer({ loading: false, error: err.message, data: null });
     }
