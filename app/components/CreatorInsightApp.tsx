@@ -1025,11 +1025,22 @@ function renderCompetitors() {
  function renderOpportunityLab() {
   // Daftar Niche Premium
   const niches = [
-    { name: "Gaming / Roblox", icon: "🎮", desc: "Misteri game, mitos, dan sejarah fitur yang dihapus." },
-    { name: "Travel & Events", icon: "🌍", desc: "Tempat nyata di bumi yang terlihat seperti buatan AI." },
-    { name: "Pets & Animals", icon: "🐾", desc: "Hewan dengan kemampuan aneh atau dikira punah." },
-    { name: "Science & Technology", icon: "🔭", desc: "Penemuan mustahil dan fakta sains yang mencekam." },
-    { name: "Finance / History", icon: "💰", desc: "Sejarah uang yang hancur dan penipuan terbesar." }
+    { name: 'Gaming / E-sports', icon: '🎮', desc: 'Misteri game, mitos, gameplay, dan sejarah fitur yang dihapus.' },
+    { name: 'Finance & Crypto', icon: '💰', desc: 'Edukasi finansial, cara menghasilkan uang online, dan investasi.' },
+    { name: 'Science & Tech', icon: '🔭', desc: 'Penemuan mustahil, gadget terbaru, dan fakta sains mencekam.' },
+    { name: 'Travel & Events', icon: '🌍', desc: 'Tempat nyata di bumi yang terlihat seperti buatan AI, vlog liburan.' },
+    { name: 'Health & Fitness', icon: '🏋️', desc: 'Tips diet sehat, transformasi tubuh, dan fakta psikologi/mental.' },
+    { name: 'Pets & Animals', icon: '🐾', desc: 'Hewan dengan kemampuan aneh, fakta unik peliharaan, dan momen lucu.' },
+    { name: 'Education & Facts', icon: '📚', desc: 'Sejarah kelam, fakta unik dunia, dan tutorial "Cara melakukan sesuatu".' },
+    { name: 'Entertainment', icon: '🎭', desc: 'Reaksi video, parodi, tren pop culture, dan tantangan seru.' },
+    { name: 'Food & Cooking', icon: '🍔', desc: 'Resep rahasia, eksperimen makanan, dan review kuliner jalanan.' },
+    { name: 'Beauty & Fashion', icon: '💄', desc: 'Glow up tutorial, tren pakaian, dan skincare routine.' },
+    { name: 'Lifestyle & Motivation', icon: '✨', desc: 'Pengembangan diri, kebiasaan miliarder, dan motivasi sukses.' },
+    { name: 'Sports & Outdoors', icon: '⚽', desc: 'Highlights momen olahraga mustahil, petualangan ekstrem.' },
+    { name: 'Music & Dance', icon: '🎵', desc: 'Fakta di balik lagu populer, tutorial alat musik, dan tren tarian.' },
+    { name: 'DIY & Crafts', icon: '🛠️', desc: 'Ide kreatif, kerajinan tangan, dan trik kehidupan sehari-hari (Life hacks).' },
+    { name: 'Automotive', icon: '🚗', desc: 'Modifikasi kendaraan, review mobil/motor, dan sejarah otomotif.' },
+    { name: 'News & Politics', icon: '📰', desc: 'Analisis berita viral, konspirasi dunia nyata, dan kejadian terkini.' }
   ];
 
   return (
@@ -1049,52 +1060,64 @@ function renderCompetitors() {
           <h2 style={{ fontSize: '24px', color: '#f8fafc', marginBottom: '10px' }}>🧠 Pilih Niche Channel Anda</h2>
           <p style={{ color: '#94a3b8', marginBottom: '30px' }}>Pilih kategori di bawah ini. AI akan otomatis mencarikan 3 ide konten dengan skor peluang tertinggi untuk Anda eksekusi.</p>
           
-          {/* MENU PILIHAN BAHASA GLOBAL TIER-1 */}
-          <div style={{ marginBottom: '30px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <label style={{ color: '#fbbf24', fontWeight: 'bold', fontSize: '16px' }}>🌎 Pilih Target Negara Tier 1 (High RPM):</label>
+          {/* MENU PILIHAN BAHASA TIER-1 (VERSI RESPONSIVE HP) */}
+          <div style={{ marginBottom: '30px', width: '100%', boxSizing: 'border-box', padding: '0 10px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', width: '100%' }}>
+              <label style={{ color: '#fbbf24', fontWeight: 'bold', fontSize: '15px', textAlign: 'center' }}>
+                🌎 Pilih Target Negara Tier 1 (High RPM):
+              </label>
               <select
                 value={optLanguage}
                 onChange={(e) => setOptLanguage(e.target.value)}
-                style={{ padding: '10px 20px', borderRadius: '8px', background: '#1e293b', color: 'white', border: '1px solid #3b82f6', fontSize: '14px', outline: 'none', cursor: 'pointer' }}
+                style={{
+                  width: '100%',
+                  maxWidth: '100%',
+                  padding: '12px 15px',
+                  borderRadius: '8px',
+                  background: '#1e293b',
+                  color: 'white',
+                  border: '1px solid #3b82f6',
+                  fontSize: '14px',
+                  outline: 'none',
+                  cursor: 'pointer',
+                  boxSizing: 'border-box'
+                }}
               >
-                <option value="English (US/Canada). Gunakan ejaan Amerika, gaya bahasa gaul (slang) Amerika yang sedang tren, sangat kasual, dan hook yang agresif untuk menahan retensi audiens US.">
-                  🇺🇸 English (US/Canada) | ⏰ Jadwal: 22:00 - 05:00 WIB
-                </option>
-                <option value="English (UK/Ireland). Gunakan ejaan British (contoh: colour, realise), istilah khas Inggris Raya (mate, bloke, dll), gaya kasual, dan hook yang relevan dengan budaya UK.">
-                  🇬🇧 English (UK/Ireland) | ⏰ Jadwal: 23:00 - 02:00 WIB
-                </option>
-                <option value="English (Australia/New Zealand). Gunakan gaya bahasa Inggris Australia yang sangat santai, gunakan slang Aussie jika cocok, dan hook yang menarik untuk audiens Australia.">
-                  🇦🇺 English (Australia/NZ) | ⏰ Jadwal: 11:00 - 17:00 WIB
-                </option>
-                <option value="Bahasa Jerman (German). Gunakan gaya bahasa Jerman yang kasual, modern, dan sangat memikat, relevan dengan budaya pop dan gaming di Jerman serta Swiss.">
-                  🇩🇪 German (Jerman/Swiss) | ⏰ Jadwal: 22:00 - 01:00 WIB
-                </option>
-                <option value="Bahasa Belanda (Dutch). Gunakan bahasa Belanda dengan gaya modern, kasual, dan hook yang sangat kuat untuk audiens Belanda yang memiliki daya beli tinggi.">
-                  🇳🇱 Dutch (Belanda) | ⏰ Jadwal: 22:00 - 01:00 WIB
-                </option>
-                <option value="Bahasa Prancis (French). Gunakan tata bahasa Prancis yang natural, gaya kasual anak muda, dan hook yang memikat untuk audiens Prancis.">
-                  🇫🇷 French (Prancis) | ⏰ Jadwal: 22:00 - 01:00 WIB
-                </option>
-                <option value="Bahasa Swedia (Swedish). Gunakan bahasa Swedia dengan gaya modern, kasual, dan relevan dengan audiens Skandinavia (Norwegia/Denmark/Swedia).">
-                  🇸🇪 Swedish (Skandinavia) | ⏰ Jadwal: 22:00 - 01:00 WIB
-                </option>
+                <option value="English (US/Canada). Gunakan ejaan Amerika, gaya bahasa gaul (slang) Amerika yang sedang tren, sangat kasual, dan hook yang agresif untuk menahan retensi audiens US.">🇺🇸 English (US/Canada) | ⏰ Jadwal: 22:00 - 05:00 WIB</option>
+                <option value="English (UK/Ireland). Gunakan ejaan British (contoh: colour, realise), istilah khas Inggris Raya (mate, bloke, dll), gaya kasual, dan hook yang relevan dengan budaya UK.">🇬🇧 English (UK/Ireland) | ⏰ Jadwal: 23:00 - 02:00 WIB</option>
+                <option value="English (Australia/New Zealand). Gunakan gaya bahasa Inggris Australia yang sangat santai, gunakan slang Aussie jika cocok, dan hook yang menarik untuk audiens Australia.">🇦🇺 English (Australia/NZ) | ⏰ Jadwal: 11:00 - 17:00 WIB</option>
+                <option value="Bahasa Jerman (German). Gunakan gaya bahasa Jerman yang kasual, modern, dan sangat memikat, relevan dengan budaya pop dan gaming di Jerman serta Swiss.">🇩🇪 German (Jerman/Swiss) | ⏰ Jadwal: 22:00 - 01:00 WIB</option>
+                <option value="Bahasa Belanda (Dutch). Gunakan bahasa Belanda dengan gaya modern, kasual, dan hook yang sangat kuat untuk audiens Belanda yang memiliki daya beli tinggi.">🇳🇱 Dutch (Belanda) | ⏰ Jadwal: 22:00 - 01:00 WIB</option>
+                <option value="Bahasa Prancis (French). Gunakan tata bahasa Prancis yang natural, gaya kasual anak muda, dan hook yang memikat untuk audiens Prancis.">🇫🇷 French (Prancis) | ⏰ Jadwal: 22:00 - 01:00 WIB</option>
+                <option value="Bahasa Swedia (Swedish). Gunakan bahasa Swedia dengan gaya modern, kasual, dan relevan dengan audiens Skandinavia (Norwegia/Denmark/Swedia).">🇸🇪 Swedish (Skandinavia) | ⏰ Jadwal: 22:00 - 01:00 WIB</option>
               </select>
             </div>
-            <p style={{ color: '#94a3b8', fontSize: '12px', marginTop: '4px' }}>*AI akan otomatis menyesuaikan slang, gaya bahasa, dan ejaan sesuai dengan negara yang dipilih.</p>
+            <p style={{ color: '#94a3b8', fontSize: '12px', marginTop: '8px', textAlign: 'center' }}>
+              *AI akan otomatis menyesuaikan slang, gaya bahasa, dan ejaan sesuai negara yang dipilih.
+            </p>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+
+          {/* GRID NICHE (VERSI RESPONSIVE HP) */}
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', 
+            gap: '12px',
+            width: '100%',
+            boxSizing: 'border-box',
+            padding: '0 10px'
+          }}>
             {niches.map((niche, idx) => (
-              <div key={idx} className="niche-card" onClick={() => handleSelectNicheAndGenerate(niche.name)}>
-                <div style={{ fontSize: '40px', marginBottom: '12px' }}>{niche.icon}</div>
-                <h3 style={{ color: '#e2e8f0', fontSize: '16px', margin: '0 0 8px 0' }}>{niche.name}</h3>
-                <p style={{ color: '#64748b', fontSize: '12px', margin: '0', lineHeight: '1.4' }}>{niche.desc}</p>
+              <div key={idx} className="niche-card" onClick={() => handleSelectNicheAndGenerate(niche.name)} style={{
+                background: '#1e293b', padding: '16px', borderRadius: '12px', border: '1px solid #334155', cursor: 'pointer', textAlign: 'center'
+              }}>
+                <div style={{ fontSize: '35px', marginBottom: '8px' }}>{niche.icon}</div>
+                <h3 style={{ color: '#e2e8f0', fontSize: '14px', margin: '0 0 8px 0', fontWeight: 'bold' }}>{niche.name}</h3>
+                <p style={{ color: '#64748b', fontSize: '11px', margin: '0', lineHeight: '1.4' }}>{niche.desc}</p>
               </div>
             ))}
-          </div>
         </div>
-      )}
-
+    </div>
+  )}
       {/* EFEK LOADING AWAL MENCARI IDE */}
       {opportunityLoading && (
         <div className="card" style={{ border: '1px solid #3b82f6', background: '#0f172a', textAlign: 'center', padding: '40px 20px' }}>
