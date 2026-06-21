@@ -46,4 +46,60 @@ export default function PortfolioPage() {
           <div style={{ background: '#0f172a', border: '1px solid #334155', padding: '24px', borderRadius: '12px', transition: 'transform 0.2s', cursor: 'default' }}>
             <h4 style={{ color: '#38bdf8', fontSize: '18px', marginTop: 0 }}>🏠 1. Dasbor (Pusat Kendali)</h4>
             <ul style={{ color: '#cbd5e1', lineHeight: '1.6', fontSize: '14px', paddingLeft: '20px' }}>
-              <li><strong>Live
+              <li><strong>Live Tracking:</strong> Pantau views, likes, dan status video secara real-time.</li>
+              <li><strong>Clean UI:</strong> Antarmuka modern yang membuat data analitik mudah dibaca dalam 3 detik pertama.</li>
+            </ul>
+          </div>
+
+          {/* Feature 2 */}
+          <div style={{ background: '#0f172a', border: '1px solid #3b82f6', padding: '24px', borderRadius: '12px', boxShadow: '0 0 15px rgba(59, 130, 246, 0.1)' }}>
+            <h4 style={{ color: '#60a5fa', fontSize: '18px', marginTop: 0 }}>🔥 2. Optimasi (Mesin SEO AI)</h4>
+            <ul style={{ color: '#cbd5e1', lineHeight: '1.6', fontSize: '14px', paddingLeft: '20px' }}>
+              <li><strong>AI Title Generator:</strong> 5 rekomendasi judul viral dengan Skor SEO realistis.</li>
+              <li><strong>Smart Description:</strong> Draf deskripsi otomatis yang natural dan kaya keyword (tanpa hashtag spam).</li>
+              <li><strong>Interactive Tags:</strong> Sistem hashtag interaktif ala vidIQ dengan lencana skor.</li>
+              <li><strong>Magic '1-Click Sync':</strong> Terapkan perubahan langsung ke YouTube Studio tanpa buka tab baru.</li>
+            </ul>
+          </div>
+
+          {/* Feature 3 */}
+          <div style={{ background: '#0f172a', border: '1px solid #334155', padding: '24px', borderRadius: '12px' }}>
+            <h4 style={{ color: '#a78bfa', fontSize: '18px', marginTop: 0 }}>📈 3. Riset (Radar Kompetitor)</h4>
+            <ul style={{ color: '#cbd5e1', lineHeight: '1.6', fontSize: '14px', paddingLeft: '20px' }}>
+              <li>Temukan celah konten yang sedang naik daun sebelum kompetitor menyadarinya.</li>
+              <li>Analisa tren pencarian sehingga konten yang diproduksi pasti ada pasarnya.</li>
+            </ul>
+          </div>
+
+          {/* Feature 4 */}
+          <div style={{ background: '#0f172a', border: '1px solid #334155', padding: '24px', borderRadius: '12px' }}>
+            <h4 style={{ color: '#f472b6', fontSize: '18px', marginTop: 0 }}>🎬 4. Sutradara (Pabrik Konten)</h4>
+            <ul style={{ color: '#cbd5e1', lineHeight: '1.6', fontSize: '14px', paddingLeft: '20px' }}>
+              <li>Penyusunan kerangka storyboard dan panduan B-roll otomatis.</li>
+              <li>Pembuatan skrip dinamis yang menyesuaikan dengan gaya audiens masa kini (Gaming, Review, dll).</li>
+            </ul>
+          </div>
+
+          {/* Feature 5 */}
+          <div style={{ background: '#0f172a', border: '1px solid #334155', padding: '24px', borderRadius: '12px' }}>
+            <h4 style={{ color: '#34d399', fontSize: '18px', marginTop: 0 }}>🧠 5. Lab (Ruang Inovasi)</h4>
+            <ul style={{ color: '#cbd5e1', lineHeight: '1.6', fontSize: '14px', paddingLeft: '20px' }}>
+              <li>Dapur uji coba untuk integrasi API E-Commerce masa depan (Shopee/TikTok).</li>
+              <li>Riset produk potensial untuk konten UGC dan Affiliate Marketing.</li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+
+      {/* --- TECH STACK SECTION --- */}
+      <div style={{ background: '#020617', border: '1px solid #1e293b', padding: '30px', borderRadius: '12px', textAlign: 'center' }}>
+        <h3 style={{ color: '#f8fafc', margin: '0 0 16px 0', fontSize: '20px' }}>⚙️ Teknologi di Balik Layar</h3>
+        <p style={{ color: '#94a3b8', fontSize: '15px', marginBottom: 0 }}>
+          Dibangun menggunakan arsitektur modern: <strong>Next.js & React</strong> untuk frontend super responsif, terintegrasi dengan <strong>Google Gemini AI</strong> untuk pemrosesan teks tingkat pakar, serta sinkronisasi aman via <strong>YouTube Data API v3</strong>.
+        </p>
+      </div>
+
+    </div>
+  );
+}
