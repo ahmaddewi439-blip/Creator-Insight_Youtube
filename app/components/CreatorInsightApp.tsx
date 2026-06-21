@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { LineChart, Line, XAxis, Tooltip, ResponsiveContainer } from 'recharts';
-type TabId = "overview" | "optimizer" | "competitors" | "roblox" | "reports" | "opportunity";
+type TabId = "overview" | "optimizer" | "competitors" | "roblox" | "reports" | "opportunity" | "portfolio";
 
 type ApiState<T> = {
   loading: boolean;
@@ -18,6 +18,7 @@ const tabs: { id: TabId; label: string; icon: string }[] = [
     { id: "competitors", label: "Riset", icon: "📈" },
     { id: "roblox", label: "Sutradara", icon: "🎬" },
     { id: "opportunity", label: "Lab", icon: "🧠" }
+    { id: "portfolio", label: "Portofolio", icon: "📂" },
   ];
 function compact(value?: string | number) {
   const n = typeof value === "string" ? Number(value) : value || 0;
