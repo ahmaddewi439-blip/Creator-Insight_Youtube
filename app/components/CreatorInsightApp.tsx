@@ -201,17 +201,26 @@ export default function CreatorInsightApp() {
   // -----------------------------------
   // --- STATE UNTUK GOOGLE TRENDS ASLI ---
   const [trendQuery, setTrendQuery] = useState("roblox");
-  const [trendData, setTrendData] = useState<any[]>([]);
+  const [trendData, setTrendData] = useState<any>(null);
   const [topKeywords, setTopKeywords] = useState<any[]>([]);
   const [loadingTrends, setLoadingTrends] = useState(false);
 
-  async function fetchTrends() {
+ async function fetchTrends() {
+    if (!trendQuery) return;
     setLoadingTrends(true);
     try {
-      const res = await fetch(`/api/youtube/trends?q=${trendQuery}`);
+      const res = await fetch('/api/youtube/google-trends', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ topic: trendQuery })
+      });
       const data = await res.json();
-      setTrendData(data.timelineData || []); // Data Grafik
-      setTopKeywords(data.topKeywords || []); // Data Kata Kunci
+      
+      if (data.success) {
+        setTrendData(data.result);
+      } else {
+        alert("Gagal menganalisis SEO. Coba lagi.");
+      }
     } catch (e) {
       console.error(e);
     }
@@ -960,30 +969,53 @@ function renderCompetitors() {
             </button>
           </div>
 
-          {trendData.length > 0 && (
-            <div style={{ background: '#0f172a', padding: '20px', borderRadius: '12px', border: '1px solid #334155' }}>
-              <h3 style={{ color: '#60a5fa', marginBottom: '16px', fontSize: '16px' }}>Fluktuasi Pencarian 30 Hari Terakhir: "{trendQuery}"</h3>
-              
-              {/* AREA GRAFIK NAIK TURUN VIDIQ */}
-              <div style={{ height: 280, width: '100%', marginBottom: '20px' }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={trendData}>
-                    <XAxis dataKey="date" stroke="#cbd5e1" fontSize={11} />
-                    <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #3b82f6', color: 'white', borderRadius: '8px' }} />
-                    <Line type="monotone" dataKey="score" stroke="#10b981" strokeWidth={4} dot={{ r: 2, fill: '#10b981' }} activeDot={{ r: 8, fill: '#34d399' }} />
-                  </LineChart>
-                </ResponsiveContainer>
+         {/* AREA HASIL SCORECARD PREMIUM (PENGGANTI GRAFIK LAMA) */}
+          {trendData && trendData.score && (
+            <div style={{ background: '#1e293b', padding: '24px', borderRadius: '16px', border: '1px solid #3b82f6', marginTop: '24px' }}>
+              <h3 style={{ color: '#f8fafc', marginBottom: '20px', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                📊 Laporan Pakar SEO untuk: <span style={{ color: '#60a5fa' }}>"{trendQuery}"</span>
+              </h3>
+
+              {/* Grid 3 Kolom Indikator */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+                
+                {/* Skor Peluang */}
+                <div style={{ background: '#0f172a', padding: '20px', borderRadius: '12px', borderLeft: `4px solid ${trendData.score >= 70 ? '#22c55e' : trendData.score >= 50 ? '#eab308' : '#ef4444'}`, textAlign: 'center' }}>
+                  <p style={{ color: '#94a3b8', fontSize: '13px', margin: '0 0 8px 0' }}>🔥 Skor Peluang</p>
+                  <h4 style={{ color: trendData.score >= 70 ? '#22c55e' : trendData.score >= 50 ? '#eab308' : '#ef4444', fontSize: '36px', margin: '0', fontWeight: 'bold' }}>{trendData.score}/100</h4>
+                </div>
+
+                {/* Volume Pencarian */}
+                <div style={{ background: '#0f172a', padding: '20px', borderRadius: '12px', border: '1px solid #334155', textAlign: 'center' }}>
+                  <p style={{ color: '#94a3b8', fontSize: '13px', margin: '0 0 8px 0' }}>📈 Volume Pencarian</p>
+                  <h4 style={{ color: '#3b82f6', fontSize: '22px', margin: '0', fontWeight: 'bold', marginTop: '10px' }}>{trendData.volume}</h4>
+                </div>
+
+                {/* Tingkat Persaingan */}
+                <div style={{ background: '#0f172a', padding: '20px', borderRadius: '12px', border: '1px solid #334155', textAlign: 'center' }}>
+                  <p style={{ color: '#94a3b8', fontSize: '13px', margin: '0 0 8px 0' }}>⚔️ Persaingan</p>
+                  <h4 style={{ color: trendData.competition?.toLowerCase() === 'rendah' ? '#22c55e' : trendData.competition?.toLowerCase() === 'sedang' ? '#eab308' : '#ef4444', fontSize: '22px', margin: '0', fontWeight: 'bold', marginTop: '10px' }}>{trendData.competition}</h4>
+                </div>
               </div>
-              
-              <h4 style={{ color: '#94a3b8', marginBottom: '10px', fontSize: '14px' }}>🔥 Top Keywords Terkait (Paling Banyak Dicari):</h4>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                {topKeywords.map((item, idx) => (
-                  <span key={idx} style={{ background: '#1e293b', color: '#f8fafc', padding: '8px 14px', borderRadius: '20px', fontSize: '13px', border: '1px solid #334155', display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    {item.keyword} <strong style={{ color: '#10b981', background: '#064e3b', padding: '2px 6px', borderRadius: '4px' }}>Skor: {item.score}</strong>
-                  </span>
-                ))}
-                {topKeywords.length === 0 && <span style={{color: '#64748b'}}>Tidak ada data keyword terkait yang cukup.</span>}
+
+              {/* Analisis Algoritma */}
+              <div style={{ background: '#0f172a', padding: '16px', borderRadius: '12px', border: '1px solid #334155', marginBottom: '24px' }}>
+                <p style={{ color: '#fbbf24', fontSize: '14px', margin: '0 0 8px 0', fontWeight: 'bold' }}>💡 Analisis Algoritma YouTube:</p>
+                <p style={{ color: '#cbd5e1', fontSize: '14px', margin: '0', lineHeight: '1.6' }}>{trendData.reason}</p>
               </div>
+
+              {/* Keyword Turunan */}
+              <div>
+                <p style={{ color: '#f8fafc', fontSize: '14px', margin: '0 0 12px 0', fontWeight: 'bold' }}>🎯 Rekomendasi Topik Turunan (Rendah Persaingan):</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {trendData.relatedKeywords?.map((kw: string, idx: number) => (
+                    <span key={idx} style={{ background: '#1e293b', border: '1px solid #475569', color: '#e2e8f0', padding: '8px 14px', borderRadius: '20px', fontSize: '13px' }}>
+                      🔍 {kw}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
             </div>
           )}
         </div>
