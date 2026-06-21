@@ -150,7 +150,7 @@ export default function CreatorInsightApp() {
   const [selectedAngle, setSelectedAngle] = useState<any>(null);
 
   // --- FUNGSI AI PEMBEDAH PELUANG ANGLE ---
-  const handleAnalyzeAngles = async () => {
+const handleAnalyzeAngles = async () => {
     if (!directorTopic) {
       alert("Tolong ketik topik spesifiknya dulu di atas!");
       return;
@@ -159,19 +159,23 @@ export default function CreatorInsightApp() {
     setDirectorAngles([]);
     setSelectedAngle(null);
     try {
+      // Pastikan alamat ini sama persis dengan susunan folder Anda di VS Code
       const res = await fetch('/api/ai/director-angles', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ niche: directorNiche, topic: directorTopic })
       });
+      
       const data = await res.json();
+      
       if (data.success) {
         setDirectorAngles(data.result);
       } else {
-        alert("Gagal membedah peluang. Coba lagi.");
+        alert("Gagal membedah peluang dari AI: " + (data.error || "Coba lagi."));
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
+      alert("Gagal menghubungi server! Cek apakah folder API-nya sudah benar. Error: " + error.message);
     }
     setAnalyzingAngles(false);
   };
