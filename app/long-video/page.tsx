@@ -49,7 +49,7 @@ export default function LongVideoPage() {
   const handleCopyAll = () => {
     if (!scriptData) return;
     let fullText = `JUDUL: ${scriptData.title}\nDESKRIPSI: ${scriptData.description}\nTAGS: ${scriptData.tags}\n\n=== NASKAH VIDEO ===\n\n`;
-    scriptData.scenes.forEach((s, i) => {
+    scriptData.scenes.forEach((s: any, i: number) => {
       fullText += `SCENE ${i + 1} [${s.waktu}]\n🎥 VISUAL: ${s.visual}\n🎙️ VO: ${s.vo}\n🎨 PROMPT AI: ${s.prompt}\n\n`;
     });
     navigator.clipboard.writeText(fullText);
@@ -144,7 +144,7 @@ export default function LongVideoPage() {
             <h3 style={{ color: '#f8fafc', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>🎞️ Timeline Director (Scene-by-Scene)</h3>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              {scriptData.scenes.map((scene, idx) => (
+              {scriptData.scenes.map((scene: any, idx: number) => (
                 <div key={idx} style={{ background: '#020617', borderRadius: '16px', border: '1px solid #334155', overflow: 'hidden' }}>
                   
                   {/* Scene Header */}
