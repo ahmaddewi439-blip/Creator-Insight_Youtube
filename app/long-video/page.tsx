@@ -144,7 +144,7 @@ export default function LongVideoPage() {
             <h3 style={{ color: '#f8fafc', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>🎞️ Timeline Director (Scene-by-Scene)</h3>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              {scriptData.scenes.map((scene: any, idx: number) => (
+              {scriptData.scenes.map((scene, idx) => (
                 <div key={idx} style={{ background: '#020617', borderRadius: '16px', border: '1px solid #334155', overflow: 'hidden' }}>
                   
                   {/* Scene Header */}
@@ -158,18 +158,28 @@ export default function LongVideoPage() {
                     {/* Kolom Visual & Prompt */}
                     <div>
                       <div style={{ marginBottom: '16px' }}>
-                        <strong style={{ color: '#94a3b8', display: 'block', fontSize: '13px', marginBottom: '6px' }}>🎥 VISUAL B-ROLL:</strong>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                          <strong style={{ color: '#94a3b8', fontSize: '13px' }}>🎥 VISUAL B-ROLL:</strong>
+                          <button onClick={() => { navigator.clipboard.writeText(scene.visual); alert("Visual disalin!"); }} style={{ background: 'transparent', border: '1px solid #3b82f6', color: '#60a5fa', borderRadius: '4px', padding: '4px 10px', fontSize: '11px', cursor: 'pointer', fontWeight: 'bold' }}>Copy</button>
+                        </div>
                         <p style={{ margin: 0, color: '#f8fafc', fontSize: '14px', lineHeight: '1.5' }}>{scene.visual}</p>
                       </div>
+                      
                       <div style={{ background: '#0f172a', padding: '12px', borderRadius: '8px', borderLeft: '3px solid #c084fc' }}>
-                        <strong style={{ color: '#c084fc', display: 'block', fontSize: '12px', marginBottom: '6px' }}>🎨 AI IMAGE PROMPT (Inggris):</strong>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                          <strong style={{ color: '#c084fc', fontSize: '12px' }}>🎨 AI IMAGE PROMPT (Inggris):</strong>
+                          <button onClick={() => { navigator.clipboard.writeText(scene.prompt); alert("Prompt disalin!"); }} style={{ background: '#3b0764', border: 'none', color: '#d8b4fe', borderRadius: '4px', padding: '4px 10px', fontSize: '11px', cursor: 'pointer', fontWeight: 'bold' }}>Copy</button>
+                        </div>
                         <code style={{ color: '#e2e8f0', fontSize: '13px', display: 'block', whiteSpace: 'pre-wrap' }}>{scene.prompt}</code>
                       </div>
                     </div>
 
                     {/* Kolom Voice Over */}
                     <div style={{ background: '#1e293b', padding: '20px', borderRadius: '12px', borderLeft: '4px solid #10b981' }}>
-                      <strong style={{ color: '#34d399', display: 'block', fontSize: '13px', marginBottom: '12px' }}>🎙️ SCRIPT VOICE OVER ({language}):</strong>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                        <strong style={{ color: '#34d399', fontSize: '13px' }}>🎙️ SCRIPT VOICE OVER:</strong>
+                        <button onClick={() => { navigator.clipboard.writeText(scene.vo); alert("VO disalin!"); }} style={{ background: 'transparent', border: '1px solid #10b981', color: '#34d399', borderRadius: '4px', padding: '4px 10px', fontSize: '11px', cursor: 'pointer', fontWeight: 'bold' }}>Copy</button>
+                      </div>
                       <p style={{ margin: 0, color: '#f8fafc', fontSize: '16px', fontStyle: 'italic', lineHeight: '1.6' }}>"{scene.vo}"</p>
                     </div>
 

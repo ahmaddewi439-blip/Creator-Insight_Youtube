@@ -19,14 +19,20 @@ export async function POST(req: Request) {
     baseUrl = baseUrl.replace(/\/+$/, "");
     const endpoint = baseUrl.endsWith("/chat/completions") ? baseUrl : `${baseUrl}/chat/completions`;
 
-    const prompt = `Anda adalah Sutradara & Pakar Naskah YouTube kelas dunia spesialis Faceless Channel.
+    const prompt = `Anda adalah Sutradara & Penulis Naskah YouTube kelas dunia spesialis Faceless Channel.
 Klien meminta naskah video panjang (Long Form).
 Niche: "${niche}"
 Topik: "${topic}"
 Durasi Target: "${duration}"
 Bahasa Voice Over (Narasi): "${language}"
 
-Tugas Anda: Buat naskah YouTube yang sangat detail, memikat, dengan retensi tinggi.
+ATURAN WAKTU DAN JUMLAH KATA SANGAT KETAT (SYARAT MUTLAK):
+1. Pecah total durasi "${duration}" tersebut menjadi adegan-adegan (scenes).
+2. SETIAP SCENE HARUS BERDURASI TEPAT 30 DETIK. (Contoh format wajib: "00:00 - 00:30", "00:30 - 01:00", "01:00 - 01:30", dst).
+3. SYARAT MUTLAK VOICE OVER (VO): Kecepatan bicara manusia normal adalah 2.5 kata per detik. Oleh karena itu, teks VO UNTUK SETIAP SCENE 30 DETIK WAJIB BERJUMLAH TEPAT 65 HINGGA 75 KATA.
+4. JANGAN KURANG DARI 65 KATA, JANGAN LEBIH DARI 75 KATA PER SCENE! Hitung manual jumlah kata Anda sebelum menuliskannya. Jika kurang, akan ada *dead air* (hening) di video. Jika lebih, naskah tidak akan muat di durasi 30 detik tersebut.
+5. Visual B-Roll harus mendeskripsikan secara sangat detail apa yang muncul di layar selama 30 detik tersebut.
+
 Berikan hasil DALAM FORMAT JSON MURNI (Object) dengan struktur persis seperti ini:
 {
   "title": "Judul Video yang sangat Clickbait dan SEO Friendly",
@@ -34,18 +40,14 @@ Berikan hasil DALAM FORMAT JSON MURNI (Object) dengan struktur persis seperti in
   "tags": "tag1, tag2, keyword3, viral4",
   "scenes": [
     {
-      "waktu": "00:00 - 01:30 (Contoh Timestamp)",
-      "visual": "Deskripsi sedetail mungkin tentang video B-roll / gambar apa yang harus muncul di layar.",
-      "vo": "Teks Voice Over (Narasi/Bicara) menggunakan bahasa ${language}. Gunakan gaya bahasa memikat.",
-      "prompt": "Prompt Midjourney/AI Image BERBAHASA INGGRIS untuk menghasilkan gambar adegan ini."
+      "waktu": "00:00 - 00:30",
+      "visual": "Deskripsi B-roll / visual sangat detail...",
+      "vo": "Teks Voice Over (wajib 65 - 75 kata) menggunakan bahasa ${language}.",
+      "prompt": "Prompt Midjourney/AI Image BERBAHASA INGGRIS untuk adegan ini."
     }
   ]
 }
-PENTING: 
-1. Buat minimal 5-8 scene yang padat agar sesuai durasi ${duration}.
-2. Pastikan bahasa VO benar-benar menggunakan ${language}.
-3. JANGAN gunakan format markdown seperti \`\`\`json. HANYA kembalikan JSON murni.`;
-
+JANGAN gunakan format markdown seperti \`\`\`json. HANYA kembalikan JSON murni.`;
     const res = await fetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },

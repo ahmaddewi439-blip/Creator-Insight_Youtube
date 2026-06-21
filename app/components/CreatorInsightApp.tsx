@@ -114,7 +114,7 @@ function LoginScreen() {
         <div>
           <div className="logo" style={{ marginBottom: 18 }}>
             <div className="logo-badge">▶</div>
-            <div>Creator Insight<small>YouTube Analyzer + Roblox Shorts Creator</small></div>
+            <div>Creator Insight<small>YouTube Analyzer</small></div>
           </div>
           <h1>Tool Pribadi Untuk Analisis YouTube dan Membuat Video Shorts Dan Video Long.</h1>
           <p className="muted" style={{ fontSize: 17, lineHeight: 1.6 }}>
