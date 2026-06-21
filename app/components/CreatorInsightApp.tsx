@@ -1050,20 +1050,15 @@ async function fetchCompetitionScore(keyword: string) {
 
         try {
             
-            // 1. Ekstrak ID langsung dari video (Pelacak Super Kuat Anti-Gagal)
-        let vidId = currentVideo?.id?.videoId || 
-                    currentVideo?.snippet?.resourceId?.videoId || 
-                    currentVideo?.contentDetails?.videoId || 
-                    currentVideo?.videoId;
-                    
-        if (!vidId && typeof currentVideo?.id === 'string') {
-            vidId = currentVideo.id;
-        }
+   // 1. Ekstrak ID (Disesuaikan dengan struktur data di web ini)
+        let vidId = currentVideo?.id?.videoId || currentVideo?.id || currentVideo?.videoId;
 
-        // Jurus Rahasia: Kalau API YouTube masih menyembunyikan ID-nya, kita curi paksa dari link Thumbnail-nya!
-        if (!vidId && currentVideo?.snippet?.thumbnails?.default?.url) {
-            const urlMatch = currentVideo.snippet.thumbnails.default.url.match(/\/vi\/([a-zA-Z0-9_-]+)\//);
-            if (urlMatch) vidId = urlMatch[1];
+        // Jurus Rahasia: Ekstrak ID langsung dari properti 'thumbnail' ("https://i.ytimg.com/vi/ID_VIDEO/...")
+        if (!vidId && currentVideo?.thumbnail) {
+            const urlMatch = currentVideo.thumbnail.match(/\/vi\/([a-zA-Z0-9_-]+)\//);
+            if (urlMatch) {
+                vidId = urlMatch[1];
+            }
         }
 
             if (!vidId) {
