@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { LineChart, Line, XAxis, Tooltip, ResponsiveContainer } from 'recharts';
-type TabId = "overview" | "optimizer" | "competitors" | "roblox" | "reports" | "opportunity" | "portfolio";
+type TabId = "overview" | "optimizer" | "competitors" | "roblox" | "reports" | "opportunity" ;
 
 type ApiState<T> = {
   loading: boolean;
@@ -18,7 +18,7 @@ const tabs: { id: TabId; label: string; icon: string }[] = [
     { id: "competitors", label: "Riset", icon: "📈" },
     { id: "roblox", label: "Sutradara", icon: "🎬" },
     { id: "opportunity", label: "Lab", icon: "🧠" }
-    { id: "portfolio", label: "Portofolio", icon: "📂" },
+    
   ];
 function compact(value?: string | number) {
   const n = typeof value === "string" ? Number(value) : value || 0;
@@ -1623,143 +1623,154 @@ function renderCompetitors() {
 } 
 
 // --- KOMPONEN HASIL SEO (DESAIN BARU & ANTI ERROR VERCEL) ---
-function OptimizerResultView({ result, onLivePreview }: { result: any; onLivePreview: (type: string, value: any) => void }) {
-  if (typeof result === "string") return <div className="output" style={{color: 'white'}}>{result}</div>;
+function OptimizerResultView({ result, onLivePreview }: { result: any; onLivePreview: any }) {
+  // 1. STATE LOKAL (Untuk Interaksi ala vidIQ)
+  const [activeTab, setActiveTab] = React.useState('SEO'); // Tab aktif: 'Judul' atau 'SEO'
   
-  const titles = result.recommendedTitles || [];
-  const tags = result.keywords || [];
+  // 2. EKSTRAK DATA JUDUL
+  const rawTitles = Array.isArray(result.recommendedTitles) ? result.recommendedTitles : Array.isArray(result.titles) ? result.titles : [];
+  const aiTitles = rawTitles.map((t: string) => {
+    const cleanTitle = t.replace(/\s*\[Skor SEO:\s*\d+\/100\]/i, '').trim();
+    const scoreMatch = t.match(/\[Skor SEO:\s*(\d+)\/100\]/i);
+    return { title: cleanTitle, score: scoreMatch ? parseInt(scoreMatch[1]) : 0 };
+  });
 
+  // 3. EKSTRAK DATA TAG (Memisahkan Teks dan Angka Skor)
+  const aiTags = result.keywords ? result.keywords.map((kw: string) => {
+    const match = kw.match(/(.*?)\s*\((.*?)\)/);
+    return { tag: match ? match[1].trim() : kw, score: match ? parseInt(match[2]) : 0 };
+  }) : [];
+
+  // 4. STATE "STAGING" (Menampung Pilihan User sebelum di-Save)
+  const [stagedTitle, setStagedTitle] = React.useState(aiTitles.length > 0 ? aiTitles[0].title : "");
+  const [stagedDesc, setStagedDesc] = React.useState(result.description || "");
+  const [stagedTags, setStagedTags] = React.useState<string[]>([]);
+
+  // 5. LOGIKA HASHTAG INTERAKTIF
+  const handleAddTag = (tag: string) => {
+    if (!stagedTags.includes(tag)) setStagedTags([...stagedTags, tag]);
+  };
+  const handleRemoveTag = (tag: string) => {
+    setStagedTags(stagedTags.filter(t => t !== tag));
+  };
+
+  // 6. LOGIKA SIMPAN PERUBAHAN
+  const handleApplyAll = () => {
+    if (stagedTitle) onLivePreview("title", stagedTitle);
+    if (stagedDesc) onLivePreview("description", stagedDesc);
+    if (stagedTags.length > 0) onLivePreview("tags", stagedTags.join(" ")); 
+    alert("Perubahan disiapkan! Silakan klik 'Simpan Perubahan Video' di tabel utama untuk mem-push ke YouTube.");
+  };
+
+  // 7. RENDER TAMPILAN (CLONE VIDIQ)
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+    <div style={{ background: '#0b0f19', borderRadius: '12px', overflow: 'hidden', border: '1px solid #1e293b', color: '#fff', fontFamily: 'sans-serif' }}>
       
-   {/* --- KOTAK JUDUL --- */}
-          <div style={{ background: '#1e293b', padding: '16px', borderRadius: '12px', border: '1px solid #334155' }}>
-            <h3 style={{ margin: '0 0 12px 0', fontSize: '15px', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span>🔥</span> 5 Rekomendasi Judul Viral
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {titles.map((rawTitle, idx) => {
-                // LOGIKA PEMBERSIH: Pisahkan teks judul asli dan angka skornya
-                const cleanTitle = typeof rawTitle === 'string' ? rawTitle.replace(/\s*\[Skor SEO:\s*\d+\/100\]/i, '').trim() : '';
-                const scoreMatch = typeof rawTitle === 'string' ? rawTitle.match(/\[Skor SEO:\s*(\d+)\/100\]/i) : null;
-                const score = scoreMatch ? parseInt(scoreMatch[1]) : 0;
+      {/* TAB NAVIGASI ATAS */}
+      <div style={{ display: 'flex', borderBottom: '1px solid #1e293b', background: '#0f172a' }}>
+        <button 
+          onClick={() => setActiveTab('Judul')}
+          style={{ flex: 1, padding: '16px', background: 'transparent', border: 'none', borderBottom: activeTab === 'Judul' ? '2px solid #3b82f6' : '2px solid transparent', color: activeTab === 'Judul' ? '#3b82f6' : '#94a3b8', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s' }}>
+          Judul
+        </button>
+        <button 
+          onClick={() => setActiveTab('SEO')}
+          style={{ flex: 1, padding: '16px', background: 'transparent', border: 'none', borderBottom: activeTab === 'SEO' ? '2px solid #3b82f6' : '2px solid transparent', color: activeTab === 'SEO' ? '#3b82f6' : '#94a3b8', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s' }}>
+          SEO
+        </button>
+      </div>
 
-                return (
-                <div 
-                  key={idx} 
-                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#0f172a', border: '1px solid #334155', padding: '12px', borderRadius: '8px' }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, paddingRight: '12px' }}>
-                    {/* LENCANA SKOR UI */}
-                    {score > 0 && (
-                      <span style={{ background: score >= 90 ? '#059669' : score >= 80 ? '#d97706' : '#dc2626', color: 'white', padding: '4px 8px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
-                        SEO {score}
-                      </span>
-                    )}
-                    <span style={{ fontSize: '14px', color: '#f8fafc', fontWeight: 'bold', lineHeight: '1.5' }}>
-                      {cleanTitle}
-                    </span>
-                  </div>
-                  
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <button 
-                      onClick={() => onLivePreview("title", cleanTitle)}
-                      style={{ background: '#059669', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px', whiteSpace: 'nowrap' }}
-                    >
-                      🔄 Terapkan
-                    </button>
-                    <button 
-                      onClick={() => { navigator.clipboard.writeText(cleanTitle); alert("Judul bersih disalin!"); }}
-                      style={{ background: '#1e293b', color: '#38bdf8', border: '1px solid #38bdf8', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px', whiteSpace: 'nowrap' }}
-                    >
-                      📋 Copy
-                    </button>
-                  </div>
-                </div>
-              )})}
-            </div>
+      {/* KONTEN TAB: JUDUL */}
+      {activeTab === 'Judul' && (
+        <div style={{ padding: '20px' }}>
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ display: 'block', marginBottom: '8px', color: '#94a3b8', fontSize: '13px', fontWeight: 'bold' }}>Judul Terpilih</label>
+            <textarea 
+              value={stagedTitle} 
+              onChange={(e) => setStagedTitle(e.target.value)}
+              style={{ width: '100%', padding: '12px', borderRadius: '8px', background: '#1e293b', color: '#f8fafc', border: '1px solid #334155', minHeight: '80px', resize: 'none', fontSize: '14px', lineHeight: '1.5' }} 
+            />
           </div>
-
-          {/* --- AREA DRAFT DESKRIPSI SEO --- */}
-          <div style={{ marginTop: '20px' }}>
-            <h4 style={{ color: '#38bdf8', marginBottom: '12px', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span>📝</span> Draft Deskripsi SEO Friendly
-            </h4>
-            <div style={{ background: '#0f172a', padding: '16px', borderRadius: '12px', border: '1px solid #334155' }}>
-              <textarea
-                readOnly
-                value={result.description || "Deskripsi akan muncul di sini..."}
-                style={{ width: '100%', height: '140px', background: 'transparent', color: '#cbd5e1', border: 'none', outline: 'none', resize: 'vertical', fontSize: '14px', lineHeight: '1.6' }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px', gap: '12px' }}>
-                <button 
-                  onClick={() => onLivePreview("description", result.description)}
-                  style={{ background: '#059669', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
-                >
-                  🔄 Terapkan ke Video
-                </button>
-                <button 
-                  onClick={() => { navigator.clipboard.writeText(result.description); alert("Deskripsi disalin!"); }}
-                  style={{ background: '#1e293b', color: '#38bdf8', border: '1px solid #38bdf8', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
-                >
-                  📋 Copy Deskripsi
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* --- AREA REKOMENDASI HASHTAG (GAYA VIDIQ) --- */}
-          <div style={{ marginTop: '20px', marginBottom: '20px' }}>
-            <h4 style={{ color: '#10b981', marginBottom: '12px', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span>🏷️</span> Rekomendasi Hashtag Viral (Berdasarkan Skor)
-            </h4>
-            <div style={{ background: '#0f172a', padding: '16px', borderRadius: '12px', border: '1px solid #334155' }}>
-              
-              {/* Tampilan Kotak Hashtag */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
-                {(result.keywords || []).map((kw: string, i: number) => {
-                  const tagMatch = kw.match(/(.*?)\s*\((.*?)\)/);
-                  const tag = tagMatch ? tagMatch[1].trim() : kw;
-                  const score = tagMatch ? parseInt(tagMatch[2]) : 0;
-                  
-                  return (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', background: '#1e293b', borderRadius: '6px', overflow: 'hidden', border: '1px solid #334155' }}>
-                      <span style={{ padding: '6px 10px', color: '#cbd5e1', fontSize: '13px' }}>{tag}</span>
-                      {score > 0 && (
-                        <span style={{ background: score >= 90 ? '#059669' : score >= 80 ? '#d97706' : '#dc2626', color: 'white', padding: '6px 8px', fontSize: '11px', fontWeight: 'bold', borderLeft: '1px solid #334155' }}>
-                          {score}
-                        </span>
-                      )}
+          <h4 style={{ color: '#f8fafc', marginBottom: '12px', fontSize: '14px' }}>Judul yang Disarankan</h4>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {aiTitles.map((item: any, idx: number) => (
+              <div 
+                key={idx} 
+                onClick={() => setStagedTitle(item.title)} 
+                style={{ background: '#1e293b', padding: '16px', borderRadius: '8px', display: 'flex', gap: '12px', cursor: 'pointer', border: stagedTitle === item.title ? '1px solid #3b82f6' : '1px solid #334155', transition: '0.2s' }}
+              >
+                 {item.score > 0 && (
+                    <div style={{ background: '#3b82f6', color: '#fff', padding: '4px 8px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold', height: 'fit-content', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <span>🚀</span>{item.score}
                     </div>
-                  );
-                })}
+                 )}
+                 <div style={{ color: '#cbd5e1', fontSize: '14px', lineHeight: '1.5' }}>{item.title}</div>
               </div>
+            ))}
+          </div>
+        </div>
+      )}
 
-              {/* Tombol Aksi Hashtag */}
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', borderTop: '1px solid #334155', paddingTop: '16px' }}>
-                <button 
-                  onClick={() => {
-                    const cleanTags = (result.keywords || []).map((kw: string) => kw.replace(/\s*\(\d+\)/g, '').trim()).join(" ");
-                    onLivePreview("tags", cleanTags);
-                  }}
-                  style={{ background: '#059669', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', whiteSpace: 'nowrap' }}
-                >
-                  🔄 Terapkan Semua Bersih
-                </button>
-                <button 
-                  onClick={() => { 
-                    const cleanTags = (result.keywords || []).map((kw: string) => kw.replace(/\s*\(\d+\)/g, '').trim()).join(" ");
-                    navigator.clipboard.writeText(cleanTags); 
-                    alert("Hashtag bersih disalin!"); 
-                  }}
-                  style={{ background: '#10b981', color: '#022c22', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', whiteSpace: 'nowrap' }}
-                >
-                  📋 Copy Bersih
-                </button>
-              </div>
+      {/* KONTEN TAB: SEO (Deskripsi & Tag) */}
+      {activeTab === 'SEO' && (
+        <div style={{ padding: '20px' }}>
+          
+          {/* Section: Deskripsi */}
+          <div style={{ marginBottom: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+               <label style={{ color: '#f8fafc', fontWeight: 'bold', fontSize: '16px' }}>Deskripsi</label>
+               <button style={{ background: '#334155', color: '#cbd5e1', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', cursor: 'pointer', fontWeight: 'bold' }}>Generate</button>
+            </div>
+            <textarea 
+              value={stagedDesc} 
+              onChange={(e) => setStagedDesc(e.target.value)}
+              style={{ width: '100%', padding: '16px', borderRadius: '8px', background: '#1e293b', color: '#cbd5e1', border: '1px solid #334155', minHeight: '150px', resize: 'vertical', lineHeight: '1.6', fontSize: '14px' }} 
+            />
+          </div>
+
+          {/* Section: Tags Area (Interaktif ala vidIQ) */}
+          <div>
+            <label style={{ display: 'block', color: '#f8fafc', fontWeight: 'bold', fontSize: '16px', marginBottom: '12px' }}>Tag</label>
+            
+            {/* Kotak Tag Terpilih */}
+            <div style={{ background: '#1e293b', padding: '16px', borderRadius: '8px', border: '1px solid #334155', minHeight: '60px', display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '20px' }}>
+               {stagedTags.length === 0 && <span style={{ color: '#64748b', fontSize: '14px', fontStyle: 'italic' }}>Tambah Tag dari rekomendasi di bawah...</span>}
+               {stagedTags.map((tag, i) => (
+                  <div key={i} onClick={() => handleRemoveTag(tag)} style={{ background: '#334155', border: '1px solid #475569', borderRadius: '20px', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', transition: '0.2s' }}>
+                     <span style={{ color: '#f8fafc', fontSize: '13px' }}>{tag}</span>
+                     <span style={{ color: '#94a3b8', fontSize: '16px', lineHeight: 1 }}>×</span>
+                  </div>
+               ))}
+            </div>
+
+            {/* Kotak Tag Rekomendasi */}
+            <label style={{ display: 'block', color: '#f8fafc', fontWeight: 'bold', fontSize: '15px', marginBottom: '12px' }}>Direkomendasikan</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+               {aiTags.filter((t: any) => !stagedTags.includes(t.tag)).map((t: any, i: number) => (
+                  <div 
+                    key={i} 
+                    onClick={() => handleAddTag(t.tag)} 
+                    style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '20px', padding: '4px 12px 4px 4px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', transition: '0.2s' }}
+                  >
+                     <span style={{ color: '#eab308', fontWeight: 'bold', fontSize: '12px', background: '#422006', padding: '4px 8px', borderRadius: '16px' }}>{t.score}</span>
+                     <span style={{ color: '#cbd5e1', fontSize: '13px' }}>{t.tag}</span>
+                     <span style={{ color: '#94a3b8', fontSize: '16px', lineHeight: 1 }}>+</span>
+                  </div>
+               ))}
             </div>
           </div>
-          
+        </div>
+      )}
+
+      {/* BOTTOM BAR: TOMBOL SIMPAN (Sticky ala vidIQ) */}
+      <div style={{ padding: '16px 20px', background: '#0f172a', borderTop: '1px solid #1e293b' }}>
+        <button 
+          onClick={handleApplyAll}
+          style={{ width: '100%', background: '#2563eb', color: '#fff', border: 'none', padding: '14px', borderRadius: '8px', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer', transition: '0.2s' }}>
+          Simpan perubahan Anda
+        </button>
+      </div>
+
     </div>
   );
 }

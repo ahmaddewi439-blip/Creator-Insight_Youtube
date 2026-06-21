@@ -30,12 +30,15 @@ Judul: "${originalTitle}"
 Deskripsi: "${originalDesc.substring(0, 500)}"
 Bahasa Target: ${targetLanguage || "English"}
 
-ATURAN KETAT ANALISA SKOR (WAJIB DIIKUTI):
-1. 'recommendedTitles': Buat TEPAT 5 pilihan judul clickbait namun SEO-friendly. SETIAP JUDUL WAJIB diberi skor di bagian AKHIR judul. SKOR HARUS REALISTIS hasil dari analisa Anda terhadap potensi klik dan pencarian. JANGAN berikan nilai palsu atau menyalin dari contoh!
-2. 'description': Buat naskah deskripsi YouTube yang panjang, profesional, dan kaya akan keyword SEO.
-3. 'keywords': Buat array yang berisi daftar minimal 15 hashtag. WAJIB diurutkan dari skor SEO tertinggi hingga terendah. SKOR HARUS REALISTIS berdasarkan persaingan keyword di YouTube. WAJIB cantumkan skornya di samping hashtag.
+ATURAN KETAT ANALISA & PENULISAN (WAJIB DIIKUTI):
+1. 'recommendedTitles': Buat TEPAT 5 pilihan judul clickbait namun SEO-friendly. SETIAP JUDUL WAJIB diberi skor di bagian AKHIR judul (contoh: "Judul Video [Skor SEO: 95/100]"). SKOR HARUS REALISTIS hasil analisa potensi klik.
+2. 'description': Buat naskah deskripsi YouTube yang memikat dan profesional. 
+   - WAJIB memasukkan "Kata Kunci (Keywords)" yang sangat relevan dengan video/judul.
+   - Kata kunci harus menyatu secara natural di dalam struktur paragraf (seperti gaya bahasa manusia, bukan mesin).
+   - DILARANG KERAS MENULISKAN HASHTAG (#) APAPUN DI DALAM DESKRIPSI INI! (Karena hashtag akan diurus di bagian terpisah).
+3. 'keywords': Buat array yang berisi daftar minimal 15 hashtag. WAJIB diurutkan dari skor SEO tertinggi hingga terendah. WAJIB cantumkan skornya di samping hashtag (contoh: "#roblox (99)").
 
-Berikan hasil DALAM FORMAT JSON MURNI (Object) dengan struktur persis seperti ini (Ganti "XX" dengan ANGKA SKOR ASLI hasil analisa Anda):
+Berikan hasil DALAM FORMAT JSON MURNI (Object) dengan struktur persis seperti ini (Ganti "XX" dengan ANGKA SKOR ASLI):
 {
   "recommendedTitles": [
     "Ketik Judul Pilihan Pertama Di Sini [Skor SEO: XX/100]",
@@ -44,7 +47,7 @@ Berikan hasil DALAM FORMAT JSON MURNI (Object) dengan struktur persis seperti in
     "Ketik Judul Pilihan Keempat Di Sini [Skor SEO: XX/100]",
     "Ketik Judul Pilihan Kelima Di Sini [Skor SEO: XX/100]"
   ],
-  "description": "Tulis deskripsi video yang lengkap dan SEO friendly di sini...",
+  "description": "Tulis deskripsi yang kaya akan KATA KUNCI natural di sini, TANPA ADA SATU PUN HASHTAG (#)...",
   "keywords": [
     "#keywordTerbaik (XX)",
     "#keywordKedua (XX)",
