@@ -176,7 +176,8 @@ export default function CreatorInsightApp() {
   const [activeDailyTab, setActiveDailyTab] = useState<number>(0);
   const [opportunityLoading, setOpportunityLoading] = useState(false);
   const [opportunityResults, setOpportunityResults] = useLocalStorage<any[]>("simpanan_hasil_ai", []);
-
+  const [directorNiche, setDirectorNiche] = useState("Gaming / E-sports");
+  const [directorTopic, setDirectorTopic] = useState("");
   // TAMBAHKAN KODE INI UNTUK EFEK VIDIQ:
   const [expandedIdea, setExpandedIdea] = useLocalStorage<number | null>("simpanan_ide_terbuka", null);
   const [scriptLoadingStep, setScriptLoadingStep] = useState<number>(0);
@@ -758,29 +759,114 @@ async function fetchCompetitionScore(keyword: string) {
   }
 
 function renderSutradara() {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+  const niches = [
+    { name: 'Gaming / E-sports', icon: '🎮' },
+    { name: 'Finance & Crypto', icon: '💰' },
+    { name: 'Science & Tech', icon: '🔭' },
+    { name: 'Travel & Events', icon: '🌍' },
+    { name: 'Health & Fitness', icon: '🏋️' },
+    { name: 'Pets & Animals', icon: '🐾' },
+    { name: 'Education & Facts', icon: '📚' },
+    { name: 'Entertainment', icon: '🎭' },
+    { name: 'Food & Cooking', icon: '🍔' },
+    { name: 'Beauty & Fashion', icon: '💄' },
+    { name: 'Lifestyle & Motivation', icon: '✨' },
+    { name: 'Sports & Outdoors', icon: '⚽' },
+    { name: 'Music & Dance', icon: '🎵' },
+    { name: 'DIY & Crafts', icon: '🛠️' },
+    { name: 'Automotive', icon: '🚗' },
+    { name: 'News & Politics', icon: '📰' }
+  ];
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+      
+      {/* 🎯 STEP 1: DASHBOARD INPUT TARGETING */}
+      <div style={{ background: '#1e293b', padding: '24px', borderRadius: '16px', border: '1px solid #3b82f6', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
+        <h2 style={{ color: '#f8fafc', fontSize: '20px', margin: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          🎯 Konfigurasi Mesin Konten
+        </h2>
+        <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '24px' }}>
+          Pilih niche dan ketik topik spesifik. AI akan merancang naskah dan prompt gambar yang 100% akurat sesuai arahan ini.
+        </p>
         
-        {/* Panggil Tampilan PRO MAX di atas */}
-        {renderSutradaraProMax()}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div>
+            <label style={{ color: '#fbbf24', fontSize: '14px', fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>1. Pilih Niche Utama:</label>
+            <select 
+              value={directorNiche}
+              onChange={(e) => setDirectorNiche(e.target.value)}
+              style={{ width: '100%', padding: '14px 16px', borderRadius: '10px', background: '#0f172a', color: 'white', border: '1px solid #475569', outline: 'none', fontSize: '14px', cursor: 'pointer' }}
+            >
+              {/* Mengambil otomatis dari daftar 16 Niche yang sudah kita buat sebelumnya */}
+              {niches.map((niche: any, idx: number) => (
+                <option key={idx} value={niche.name}>{niche.icon} {niche.name}</option>
+              ))}
+            </select>
+          </div>
 
-        <section className="grid" style={{ gridTemplateColumns: "1fr" }}>
-          <div className="card" style={{ border: '2px solid #10b981', background: 'linear-gradient(to right, #064e3b, #022c22)', padding: '24px' }}>
-          <h2 style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#34d399', margin: '0 0 8px 0', fontSize: '20px' }}>🎬 Sutradara AI (Full Video)</h2>
-          <p style={{ color: '#a7f3d0', margin: '0 0 16px 0', fontSize: '14px', lineHeight: '1.5' }}>Buat naskah video panjang (5-20 Menit) dengan Voice Over spesifik, instruksi overlay teks, dan format gambar Micro-Pacing (Slide-by-Slide) untuk channel luar negeri.</p>
-          <button onClick={() => window.location.href='/long-video'} style={{ width: '100%', background: '#10b981', color: 'white', fontWeight: 'bold', padding: '12px', borderRadius: '8px', border: 'none', cursor: 'pointer' }}>
-            Masuk ke Sutradara AI 🚀
-          </button>
+          <div>
+            <label style={{ color: '#fbbf24', fontSize: '14px', fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>2. Topik Spesifik (Ide Video):</label>
+            <input 
+              type="text" 
+              value={directorTopic}
+              onChange={(e) => setDirectorTopic(e.target.value)}
+              placeholder="Contoh: Lore hero Alucard, Fakta aneh hewan laut, Penemuan Nikola Tesla..."
+              style={{ width: '100%', padding: '14px 16px', borderRadius: '10px', background: '#0f172a', color: 'white', border: '1px solid #475569', outline: 'none', fontSize: '14px' }}
+            />
+          </div>
         </div>
-
-      
-        
-      </section>
       </div>
-    );
-  }
-      
 
+      {/* 🚀 STEP 2: PILIHAN FORMAT EKSEKUSI */}
+      <div>
+        <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          🚀 Pilih Format Eksekusi AI:
+        </h3>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+          
+          {/* KARTU 1: VIRAL FACTORY (SHORTS) - Langsung memanggil fungsi lama Anda di sini! */}
+          {renderSutradaraProMax()}
+
+          {/* KARTU 2: SUTRADARA AI (LONG VIDEO) */}
+          <div className="card" style={{ border: '1px solid #10b981', background: 'linear-gradient(145deg, #064e3b 0%, #022c22 100%)', padding: '24px', borderRadius: '16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', top: '-2px', right: '-2px', background: '#10b981', color: '#022c22', padding: '8px 16px', borderRadius: '0 16px 0 16px', fontSize: '12px', fontWeight: 'bold' }}>
+              👑 Paling Laris
+            </div>
+            
+            <div style={{ marginTop: '10px' }}>
+              <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#34d399', margin: '0 0 12px 0', fontSize: '20px' }}>
+                🎬 Sutradara AI (Long Video)
+              </h2>
+              <p style={{ color: '#a7f3d0', margin: '0 0 24px 0', fontSize: '13px', lineHeight: '1.6' }}>
+                Pakar naskah video panjang (5-15 Menit). Menghasilkan struktur Micro-Pacing, Voice Over, dan Prompt Gambar AI Midjourney/Bing untuk channel Automation Anda.
+              </p>
+            </div>
+            
+            <button 
+              onClick={() => {
+                if(!directorTopic) { 
+                  alert('Tolong ketik topik spesifiknya dulu di atas ya!'); 
+                  return; 
+                }
+                // Simpan input user ke memory agar terbawa ke halaman /long-video
+                localStorage.setItem('targetNiche', directorNiche);
+                localStorage.setItem('targetTopic', directorTopic);
+                window.location.href='/long-video';
+              }} 
+              style={{ width: '100%', background: '#10b981', color: '#022c22', fontWeight: 'bold', padding: '14px', borderRadius: '10px', border: 'none', cursor: 'pointer', fontSize: '15px', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)' }}
+            >
+              Masuk ke Sutradara AI 🚀
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  );
+}
+      
   function renderOptimizer() {
     // FITUR LIVE PREVIEW (Update Judul, Deskripsi, dan Tags sekaligus)
     const handleLivePreview = (type: string, value: any) => {
