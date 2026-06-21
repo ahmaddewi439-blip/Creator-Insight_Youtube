@@ -17,38 +17,39 @@ export async function POST(req: Request) {
     baseUrl = baseUrl.replace(/\/+$/, "");
     const endpoint = baseUrl.endsWith("/chat/completions") ? baseUrl : `${baseUrl}/chat/completions`;
 
-    // Prompt ini sudah diubah agar menghasilkan format Scene-by-Scene percis seperti menu Lab
+    // Prompt dengan Ancaman Matematika 5 Detik
     const prompt = `Anda adalah Pakar TikTok & YouTube Shorts kelas dunia spesialis Faceless Channel.
 Klien meminta 4 ide konten vertikal (9:16) super viral.
 Niche: "${niche}"
 Topik Spesifik: "${topic}"
 BAHASA NASKAH (VO) & JUDUL HARUS MENGGUNAKAN: "${language}"
 
-ATURAN WAKTU SANGAT KETAT (WAJIB DIIKUTI):
-1. Setiap video WAJIB memiliki antara 8 hingga 12 scene (agar durasi total mencapai 40-60 detik).
-2. SETIAP SCENE HARUS BERDURASI TEPAT 5 DETIK. Tidak boleh kurang, tidak boleh lebih!
-3. Format penulisan waktu harus kelipatan 5 detik (Contoh: "00:00 - 00:05", "00:05 - 00:10", "00:10 - 00:15", dst).
-4. Panjang Teks Voice Over (VO) per scene HARUS disesuaikan dengan kecepatan bicara normal manusia selama 5 detik (maksimal 10-15 kata per scene).
+ATURAN WAKTU DAN JUMLAH KATA SANGAT KETAT (SYARAT MUTLAK):
+1. Setiap video WAJIB memiliki antara 8 hingga 12 scene (agar durasi total 40-60 detik).
+2. SETIAP SCENE HARUS BERDURASI TEPAT 5 DETIK. Format waktu wajib kelipatan 5 detik (Contoh: "00:00 - 00:05", "00:05 - 00:10").
+3. SYARAT MUTLAK VOICE OVER (VO): Kecepatan bicara manusia adalah 2.5 kata per detik. Oleh karena itu, teks VO UNTUK SETIAP SCENE WAJIB BERJUMLAH TEPAT 12 HINGGA 14 KATA. 
+4. JANGAN KURANG DARI 10 KATA, JANGAN LEBIH DARI 13 KATA! Hitung manual kata-kata Anda sebelum menuliskannya. Jika kurang dari 12 kata, naskah akan ada jeda diam. Jika lebih dari 14 kata, naskah akan terpotong sebelum selesai dibaca.
 
 Berikan hasil DALAM FORMAT JSON ARRAY murni yang berisi tepat 4 objek video. Struktur persis seperti ini:
 [
   {
     "title": "Judul Konsep Video",
-    "hook": "Hook 3 detik pertama yang sangat mematikan",
-    "audioMood": "Rekomendasi musik background yang trending",
-    "thumbnailPrompt": "Prompt bahasa inggris untuk generate gambar thumbnail/cover awal",
+    "hook": "Hook 3 detik pertama yang mematikan",
+    "audioMood": "Rekomendasi musik background",
+    "thumbnailPrompt": "Prompt thumbnail bahasa inggris",
     "scenes": [
       {
         "waktu": "00:00 - 00:05",
-        "vo": "Teks voice over 10-15 kata (pas untuk diucapkan dalam 5 detik)",
+        "vo": "Tuliskan kalimat Anda di sini dengan syarat mutlak harus dua belas sampai empat belas kata.",
         "visual": "Aksi visual/B-roll di layar",
-        "imagePrompt": "Prompt gambar AI (Midjourney/Grok) BERBAHASA INGGRIS untuk adegan ini",
-        "videoPrompt": "Prompt video AI (Kling/Runway) BERBAHASA INGGRIS untuk adegan ini"
+        "imagePrompt": "Prompt gambar AI (Midjourney/Grok) BERBAHASA INGGRIS",
+        "videoPrompt": "Prompt video AI (Kling/Runway) BERBAHASA INGGRIS"
       }
     ]
   }
 ]
 JANGAN gunakan format markdown seperti \`\`\`json. HANYA kembalikan JSON murni.`;
+   
 
     const res = await fetch(endpoint, {
       method: "POST",
