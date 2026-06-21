@@ -1,168 +1,80 @@
 "use client";
+import { useState, useEffect } from "react";
 
-import React, { useState, useEffect } from "react";
+export default function LongVideoPage() {
+  const [targetTopic, setTargetTopic] = useState("");
+  const [targetNiche, setTargetNiche] = useState("");
+  const [duration, setDuration] = useState("5 Menit");
+  const [language, setLanguage] = useState("Indonesia");
+  const [isGenerating, setIsGenerating] = useState(false);
 
-function CopyButton({ text, label = "Copy" }) {
-  const [copied, setCopied] = useState(false);
-  const handleCopy = () => {
-    navigator.clipboard.writeText(text || "");
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-  return (
-    <button onClick={handleCopy} className={`text-xs px-3 py-1 rounded font-bold transition-all flex items-center gap-1 border ${copied ? "bg-green-600 border-green-500 text-white" : "bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white"}`}>
-      {copied ? "✓ Tersalin!" : `📋 ${label}`}
-    </button>
-  );
-}
-
-export default function LongVideoCreator() {
-  const [formData, setFormData] = useState({ topic: "Misteri Game Roblox Paling Horor", duration: "5 Menit", language: "English" });
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null);
-  const [errorMsg, setErrorMsg] = useState("");
-  // --- MULAI KODE AUTO-SAVE ---
+  // Menyedot memori "Angle" yang dipilih user dari halaman sebelumnya
   useEffect(() => {
-    const savedForm = localStorage.getItem("sutradaraForm");
-    const savedResult = localStorage.getItem("sutradaraResult");
-    if (savedForm) setFormData(JSON.parse(savedForm));
-    if (savedResult) setResult(JSON.parse(savedResult));
+    setTargetTopic(localStorage.getItem("targetTopic") || "");
+    setTargetNiche(localStorage.getItem("targetNiche") || "");
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem("sutradaraForm", JSON.stringify(formData));
-    if (result) localStorage.setItem("sutradaraResult", JSON.stringify(result));
-  }, [formData, result]);
-  // --- AKHIR KODE AUTO-SAVE ---
-  const generateFullScript = async () => {
-    setLoading(true);
-    setErrorMsg("");
-    setResult(null);
-
-    try {
-      const response = await fetch("/api/ai/director", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData)
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Gagal memproses AI");
-      setResult(data.result || data.raw || data);
-    } catch (e) {
-      setErrorMsg("Gagal meracik Naskah: " + e.message);
-    } finally {
-      setLoading(false);
-    }
+  const handleGenerateLongVideo = () => {
+    setIsGenerating(true);
+    // Nanti di sini kita sambungkan ke API Pembuat Naskah Long Video
+    setTimeout(() => {
+      alert("Sistem siap meracik naskah untuk: " + targetTopic);
+      setIsGenerating(false);
+    }, 1500);
   };
 
-  let scenesList = result?.scenes || result?.script?.scenes || [];
-
   return (
-    <div className="min-h-screen bg-black text-white p-4 md:p-8 font-sans">
-      <div className="max-w-4xl mx-auto space-y-6">
-        <h1 className="text-3xl font-bold text-green-500 mb-2">Sutradara AI: Produksi Full Video (Slide-by-Slide)</h1>
+    <div style={{ minHeight: '100vh', background: '#0f172a', color: 'white', padding: '40px 20px', fontFamily: 'sans-serif' }}>
+      <div style={{ maxWidth: '800px', margin: '0 auto' }}>
         
-        <div className="bg-gray-900 p-6 rounded-xl border border-green-800 space-y-4 shadow-lg">
-          <input
-            className="w-full p-4 bg-gray-800 rounded border border-gray-700 text-white focus:border-green-500 outline-none"
-            placeholder="Ketik Topik (Contoh: Rahasia item gratis di Brookhaven)"
-            value={formData.topic}
-            onChange={(e) => setFormData({...formData, topic: e.target.value})}
-          />
-          
-          <div className="grid grid-cols-2 gap-4">
-            <select className="p-4 bg-gray-800 rounded border border-gray-700 text-white outline-none" value={formData.duration} onChange={(e) => setFormData({...formData, duration: e.target.value})}>
-              <option value="5 Menit">5 Menit</option>
-              <option value="10 Menit">10 Menit</option>
-              <option value="20 Menit">20 Menit</option>
-            </select>
-            <select className="p-4 bg-gray-800 rounded border border-gray-700 text-white outline-none" value={formData.language} onChange={(e) => setFormData({...formData, language: e.target.value})}>
-              <option value="English">English</option>
-              <option value="Indonesia">Indonesia</option>
-            </select>
-          </div>
-          
-          <button className="w-full bg-green-600 hover:bg-green-500 py-4 rounded font-bold text-lg transition-all flex justify-center items-center" onClick={generateFullScript} disabled={loading}>
-            {loading ? "⏳ AI Sedang Meracik Visual & Overlay... (Tunggu 20-40 Detik)" : "🎬 Generate Naskah Matang Final"}
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '30px' }}>
+          <h1 style={{ color: '#f8fafc', fontSize: '24px', margin: 0 }}>🎬 Sutradara AI (Long Video)</h1>
+          <button onClick={() => window.location.href='/'} style={{ background: '#1e293b', color: '#cbd5e1', border: '1px solid #334155', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
+            🔙 Kembali
           </button>
-          
-          {errorMsg && <div className="p-4 bg-red-900/50 border border-red-500 text-white rounded mt-4">{errorMsg}</div>}
         </div>
 
-        {result && (
-          <div className="mt-8 space-y-6 animate-fadeIn">
-            <div className="flex justify-between items-end border-b border-green-900 pb-2">
-              <h2 className="text-2xl font-bold text-green-400">
-                {result.videoTitle || "Blueprint Video Panjang:"}
-              </h2>
-              <div>
-                <CopyButton text={JSON.stringify(result, null, 2)} label="Copy Semua (JSON)" />
-              </div>
-            </div>
-
-            {scenesList.length > 0 ? (
-              scenesList.map((scene, i) => (
-                <div key={i} className="bg-gray-900 p-6 rounded-xl border-l-4 border-blue-500 shadow-lg relative">
-                  <div className="flex justify-between items-start mb-4 border-b border-gray-800 pb-2">
-                    <div>
-                      <span className="bg-blue-500/20 text-blue-400 px-3 py-1 rounded text-xs font-bold uppercase tracking-widest">
-                        {scene.name || `Scene ${scene.scene || i + 1}`}
-                      </span>
-                      <p className="text-sm font-bold text-gray-400 mt-2">⏱️ Waktu VO: {scene.duration || scene.time || "-"}</p>
-                    </div>
-                    <div>
-                      <CopyButton text={scene.vo || scene.voiceOver} label="Copy Naskah VO" />
-                    </div>
-                  </div>
-                  
-                  <p className="text-lg text-white mb-6 leading-relaxed">
-                    <span className="text-yellow-500 font-bold mr-2">🎙️ Voice Over:</span> 
-                    "{scene.vo || scene.voiceOver}"
-                  </p>
-
-                  <div className="space-y-3 bg-black/60 p-4 rounded-lg border border-gray-800 mt-4">
-                    <p className="font-bold text-gray-400 uppercase tracking-wide text-xs mb-3 border-b border-gray-700 pb-2">📸 Slide-by-Slide Visual (16:9):</p>
-                    
-                    {scene.visuals && scene.visuals.length > 0 ? (
-                      scene.visuals.map((vis, vIdx) => (
-                        <div key={vIdx} className="flex justify-between items-start border-b border-gray-700/50 pb-3 mb-3 last:border-0 last:pb-0 last:mb-0 hover:bg-gray-800/50 p-3 rounded transition-colors">
-                          <div className="w-5/6 pr-4">
-                            <span className="text-xs font-bold text-yellow-500 bg-yellow-500/10 px-2 py-1 rounded mr-2 border border-yellow-500/20">⏱️ {vis.time}</span>
-                            <p className="text-sm italic text-green-400 mt-2 leading-relaxed">🖼️ Prompt: {vis.prompt}</p>
-                            {vis.overlay && (
-                              <p className="text-sm font-bold text-blue-400 mt-2 bg-blue-900/30 p-2 rounded border border-blue-800/50">
-                                🔠 {vis.overlay}
-                              </p>
-                            )}
-                          </div>
-                          <div>
-                            <CopyButton text={vis.prompt} label="Copy Prompt" />
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-sm text-gray-500 italic">Format slide-by-slide tidak tersedia untuk scene ini.</p>
-                    )}
-
-                    {scene.editingDirection && (
-                      <div className="mt-3 pt-3 border-t border-gray-700">
-                        <p className="text-sm text-purple-300">
-                          <span className="font-bold text-gray-500 uppercase tracking-wide text-xs">✂️ Cara Edit:</span><br/>{scene.editingDirection}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="bg-gray-900 p-6 rounded-xl border border-yellow-600 shadow-lg">
-                <p className="text-yellow-400 text-sm mb-4">⚠️ Format JSON tidak terduga, ini hasil mentahnya:</p>
-                <pre className="text-sm text-gray-300 whitespace-pre-wrap overflow-x-auto">{JSON.stringify(result, null, 2)}</pre>
-              </div>
-            )}
+        {/* Dashboard Card */}
+        <div style={{ background: '#1e293b', border: '1px solid #10b981', borderRadius: '16px', padding: '30px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}>
+          
+          {/* Kotak Info Target Otomatis */}
+          <div style={{ marginBottom: '24px', background: '#064e3b', padding: '20px', borderRadius: '12px', borderLeft: '4px solid #10b981' }}>
+            <p style={{ margin: '0 0 8px 0', color: '#a7f3d0', fontSize: '13px', fontWeight: 'bold' }}>🎯 Angle Terpilih (Otomatis dari Radar):</p>
+            <h2 style={{ margin: 0, color: '#34d399', fontSize: '22px', lineHeight: '1.4' }}>"{targetTopic || "Belum ada topik terpilih"}"</h2>
           </div>
-        )}
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', marginBottom: '30px' }}>
+            {/* Input Durasi */}
+            <div>
+              <label style={{ display: 'block', color: '#cbd5e1', marginBottom: '8px', fontSize: '14px', fontWeight: 'bold' }}>⏳ Durasi Video:</label>
+              <select value={duration} onChange={(e) => setDuration(e.target.value)} style={{ width: '100%', padding: '14px', borderRadius: '8px', background: '#0f172a', color: 'white', border: '1px solid #334155', outline: 'none', cursor: 'pointer' }}>
+                <option value="5 Menit">5 Menit (Standar Retensi)</option>
+                <option value="10 Menit">10 Menit (Monetisasi Ekstra)</option>
+                <option value="15 Menit">15 Menit (Dokumenter Panjang)</option>
+              </select>
+            </div>
+            
+            {/* Input Bahasa */}
+            <div>
+              <label style={{ display: 'block', color: '#cbd5e1', marginBottom: '8px', fontSize: '14px', fontWeight: 'bold' }}>🗣️ Bahasa Naskah:</label>
+              <select value={language} onChange={(e) => setLanguage(e.target.value)} style={{ width: '100%', padding: '14px', borderRadius: '8px', background: '#0f172a', color: 'white', border: '1px solid #334155', outline: 'none', cursor: 'pointer' }}>
+                <option value="Indonesia">Indonesia (Lokal)</option>
+                <option value="English">English (Target Bule / RPM Tinggi)</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Tombol Eksekusi */}
+          <button 
+            onClick={handleGenerateLongVideo} 
+            disabled={isGenerating || !targetTopic}
+            style={{ width: '100%', background: '#10b981', color: '#022c22', fontWeight: 'bold', padding: '18px', borderRadius: '12px', border: 'none', cursor: 'pointer', fontSize: '16px', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)' }}
+          >
+            {isGenerating ? '⏳ Menyusun Timeline & Prompt Visual...' : '🎬 Generate Naskah Matang Final'}
+          </button>
+        </div>
+
       </div>
     </div>
   );

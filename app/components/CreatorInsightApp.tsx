@@ -116,9 +116,9 @@ function LoginScreen() {
             <div className="logo-badge">▶</div>
             <div>Creator Insight<small>YouTube Analyzer + Roblox Shorts Creator</small></div>
           </div>
-          <h1>Tool pribadi untuk analisis YouTube dan membuat Roblox Shorts.</h1>
+          <h1>Tool Pribadi Untuk Analisis YouTube dan Membuat Video Shorts Dan Video Long.</h1>
           <p className="muted" style={{ fontSize: 17, lineHeight: 1.6 }}>
-            Login channel YouTube, optimasi video, cek kompetitor, lalu generate paket Roblox Shorts lengkap: hook 3 detik, VO natural, 5 scene, prompt gambar, arahan gameplay, caption, deskripsi, hashtag, dan CTA kuat.
+            Login Channel YouTube Anda, Optimasi Video, Cek kompetitor, lalu generate paket Video Shorts lengkap Serta Video Panjang: hook 3 detik, VO natural, 5 scene, prompt gambar, arahan gameplay, caption, deskripsi, hashtag, dan CTA kuat.
           </p>
           <div className="form-row" style={{ marginTop: 22 }}>
             <button className="btn primary" onClick={() => signIn("google")}>Login Channel YouTube</button>
@@ -179,6 +179,67 @@ const handleAnalyzeAngles = async () => {
     }
     setAnalyzingAngles(false);
   };
+  // --- FUNGSI AI VIRAL FACTORY (SHORTS) BARU ---
+  const handleGenerate = async () => {
+    setIsGeneratingViral(true);
+    setViralVideos([]);
+    try {
+      // Menyambung ke folder api/ai/viral-factory yang Mas Ahmad miliki
+      const res = await fetch('/api/ai/viral-factory', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ niche: directorNiche, topic: selectedAngle?.title || directorTopic })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setViralVideos(data.result);
+      } else {
+        alert("Gagal memuat Viral Pack. Coba lagi.");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Error menghubungi server Viral Factory. Pastikan folder API sudah benar.");
+    }
+    setIsGeneratingViral(false);
+  };
+
+  // --- TAMPILAN HASIL 4 VIDEO SHORTS (PENGGANTI FUNGSI LAMA) ---
+  function renderSutradaraProMax() {
+    if (!viralVideos || viralVideos.length === 0) return null;
+    return (
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px', marginTop: '20px' }}>
+        {viralVideos.map((video: any, idx: number) => (
+          <div key={idx} style={{ background: '#020617', border: '1px solid #3b82f6', borderRadius: '12px', padding: '24px' }}>
+            <h3 style={{ color: '#60a5fa', margin: '0 0 16px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>📱 Video Shorts {idx + 1}</span>
+              <span style={{ fontSize: '12px', background: '#1e3a8a', padding: '6px 12px', borderRadius: '8px', color: 'white' }}>🔥 Potensi Viral</span>
+            </h3>
+            <div style={{ marginBottom: '16px', background: '#0f172a', padding: '16px', borderRadius: '8px', borderLeft: '4px solid #fbbf24' }}>
+              <strong style={{ color: '#fbbf24', display: 'block', marginBottom: '8px' }}>🪝 Hook (3 Detik Pertama):</strong>
+              <p style={{ margin: 0, color: 'white', fontSize: '15px' }}>{video.hook || video.judul || video.title || "Teks Hook Video"}</p>
+            </div>
+            <div style={{ marginBottom: '20px', background: '#0f172a', padding: '16px', borderRadius: '8px', borderLeft: '4px solid #10b981' }}>
+              <strong style={{ color: '#34d399', display: 'block', marginBottom: '8px' }}>🗣️ Naskah / Voice Over:</strong>
+              <p style={{ margin: 0, color: '#cbd5e1', whiteSpace: 'pre-wrap', lineHeight: '1.6', fontSize: '14px' }}>{video.script || video.naskah || video.narasi || "Isi naskah lengkap..."}</p>
+            </div>
+            <button 
+              onClick={() => {
+                const copyText = `HOOK:\n${video.hook || video.judul || video.title}\n\nSCRIPT:\n${video.script || video.naskah || video.narasi}`;
+                navigator.clipboard.writeText(copyText);
+                alert("✅ Script Shorts berhasil disalin ke Clipboard!");
+              }}
+              style={{ width: '100%', background: '#1e293b', color: '#60a5fa', border: '1px solid #3b82f6', padding: '14px', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold', transition: 'all 0.2s' }}
+              onMouseOver={(e) => e.currentTarget.style.background = '#0f172a'}
+              onMouseOut={(e) => e.currentTarget.style.background = '#1e293b'}
+            >
+              📋 Copy Script Ini
+            </button>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  
   const { data: session, status } = useSession();
  const ACTIVE_TAB_KEY = "creator_insight_active_tab";
 
@@ -783,7 +844,14 @@ async function fetchCompetitionScore(keyword: string) {
               <p style={{ color: '#93c5fd', margin: '0 0 24px 0', fontSize: '13px' }}>Hasilkan 4 script video pendek vertikal 9:16 super viral berdasarkan angle ini.</p>
               <button 
                 onClick={() => {
-                  alert("Fitur AI Viral Factory untuk angle '" + selectedAngle.title + "' segera hadir!");
+                  // 1. Masukkan angle yang dipilih ke state input Anda
+                  setTrendQuery(selectedAngle.title); 
+                  
+                  // 2. Gulir layar sedikit ke atas agar user melihat proses loading
+                  window.scrollTo({ top: 100, behavior: 'smooth' });
+                  
+                  // 3. Panggil fungsi pembuat Shorts asli Anda
+                  handleGenerate(); 
                 }} 
                 style={{ width: '100%', background: '#3b82f6', color: 'white', fontWeight: 'bold', padding: '14px', borderRadius: '10px', border: 'none', cursor: 'pointer', fontSize: '15px' }}
               >
