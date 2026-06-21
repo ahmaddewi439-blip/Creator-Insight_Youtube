@@ -1641,47 +1641,50 @@ function OptimizerResultView({ result, onLivePreview }: { result: any; onLivePre
               <span style={{ fontSize: '14px', color: '#f8fafc', fontWeight: 'bold' }}>{title}</span>
               <CopyButton text={title} />
             </div>
+
           ))}
         </div>
       </div>
 
-      {/* KOTAK DESKRIPSI (Sekarang Bisa Diklik) */}
-      <div 
-        onClick={() => onLivePreview("description", result.description)}
-        style={{ background: '#1e293b', padding: '16px', borderRadius: '12px', border: '1px solid #334155', cursor: 'pointer' }}
-        title="Klik untuk menerapkan deskripsi ini ke video"
-        onMouseOver={(e) => e.currentTarget.style.borderColor = '#60a5fa'}
-        onMouseOut={(e) => e.currentTarget.style.borderColor = '#334155'}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-          <h3 style={{ margin: '0', fontSize: '14px', color: '#f8fafc' }}>📝 Deskripsi Full SEO (Ketuk untuk Update)</h3>
-          <CopyButton text={result.description} />
-        </div>
-        <p style={{ fontSize: '13px', color: '#cbd5e1', whiteSpace: 'pre-wrap', background: '#0f172a', padding: '12px', borderRadius: '8px', border: '1px solid #334155', margin: 0 }}>
-          {result.description}
-        </p>
-      </div>
+    {/* --- AREA DRAFT DESKRIPSI SEO --- */}
+          <div style={{ marginTop: '20px' }}>
+            <h4 style={{ color: '#38bdf8', marginBottom: '12px', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span>📝</span> Draft Deskripsi SEO Friendly
+            </h4>
+            <div style={{ background: '#0f172a', padding: '16px', borderRadius: '12px', border: '1px solid #334155' }}>
+              <textarea
+                readOnly
+                value={result.description || "Deskripsi akan muncul di sini..."}
+                style={{ width: '100%', height: '140px', background: 'transparent', color: '#cbd5e1', border: 'none', outline: 'none', resize: 'vertical', fontSize: '14px', lineHeight: '1.6' }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
+                <button 
+                  onClick={() => { navigator.clipboard.writeText(result.description); alert("Deskripsi disalin!"); }}
+                  style={{ background: '#1e293b', color: '#38bdf8', border: '1px solid #38bdf8', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+                >
+                  📋 Copy Deskripsi
+                </button>
+              </div>
+            </div>
+          </div>
 
-      {/* KOTAK HASHTAG (Sekarang Bisa Diklik) */}
-      <div 
-        onClick={() => onLivePreview("tags", tags)}
-        style={{ background: '#1e293b', padding: '16px', borderRadius: '12px', border: '1px solid #334155', cursor: 'pointer' }}
-        title="Klik untuk menerapkan hashtags ini ke video"
-        onMouseOver={(e) => e.currentTarget.style.borderColor = '#60a5fa'}
-        onMouseOut={(e) => e.currentTarget.style.borderColor = '#334155'}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-          <h3 style={{ margin: '0', fontSize: '14px', color: '#f8fafc' }}>🏷️ Hashtags & Keywords (Ketuk untuk Update)</h3>
-          <CopyButton text={tags.join(", ")} />
-        </div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-          {tags.map((tag: string, i: number) => (
-            <span key={i} style={{ background: '#0f172a', color: '#60a5fa', padding: '4px 10px', borderRadius: '20px', fontSize: '12px', border: '1px solid #1e3a8a' }}>
-              #{tag.replace(/\s+/g, '')}
-            </span>
-          ))}
-        </div>
-      </div>
+          {/* --- AREA REKOMENDASI HASHTAG --- */}
+          <div style={{ marginTop: '20px', marginBottom: '20px' }}>
+            <h4 style={{ color: '#10b981', marginBottom: '12px', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span>🏷️</span> Rekomendasi Hashtag Viral (Berdasarkan Skor)
+            </h4>
+            <div style={{ background: '#0f172a', padding: '16px', borderRadius: '12px', border: '1px solid #334155', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+              <p style={{ color: '#cbd5e1', margin: '0', fontSize: '14px', flex: 1, lineHeight: '1.6' }}>
+                {result.tags ? result.tags : result.keywords ? result.keywords.join(" ") : "#hashtag #seo"}
+              </p>
+              <button 
+                onClick={() => { navigator.clipboard.writeText(result.tags || (result.keywords && result.keywords.join(" "))); alert("Hashtag disalin!"); }}
+                style={{ background: '#10b981', color: '#022c22', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', whiteSpace: 'nowrap' }}
+              >
+                📋 Copy Hashtag
+              </button>
+            </div>
+          </div>
       
     </div>
   );
