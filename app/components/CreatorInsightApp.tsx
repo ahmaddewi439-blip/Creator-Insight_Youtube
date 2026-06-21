@@ -1625,26 +1625,41 @@ function OptimizerResultView({ result, onLivePreview }: { result: any; onLivePre
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       
-      {/* KOTAK JUDUL */}
-      <div style={{ background: '#1e293b', padding: '16px', borderRadius: '12px', border: '1px solid #334155' }}>
-        <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#f8fafc' }}>🔥 3 Rekomendasi Judul Viral (Ketuk untuk Update)</h3>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {titles.map((title: string, idx: number) => (
-            <div 
-              key={idx} 
-              onClick={() => onLivePreview("title", title)}
-              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#0f172a', border: '1px solid #334155', padding: '12px', borderRadius: '8px', cursor: 'pointer' }}
-              title="Klik untuk mengubah judul video"
-              onMouseOver={(e) => e.currentTarget.style.borderColor = '#60a5fa'}
-              onMouseOut={(e) => e.currentTarget.style.borderColor = '#334155'}
-            >
-              <span style={{ fontSize: '14px', color: '#f8fafc', fontWeight: 'bold' }}>{title}</span>
-              <CopyButton text={title} />
+   {/* --- KOTAK JUDUL --- */}
+          <div style={{ background: '#1e293b', padding: '16px', borderRadius: '12px', border: '1px solid #334155' }}>
+            <h3 style={{ margin: '0 0 12px 0', fontSize: '15px', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span>🔥</span> 5 Rekomendasi Judul Viral (Lengkap dengan Skor)
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {titles.map((title, idx) => (
+                <div 
+                  key={idx} 
+                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#0f172a', border: '1px solid #334155', padding: '12px', borderRadius: '8px' }}
+                >
+                  <span style={{ fontSize: '14px', color: '#f8fafc', fontWeight: 'bold', flex: 1, paddingRight: '12px', lineHeight: '1.5' }}>
+                    {title}
+                  </span>
+                  
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    {/* TOMBOL TERAPKAN */}
+                    <button 
+                      onClick={() => onLivePreview("title", title)}
+                      style={{ background: '#059669', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px', whiteSpace: 'nowrap' }}
+                    >
+                      🔄 Terapkan
+                    </button>
+                    {/* TOMBOL COPY */}
+                    <button 
+                      onClick={() => { navigator.clipboard.writeText(title); alert("Judul disalin!"); }}
+                      style={{ background: '#1e293b', color: '#38bdf8', border: '1px solid #38bdf8', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px', whiteSpace: 'nowrap' }}
+                    >
+                      📋 Copy
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
-
-          ))}
-        </div>
-      </div>
+          </div>
 
     {/* --- AREA DRAFT DESKRIPSI SEO --- */}
           <div style={{ marginTop: '20px' }}>
@@ -1657,7 +1672,15 @@ function OptimizerResultView({ result, onLivePreview }: { result: any; onLivePre
                 value={result.description || "Deskripsi akan muncul di sini..."}
                 style={{ width: '100%', height: '140px', background: 'transparent', color: '#cbd5e1', border: 'none', outline: 'none', resize: 'vertical', fontSize: '14px', lineHeight: '1.6' }}
               />
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px', gap: '12px' }}>
+                {/* TOMBOL SAKTI UNTUK UPDATE KE WEB */}
+                <button 
+                  onClick={() => onLivePreview("description", result.description)}
+                  style={{ background: '#059669', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+                >
+                  🔄 Terapkan ke Video
+                </button>
+                {/* TOMBOL COPY */}
                 <button 
                   onClick={() => { navigator.clipboard.writeText(result.description); alert("Deskripsi disalin!"); }}
                   style={{ background: '#1e293b', color: '#38bdf8', border: '1px solid #38bdf8', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
@@ -1675,17 +1698,26 @@ function OptimizerResultView({ result, onLivePreview }: { result: any; onLivePre
             </h4>
             <div style={{ background: '#0f172a', padding: '16px', borderRadius: '12px', border: '1px solid #334155', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
               <p style={{ color: '#cbd5e1', margin: '0', fontSize: '14px', flex: 1, lineHeight: '1.6' }}>
-                {result.tags ? result.tags : result.keywords ? result.keywords.join(" ") : "#hashtag #seo"}
+                {result.keywords ? result.keywords.join(" ") : result.tags ? result.tags : "#hashtag #seo"}
               </p>
-              <button 
-                onClick={() => { navigator.clipboard.writeText(result.tags || (result.keywords && result.keywords.join(" "))); alert("Hashtag disalin!"); }}
-                style={{ background: '#10b981', color: '#022c22', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', whiteSpace: 'nowrap' }}
-              >
-                📋 Copy Hashtag
-              </button>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                {/* TOMBOL SAKTI UNTUK UPDATE KE WEB */}
+                <button 
+                  onClick={() => onLivePreview("tags", result.keywords ? result.keywords.join(" ") : result.tags)}
+                  style={{ background: '#059669', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', whiteSpace: 'nowrap' }}
+                >
+                  🔄 Terapkan
+                </button>
+                {/* TOMBOL COPY */}
+                <button 
+                  onClick={() => { navigator.clipboard.writeText(result.keywords ? result.keywords.join(" ") : result.tags); alert("Hashtag disalin!"); }}
+                  style={{ background: '#10b981', color: '#022c22', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', whiteSpace: 'nowrap' }}
+                >
+                  📋 Copy
+                </button>
+              </div>
             </div>
           </div>
-      
     </div>
   );
 }

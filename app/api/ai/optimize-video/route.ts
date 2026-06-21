@@ -22,7 +22,7 @@ export async function POST(req: Request) {
     const originalTitle = video?.snippet?.title || video?.title || "Video Tanpa Judul";
     const originalDesc = video?.snippet?.description || "";
 
- const prompt = `Anda adalah Pakar SEO YouTube dan Copywriter kelas dunia.
+const prompt = `Anda adalah Pakar SEO YouTube dan Copywriter kelas dunia.
 Klien meminta optimasi metadata video YouTube agar mendapatkan ranking 1 di pencarian dan rasio klik (CTR) yang tinggi.
 
 Data Video Asli:
@@ -30,25 +30,25 @@ Judul: "${originalTitle}"
 Deskripsi: "${originalDesc.substring(0, 500)}"
 Bahasa Target: ${targetLanguage || "English"}
 
-ATURAN KETAT (WAJIB DIIKUTI):
-1. 'titles': Buat 5 pilihan judul clickbait namun SEO-friendly. SETIAP JUDUL WAJIB diberi awalan [Skor SEO: Angka/100]. Beri skor realistis berdasarkan persaingan (contoh: "[Skor SEO: 98/100] Judul Video...").
+ATURAN KETAT ANALISA SKOR (WAJIB DIIKUTI):
+1. 'recommendedTitles': Buat TEPAT 5 pilihan judul clickbait namun SEO-friendly. SETIAP JUDUL WAJIB diberi skor di bagian AKHIR judul. SKOR HARUS REALISTIS hasil dari analisa Anda terhadap potensi klik dan pencarian. JANGAN berikan nilai palsu atau menyalin dari contoh!
 2. 'description': Buat naskah deskripsi YouTube yang panjang, profesional, dan kaya akan keyword SEO.
-3. 'keywords': Buat array yang berisi daftar minimal 15 hashtag. WAJIB diurutkan dari skor SEO tertinggi hingga terendah. WAJIB cantumkan skornya di samping hashtag (contoh: "#roblox (99)", "#bloxfruits (95)").
+3. 'keywords': Buat array yang berisi daftar minimal 15 hashtag. WAJIB diurutkan dari skor SEO tertinggi hingga terendah. SKOR HARUS REALISTIS berdasarkan persaingan keyword di YouTube. WAJIB cantumkan skornya di samping hashtag.
 
-Berikan hasil DALAM FORMAT JSON MURNI (Object) dengan struktur persis seperti ini:
+Berikan hasil DALAM FORMAT JSON MURNI (Object) dengan struktur persis seperti ini (Ganti "XX" dengan ANGKA SKOR ASLI hasil analisa Anda):
 {
-  "titles": [
-    "[Skor SEO: 98/100] Judul Pilihan Pertama",
-    "[Skor SEO: 95/100] Judul Pilihan Kedua",
-    "[Skor SEO: 91/100] Judul Pilihan Ketiga",
-    "[Skor SEO: 88/100] Judul Pilihan Keempat",
-    "[Skor SEO: 85/100] Judul Pilihan Kelima"
+  "recommendedTitles": [
+    "Ketik Judul Pilihan Pertama Di Sini [Skor SEO: XX/100]",
+    "Ketik Judul Pilihan Kedua Di Sini [Skor SEO: XX/100]",
+    "Ketik Judul Pilihan Ketiga Di Sini [Skor SEO: XX/100]",
+    "Ketik Judul Pilihan Keempat Di Sini [Skor SEO: XX/100]",
+    "Ketik Judul Pilihan Kelima Di Sini [Skor SEO: XX/100]"
   ],
   "description": "Tulis deskripsi video yang lengkap dan SEO friendly di sini...",
   "keywords": [
-    "#keyword1 (99)",
-    "#keyword2 (95)",
-    "#keyword3 (90)"
+    "#keywordTerbaik (XX)",
+    "#keywordKedua (XX)",
+    "#keywordKetiga (XX)"
   ]
 }
 
