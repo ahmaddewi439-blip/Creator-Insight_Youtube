@@ -244,37 +244,55 @@ const handleAnalyzeAngles = async () => {
                 <span>🎬</span> FULL VIDEO TIMELINE
               </strong>
               
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {video.scenes?.map((scene: any, sIdx: number) => (
-                  <div key={sIdx} style={{ background: '#1e293b', borderRadius: '8px', padding: '16px', borderLeft: '4px solid #38bdf8' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #334155', paddingBottom: '8px', marginBottom: '12px' }}>
-                      <strong style={{ color: '#fbbf24', fontSize: '14px' }}>Scene {sIdx + 1} • {scene.waktu}</strong>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {video.scenes?.map((scene, sIdx) => (
+                <div key={sIdx} style={{ background: '#1e293b', borderRadius: '8px', padding: '16px', borderLeft: '4px solid #38bdf8' }}>
+                  
+                  {/* Header Scene */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #334155', paddingBottom: '8px', marginBottom: '12px' }}>
+                    <strong style={{ color: '#fbbf24', fontSize: '14px' }}>Scene {sIdx + 1} • {scene.waktu}</strong>
+                  </div>
+                  
+                  {/* Kotak VO */}
+                  <div style={{ marginBottom: '12px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                      <strong style={{ color: '#94a3b8', fontSize: '12px' }}>🎙️ VOICE OVER:</strong>
+                      <button onClick={() => { navigator.clipboard.writeText(scene.vo); alert("VO disalin!"); }} style={{ background: 'transparent', border: '1px solid #3b82f6', color: '#60a5fa', borderRadius: '4px', padding: '2px 8px', fontSize: '10px', cursor: 'pointer' }}>Copy</button>
                     </div>
-                    
-                    <div style={{ marginBottom: '12px' }}>
-                      <strong style={{ color: '#94a3b8', fontSize: '12px', display: 'block', marginBottom: '4px' }}>🎙️ VOICE OVER:</strong>
-                      <p style={{ color: '#f8fafc', margin: '0', fontSize: '15px', fontStyle: 'italic', background: '#020617', padding: '10px', borderRadius: '6px' }}>"{scene.vo}"</p>
+                    <p style={{ color: '#f8fafc', margin: '0', fontSize: '15px', fontStyle: 'italic', background: '#020617', padding: '10px', borderRadius: '6px' }}>"{scene.vo}"</p>
+                  </div>
+                  
+                  {/* Kotak Visual */}
+                  <div style={{ marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                      <strong style={{ color: '#94a3b8', fontSize: '12px' }}>🎥 VISUAL ACTION:</strong>
+                      <button onClick={() => { navigator.clipboard.writeText(scene.visual); alert("Visual disalin!"); }} style={{ background: 'transparent', border: '1px solid #3b82f6', color: '#60a5fa', borderRadius: '4px', padding: '2px 8px', fontSize: '10px', cursor: 'pointer' }}>Copy</button>
                     </div>
-                    
-                    <div style={{ marginBottom: '16px' }}>
-                      <strong style={{ color: '#94a3b8', fontSize: '12px', display: 'block', marginBottom: '4px' }}>🎥 VISUAL ACTION:</strong>
-                      <p style={{ color: '#cbd5e1', margin: '0', fontSize: '13px' }}>{scene.visual}</p>
-                    </div>
+                    <p style={{ color: '#cbd5e1', margin: '0', fontSize: '13px' }}>{scene.visual}</p>
+                  </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
-                      <div style={{ background: '#020617', padding: '12px', borderRadius: '6px', border: '1px solid #334155' }}>
-                        <strong style={{ color: '#c084fc', fontSize: '11px', display: 'block', marginBottom: '6px' }}>🖼️ IMAGE PROMPT</strong>
-                        <code style={{ color: '#e2e8f0', fontSize: '12px', whiteSpace: 'pre-wrap' }}>{scene.imagePrompt}</code>
+                  {/* Grid Prompts */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+                    <div style={{ background: '#020617', padding: '12px', borderRadius: '6px', border: '1px solid #334155' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                        <strong style={{ color: '#c084fc', fontSize: '11px' }}>🖼️ IMAGE PROMPT</strong>
+                        <button onClick={() => { navigator.clipboard.writeText(scene.imagePrompt); alert("Image Prompt disalin!"); }} style={{ background: '#3b0764', border: 'none', color: '#d8b4fe', borderRadius: '4px', padding: '4px 8px', fontSize: '10px', cursor: 'pointer' }}>Copy</button>
                       </div>
-                      <div style={{ background: '#020617', padding: '12px', borderRadius: '6px', border: '1px solid #334155' }}>
-                        <strong style={{ color: '#f472b6', fontSize: '11px', display: 'block', marginBottom: '6px' }}>🎞️ VIDEO PROMPT</strong>
-                        <code style={{ color: '#e2e8f0', fontSize: '12px', whiteSpace: 'pre-wrap' }}>{scene.videoPrompt}</code>
+                      <code style={{ color: '#e2e8f0', fontSize: '12px', whiteSpace: 'pre-wrap' }}>{scene.imagePrompt}</code>
+                    </div>
+                    <div style={{ background: '#020617', padding: '12px', borderRadius: '6px', border: '1px solid #334155' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                        <strong style={{ color: '#f472b6', fontSize: '11px' }}>🎞️ VIDEO PROMPT</strong>
+                        <button onClick={() => { navigator.clipboard.writeText(scene.videoPrompt); alert("Video Prompt disalin!"); }} style={{ background: '#831843', border: 'none', color: '#fbcfe8', borderRadius: '4px', padding: '4px 8px', fontSize: '10px', cursor: 'pointer' }}>Copy</button>
                       </div>
+                      <code style={{ color: '#e2e8f0', fontSize: '12px', whiteSpace: 'pre-wrap' }}>{scene.videoPrompt}</code>
                     </div>
                   </div>
-                ))}
-              </div>
+
+                </div>
+              ))}
             </div>
+          </div>
 
             {/* Kotak Copy Full VO & Visual ala Lab */}
             <div style={{ backgroundColor: "#111827", border: "1px solid #374151", borderRadius: 8, padding: 16 }}>

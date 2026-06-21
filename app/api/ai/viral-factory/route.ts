@@ -18,11 +18,17 @@ export async function POST(req: Request) {
     const endpoint = baseUrl.endsWith("/chat/completions") ? baseUrl : `${baseUrl}/chat/completions`;
 
     // Prompt ini sudah diubah agar menghasilkan format Scene-by-Scene percis seperti menu Lab
-    const prompt = `Anda adalah Pakar TikTok & YouTube Shorts kelas dunia.
-Klien meminta 4 ide konten vertikal (9:16) super viral (Durasi 45-60 detik per video).
+    const prompt = `Anda adalah Pakar TikTok & YouTube Shorts kelas dunia spesialis Faceless Channel.
+Klien meminta 4 ide konten vertikal (9:16) super viral.
 Niche: "${niche}"
 Topik Spesifik: "${topic}"
 BAHASA NASKAH (VO) & JUDUL HARUS MENGGUNAKAN: "${language}"
+
+ATURAN WAKTU SANGAT KETAT (WAJIB DIIKUTI):
+1. Setiap video WAJIB memiliki antara 8 hingga 12 scene (agar durasi total mencapai 40-60 detik).
+2. SETIAP SCENE HARUS BERDURASI TEPAT 5 DETIK. Tidak boleh kurang, tidak boleh lebih!
+3. Format penulisan waktu harus kelipatan 5 detik (Contoh: "00:00 - 00:05", "00:05 - 00:10", "00:10 - 00:15", dst).
+4. Panjang Teks Voice Over (VO) per scene HARUS disesuaikan dengan kecepatan bicara normal manusia selama 5 detik (maksimal 10-15 kata per scene).
 
 Berikan hasil DALAM FORMAT JSON ARRAY murni yang berisi tepat 4 objek video. Struktur persis seperti ini:
 [
@@ -34,7 +40,7 @@ Berikan hasil DALAM FORMAT JSON ARRAY murni yang berisi tepat 4 objek video. Str
     "scenes": [
       {
         "waktu": "00:00 - 00:05",
-        "vo": "Teks voice over untuk adegan ini",
+        "vo": "Teks voice over 10-15 kata (pas untuk diucapkan dalam 5 detik)",
         "visual": "Aksi visual/B-roll di layar",
         "imagePrompt": "Prompt gambar AI (Midjourney/Grok) BERBAHASA INGGRIS untuk adegan ini",
         "videoPrompt": "Prompt video AI (Kling/Runway) BERBAHASA INGGRIS untuk adegan ini"
@@ -42,7 +48,7 @@ Berikan hasil DALAM FORMAT JSON ARRAY murni yang berisi tepat 4 objek video. Str
     ]
   }
 ]
-PENTING: Setiap video minimal harus memiliki 5-6 scenes agar durasinya pas untuk Shorts. JANGAN gunakan format markdown seperti \`\`\`json. HANYA kembalikan JSON murni.`;
+JANGAN gunakan format markdown seperti \`\`\`json. HANYA kembalikan JSON murni.`;
 
     const res = await fetch(endpoint, {
       method: "POST",
