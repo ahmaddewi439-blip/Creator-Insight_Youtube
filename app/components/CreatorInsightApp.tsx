@@ -148,7 +148,8 @@ export default function CreatorInsightApp() {
   const [analyzingAngles, setAnalyzingAngles] = useState(false);
   const [directorAngles, setDirectorAngles] = useState<any[]>([]);
   const [selectedAngle, setSelectedAngle] = useState<any>(null);
-
+  const [directorLanguage, setDirectorLanguage] = useState("Indonesia");
+  const [viralLoadingStep, setViralLoadingStep] = useState(0); // Untuk efek loading menurun
   // --- FUNGSI AI PEMBEDAH PELUANG ANGLE ---
 const handleAnalyzeAngles = async () => {
     if (!directorTopic) {
@@ -179,28 +180,35 @@ const handleAnalyzeAngles = async () => {
     }
     setAnalyzingAngles(false);
   };
-  // --- FUNGSI AI VIRAL FACTORY (SHORTS) BARU ---
+// --- FUNGSI AI VIRAL FACTORY (SHORTS) BARU DENGAN LOADING MENURUN ---
   const handleGenerate = async () => {
     setIsGeneratingViral(true);
+    setViralLoadingStep(1); // Mulai Step 1
     setViralVideos([]);
+
+    // Efek loading menurun buatan
+    setTimeout(() => setViralLoadingStep(2), 2000); 
+    setTimeout(() => setViralLoadingStep(3), 4500); 
+
     try {
-      // Menyambung ke folder api/ai/viral-factory yang Mas Ahmad miliki
       const res = await fetch('/api/ai/viral-factory', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ niche: directorNiche, topic: selectedAngle?.title || directorTopic })
+        // Mengirimkan Bahasa ke Backend!
+        body: JSON.stringify({ niche: directorNiche, topic: selectedAngle?.title || directorTopic, language: directorLanguage })
       });
       const data = await res.json();
       if (data.success) {
+        setViralLoadingStep(4); // Selesai
         setViralVideos(data.result);
       } else {
         alert("Gagal memuat Viral Pack. Coba lagi.");
       }
     } catch (error) {
       console.error(error);
-      alert("Error menghubungi server Viral Factory. Pastikan folder API sudah benar.");
+      alert("Error menghubungi server Viral Factory.");
     }
-    setIsGeneratingViral(false);
+    setTimeout(() => setIsGeneratingViral(false), 500); // Tutup loading
   };
 
   // --- TAMPILAN HASIL 4 VIDEO SHORTS (PENGGANTI FUNGSI LAMA) ---
@@ -239,7 +247,7 @@ const handleAnalyzeAngles = async () => {
       </div>
     );
   }
-  
+
   const { data: session, status } = useSession();
  const ACTIVE_TAB_KEY = "creator_insight_active_tab";
 
@@ -783,8 +791,9 @@ async function fetchCompetitionScore(keyword: string) {
         <h2 style={{ color: '#f8fafc', fontSize: '20px', margin: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
           🎯 Konfigurasi Mesin Konten Sniper
         </h2>
-        
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '20px' }}>
+       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '20px' }}>
+          
+          {/* KOTAK 1: NICHE */}
           <div>
             <label style={{ color: '#fbbf24', fontSize: '14px', fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>1. Pilih Niche Utama:</label>
             <select value={directorNiche} onChange={(e) => setDirectorNiche(e.target.value)} style={{ width: '100%', padding: '14px 16px', borderRadius: '10px', background: '#0f172a', color: 'white', border: '1px solid #475569', outline: 'none' }}>
@@ -793,10 +802,22 @@ async function fetchCompetitionScore(keyword: string) {
               ))}
             </select>
           </div>
+          
+          {/* KOTAK 2: TOPIK DASAR */}
           <div>
             <label style={{ color: '#fbbf24', fontSize: '14px', fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>2. Topik Dasar:</label>
             <input type="text" value={directorTopic} onChange={(e) => setDirectorTopic(e.target.value)} placeholder="Contoh: Lore hero Alucard..." style={{ width: '100%', padding: '14px 16px', borderRadius: '10px', background: '#0f172a', color: 'white', border: '1px solid #475569', outline: 'none' }} />
           </div>
+
+          {/* KOTAK 3: BAHASA */}
+          <div>
+            <label style={{ color: '#fbbf24', fontSize: '14px', fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>3. Target Bahasa (Untuk Naskah):</label>
+            <select value={directorLanguage} onChange={(e) => setDirectorLanguage(e.target.value)} style={{ width: '100%', padding: '14px 16px', borderRadius: '10px', background: '#0f172a', color: 'white', border: '1px solid #475569', outline: 'none' }}>
+              <option value="Indonesia">🇮🇩 Indonesia (Lokal)</option>
+              <option value="English">🇺🇸 English (Target Bule / RPM Tinggi)</option>
+            </select>
+          </div>
+
         </div>
 
         <button onClick={handleAnalyzeAngles} disabled={analyzingAngles} style={{ width: '100%', padding: '16px', borderRadius: '10px', background: '#3b82f6', color: 'white', fontWeight: 'bold', border: 'none', cursor: 'pointer', fontSize: '16px' }}>
@@ -879,6 +900,33 @@ async function fetchCompetitionScore(keyword: string) {
             </div>
 
           </div>
+        </div>
+      )}
+    {/* 🟢 AREA EFEK LOADING MENURUN VIRAL FACTORY */}
+      {isGeneratingViral && (
+        <div style={{ background: '#020617', padding: '24px', borderRadius: '12px', border: '1px solid #3b82f6', marginTop: '20px' }}>
+          <h3 style={{ color: '#60a5fa', marginBottom: '16px' }}>⚡ Membangun Pabrik Viral Shorts...</h3>
+          <div className={viralLoadingStep >= 1 ? "vidiq-step done" : "vidiq-step"}>
+            {viralLoadingStep > 1 ? "✓" : <span className="spinner">⏳</span>} Menganalisis algoritma tren untuk topik ini...
+          </div>
+          {viralLoadingStep >= 2 && (
+            <div className={viralLoadingStep >= 2 ? "vidiq-step done" : "vidiq-step"}>
+              {viralLoadingStep > 2 ? "✓" : <span className="spinner">⏳</span>} Meracik 4 "Hook Maut" (3 detik pertama)...
+            </div>
+          )}
+          {viralLoadingStep >= 3 && (
+            <div className={viralLoadingStep >= 3 ? "vidiq-step done" : "vidiq-step"}>
+              {viralLoadingStep > 3 ? "✓" : <span className="spinner">⏳</span>} Menulis naskah retensi tinggi dalam bahasa {directorLanguage}...
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* HASILNYA */}
+      {viralVideos && viralVideos.length > 0 && !isGeneratingViral && (
+        <div style={{ marginTop: '20px', padding: '20px', background: '#1e293b', borderRadius: '16px', border: '1px solid #3b82f6' }}>
+          <h2 style={{ color: '#60a5fa', marginBottom: '20px' }}>⚡ Hasil 4 Naskah Shorts ({directorLanguage}):</h2>
+          {renderSutradaraProMax()} 
         </div>
       )}
     </div>

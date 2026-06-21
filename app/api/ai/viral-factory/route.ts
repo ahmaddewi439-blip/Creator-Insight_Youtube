@@ -5,35 +5,35 @@ export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   try {
+    const body = await req.json();
+    // Menangkap niche, topik, dan BAHASA dari frontend
+    const { niche, topic, language } = body;
+
     const apiKey = process.env.AI_API_KEYS;
     let baseUrl = process.env.AI_BASE_URL || "https://lite.koboillm.com/v1";
     const aiModel = process.env.AI_MODEL || "gemini/gemini-2.5-flash-lite";
 
     if (!apiKey) return NextResponse.json({ error: "API Key belum diatur." }, { status: 400 });
+
     baseUrl = baseUrl.replace(/\/+$/, "");
     const endpoint = baseUrl.endsWith("/chat/completions") ? baseUrl : `${baseUrl}/chat/completions`;
 
-    const prompt = `You are an Elite Global Viral News Scraper and Content Strategist for YouTube Shorts.
-Your task is to analyze the ABSOLUTE LATEST, breaking Roblox global trends happening RIGHT NOW (e.g., massive new game releases, huge updates, community drama, or viral glitches). DO NOT use generic topics.
+    // Prompt yang sudah diupgrade untuk menyesuaikan bahasa
+    const prompt = `Anda adalah Pakar TikTok & YouTube Shorts.
+Klien meminta 4 ide konten vertikal (9:16) super viral.
+Niche: "${niche}"
+Topik Spesifik: "${topic}"
+BAHASA NASKAH HARUS MENGGUNAKAN: "${language}"
 
-Create 4 distinct video concepts based heavily on these real, current news/trends.
-Focus ENTIRELY on Roblox. No Minecraft.
-
-You MUST output valid JSON containing an array of exactly 4 objects. 
-JSON Structure:
+Berikan hasil DALAM FORMAT JSON ARRAY murni yang berisi tepat 4 objek. Struktur persis seperti ini:
 [
   {
-    "videoNumber": 1,
-    "title": "MUST BE ENGAGING AND RELATED TO REAL NEWS (Max 60 chars)",
-    "description": "Short, punchy explanation of the news/trend.",
-    "hashtags": "#RobloxNews #RobloxTrend #SpecificGameName",
-    "uploadTime": "Recommend best global time (EST/GMT)",
-    "prompts": [
-      "Write 4 to 6 highly dynamic scene descriptions based on the specific news. EACH string MUST end strictly with: 'Vertical 9:16 video. Roblox gameplay style. Premium dark green aesthetic, cinematic lighting, high contrast, sharp focus.'"
-    ]
+    "title": "Judul Konsep Video",
+    "hook": "Kalimat pertama (3 detik awal) yang sangat clickbait/memicu penasaran",
+    "script": "Isi naskah lengkap dari awal sampai akhir video (durasi 30-40 detik). Tuliskan dengan gaya bahasa yang sesuai dengan target negara/bahasa."
   }
 ]
-Return ONLY raw JSON. No markdown, no introduction.`;
+JANGAN gunakan format markdown seperti \`\`\`json. HANYA kembalikan array JSON murni.`;
 
     const res = await fetch(endpoint, {
       method: "POST",
@@ -42,19 +42,19 @@ Return ONLY raw JSON. No markdown, no introduction.`;
     });
 
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error?.message || "Gagal menghubungi AI");
-
+    if (!res.ok) throw new Error(data.error?.message || JSON.stringify(data));
+    
     let textResponse = data.choices[0].message.content.trim();
-    if (textResponse.startsWith("```json")) textResponse = textResponse.replace(/^```json\s*/, "").replace(/\s*```$/, "");
-    else if (textResponse.startsWith("```")) textResponse = textResponse.replace(/^```\s*/, "").replace(/\s*```$/, "");
+    const bt = "\`\`\`";
+    if (textResponse.startsWith(bt + "json")) textResponse = textResponse.slice(7);
+    else if (textResponse.startsWith(bt + "JSON")) textResponse = textResponse.slice(7);
+    else if (textResponse.startsWith(bt)) textResponse = textResponse.slice(3);
+    if (textResponse.endsWith(bt)) textResponse = textResponse.slice(0, -3);
+    textResponse = textResponse.trim();
 
-    const videosArray = JSON.parse(textResponse);
-
-    // Mengirim data array terpisah agar Frontend bisa membuat 4 tombol copy
-    return NextResponse.json({ success: true, videos: videosArray });
-
+    const result = JSON.parse(textResponse);
+    return NextResponse.json({ success: true, result });
   } catch (error: any) {
-    console.error("Viral Factory Error:", error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
