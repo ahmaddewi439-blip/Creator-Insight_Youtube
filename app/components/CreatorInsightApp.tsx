@@ -1628,40 +1628,52 @@ function OptimizerResultView({ result, onLivePreview }: { result: any; onLivePre
    {/* --- KOTAK JUDUL --- */}
           <div style={{ background: '#1e293b', padding: '16px', borderRadius: '12px', border: '1px solid #334155' }}>
             <h3 style={{ margin: '0 0 12px 0', fontSize: '15px', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span>🔥</span> 5 Rekomendasi Judul Viral (Lengkap dengan Skor)
+              <span>🔥</span> 5 Rekomendasi Judul Viral
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {titles.map((title, idx) => (
+              {titles.map((rawTitle, idx) => {
+                // LOGIKA PEMBERSIH: Pisahkan teks judul asli dan angka skornya
+                const cleanTitle = typeof rawTitle === 'string' ? rawTitle.replace(/\s*\[Skor SEO:\s*\d+\/100\]/i, '').trim() : '';
+                const scoreMatch = typeof rawTitle === 'string' ? rawTitle.match(/\[Skor SEO:\s*(\d+)\/100\]/i) : null;
+                const score = scoreMatch ? parseInt(scoreMatch[1]) : 0;
+
+                return (
                 <div 
                   key={idx} 
                   style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#0f172a', border: '1px solid #334155', padding: '12px', borderRadius: '8px' }}
                 >
-                  <span style={{ fontSize: '14px', color: '#f8fafc', fontWeight: 'bold', flex: 1, paddingRight: '12px', lineHeight: '1.5' }}>
-                    {title}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, paddingRight: '12px' }}>
+                    {/* LENCANA SKOR UI */}
+                    {score > 0 && (
+                      <span style={{ background: score >= 90 ? '#059669' : score >= 80 ? '#d97706' : '#dc2626', color: 'white', padding: '4px 8px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
+                        SEO {score}
+                      </span>
+                    )}
+                    <span style={{ fontSize: '14px', color: '#f8fafc', fontWeight: 'bold', lineHeight: '1.5' }}>
+                      {cleanTitle}
+                    </span>
+                  </div>
                   
                   <div style={{ display: 'flex', gap: '8px' }}>
-                    {/* TOMBOL TERAPKAN */}
                     <button 
-                      onClick={() => onLivePreview("title", title)}
+                      onClick={() => onLivePreview("title", cleanTitle)}
                       style={{ background: '#059669', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px', whiteSpace: 'nowrap' }}
                     >
                       🔄 Terapkan
                     </button>
-                    {/* TOMBOL COPY */}
                     <button 
-                      onClick={() => { navigator.clipboard.writeText(title); alert("Judul disalin!"); }}
+                      onClick={() => { navigator.clipboard.writeText(cleanTitle); alert("Judul bersih disalin!"); }}
                       style={{ background: '#1e293b', color: '#38bdf8', border: '1px solid #38bdf8', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px', whiteSpace: 'nowrap' }}
                     >
                       📋 Copy
                     </button>
                   </div>
                 </div>
-              ))}
+              )})}
             </div>
           </div>
 
-    {/* --- AREA DRAFT DESKRIPSI SEO --- */}
+          {/* --- AREA DRAFT DESKRIPSI SEO --- */}
           <div style={{ marginTop: '20px' }}>
             <h4 style={{ color: '#38bdf8', marginBottom: '12px', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span>📝</span> Draft Deskripsi SEO Friendly
@@ -1673,14 +1685,12 @@ function OptimizerResultView({ result, onLivePreview }: { result: any; onLivePre
                 style={{ width: '100%', height: '140px', background: 'transparent', color: '#cbd5e1', border: 'none', outline: 'none', resize: 'vertical', fontSize: '14px', lineHeight: '1.6' }}
               />
               <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px', gap: '12px' }}>
-                {/* TOMBOL SAKTI UNTUK UPDATE KE WEB */}
                 <button 
                   onClick={() => onLivePreview("description", result.description)}
                   style={{ background: '#059669', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
                 >
                   🔄 Terapkan ke Video
                 </button>
-                {/* TOMBOL COPY */}
                 <button 
                   onClick={() => { navigator.clipboard.writeText(result.description); alert("Deskripsi disalin!"); }}
                   style={{ background: '#1e293b', color: '#38bdf8', border: '1px solid #38bdf8', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
@@ -1691,33 +1701,58 @@ function OptimizerResultView({ result, onLivePreview }: { result: any; onLivePre
             </div>
           </div>
 
-          {/* --- AREA REKOMENDASI HASHTAG --- */}
+          {/* --- AREA REKOMENDASI HASHTAG (GAYA VIDIQ) --- */}
           <div style={{ marginTop: '20px', marginBottom: '20px' }}>
             <h4 style={{ color: '#10b981', marginBottom: '12px', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span>🏷️</span> Rekomendasi Hashtag Viral (Berdasarkan Skor)
             </h4>
-            <div style={{ background: '#0f172a', padding: '16px', borderRadius: '12px', border: '1px solid #334155', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-              <p style={{ color: '#cbd5e1', margin: '0', fontSize: '14px', flex: 1, lineHeight: '1.6' }}>
-                {result.keywords ? result.keywords.join(" ") : result.tags ? result.tags : "#hashtag #seo"}
-              </p>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                {/* TOMBOL SAKTI UNTUK UPDATE KE WEB */}
+            <div style={{ background: '#0f172a', padding: '16px', borderRadius: '12px', border: '1px solid #334155' }}>
+              
+              {/* Tampilan Kotak Hashtag */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
+                {(result.keywords || []).map((kw: string, i: number) => {
+                  const tagMatch = kw.match(/(.*?)\s*\((.*?)\)/);
+                  const tag = tagMatch ? tagMatch[1].trim() : kw;
+                  const score = tagMatch ? parseInt(tagMatch[2]) : 0;
+                  
+                  return (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', background: '#1e293b', borderRadius: '6px', overflow: 'hidden', border: '1px solid #334155' }}>
+                      <span style={{ padding: '6px 10px', color: '#cbd5e1', fontSize: '13px' }}>{tag}</span>
+                      {score > 0 && (
+                        <span style={{ background: score >= 90 ? '#059669' : score >= 80 ? '#d97706' : '#dc2626', color: 'white', padding: '6px 8px', fontSize: '11px', fontWeight: 'bold', borderLeft: '1px solid #334155' }}>
+                          {score}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Tombol Aksi Hashtag */}
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', borderTop: '1px solid #334155', paddingTop: '16px' }}>
                 <button 
-                  onClick={() => onLivePreview("tags", result.keywords ? result.keywords.join(" ") : result.tags)}
+                  onClick={() => {
+                    const cleanTags = (result.keywords || []).map((kw: string) => kw.replace(/\s*\(\d+\)/g, '').trim()).join(" ");
+                    onLivePreview("tags", cleanTags);
+                  }}
                   style={{ background: '#059669', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', whiteSpace: 'nowrap' }}
                 >
-                  🔄 Terapkan
+                  🔄 Terapkan Semua Bersih
                 </button>
-                {/* TOMBOL COPY */}
                 <button 
-                  onClick={() => { navigator.clipboard.writeText(result.keywords ? result.keywords.join(" ") : result.tags); alert("Hashtag disalin!"); }}
+                  onClick={() => { 
+                    const cleanTags = (result.keywords || []).map((kw: string) => kw.replace(/\s*\(\d+\)/g, '').trim()).join(" ");
+                    navigator.clipboard.writeText(cleanTags); 
+                    alert("Hashtag bersih disalin!"); 
+                  }}
                   style={{ background: '#10b981', color: '#022c22', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', whiteSpace: 'nowrap' }}
                 >
-                  📋 Copy
+                  📋 Copy Bersih
                 </button>
               </div>
             </div>
           </div>
+          
     </div>
   );
 }
