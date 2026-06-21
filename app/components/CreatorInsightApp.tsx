@@ -1049,11 +1049,22 @@ async function fetchCompetitionScore(keyword: string) {
         btn.disabled = true;
 
         try {
-            // 1. Ekstrak ID langsung dari video yang diklik (Anti-Rabun)
-            let vidId = null;
-            if (typeof currentVideo?.id === 'string') vidId = currentVideo.id;
-            else if (currentVideo?.id?.videoId) vidId = currentVideo.id.videoId;
-            else if (currentVideo?.snippet?.resourceId?.videoId) vidId = currentVideo.snippet.resourceId.videoId;
+            
+            // 1. Ekstrak ID langsung dari video (Pelacak Super Kuat Anti-Gagal)
+        let vidId = currentVideo?.id?.videoId || 
+                    currentVideo?.snippet?.resourceId?.videoId || 
+                    currentVideo?.contentDetails?.videoId || 
+                    currentVideo?.videoId;
+                    
+        if (!vidId && typeof currentVideo?.id === 'string') {
+            vidId = currentVideo.id;
+        }
+
+        // Jurus Rahasia: Kalau API YouTube masih menyembunyikan ID-nya, kita curi paksa dari link Thumbnail-nya!
+        if (!vidId && currentVideo?.snippet?.thumbnails?.default?.url) {
+            const urlMatch = currentVideo.snippet.thumbnails.default.url.match(/\/vi\/([a-zA-Z0-9_-]+)\//);
+            if (urlMatch) vidId = urlMatch[1];
+        }
 
             if (!vidId) {
                 console.error("Data aneh:", currentVideo);
