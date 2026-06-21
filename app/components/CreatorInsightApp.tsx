@@ -142,6 +142,39 @@ function getVideoId(video: any) {
 }
 
 export default function CreatorInsightApp() {
+  // --- STATE UNTUK MENU SUTRADARA SNIPER ---
+  const [directorNiche, setDirectorNiche] = useState("Gaming / E-sports");
+  const [directorTopic, setDirectorTopic] = useState("");
+  const [analyzingAngles, setAnalyzingAngles] = useState(false);
+  const [directorAngles, setDirectorAngles] = useState<any[]>([]);
+  const [selectedAngle, setSelectedAngle] = useState<any>(null);
+
+  // --- FUNGSI AI PEMBEDAH PELUANG ANGLE ---
+  const handleAnalyzeAngles = async () => {
+    if (!directorTopic) {
+      alert("Tolong ketik topik spesifiknya dulu di atas!");
+      return;
+    }
+    setAnalyzingAngles(true);
+    setDirectorAngles([]);
+    setSelectedAngle(null);
+    try {
+      const res = await fetch('/api/ai/director-angles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ niche: directorNiche, topic: directorTopic })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setDirectorAngles(data.result);
+      } else {
+        alert("Gagal membedah peluang. Coba lagi.");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+    setAnalyzingAngles(false);
+  };
   const { data: session, status } = useSession();
  const ACTIVE_TAB_KEY = "creator_insight_active_tab";
 
@@ -176,8 +209,8 @@ export default function CreatorInsightApp() {
   const [activeDailyTab, setActiveDailyTab] = useState<number>(0);
   const [opportunityLoading, setOpportunityLoading] = useState(false);
   const [opportunityResults, setOpportunityResults] = useLocalStorage<any[]>("simpanan_hasil_ai", []);
-  const [directorNiche, setDirectorNiche] = useState("Gaming / E-sports");
-  const [directorTopic, setDirectorTopic] = useState("");
+ 
+
   // TAMBAHKAN KODE INI UNTUK EFEK VIDIQ:
   const [expandedIdea, setExpandedIdea] = useLocalStorage<number | null>("simpanan_ide_terbuka", null);
   const [scriptLoadingStep, setScriptLoadingStep] = useState<number>(0);
@@ -665,208 +698,120 @@ async function fetchCompetitionScore(keyword: string) {
     setOpportunityLoading(false);
   }
 
-  function renderSutradaraProMax() {
-  async function handleGenerate() {
-      setIsGeneratingViral(true);
-      setViralVideos([]); 
-      try {
-        const res = await fetch('/api/ai/viral-factory', { method: 'POST' });
-        const data = await res.json();
-        
-        if (data.success && data.videos) {
-          setViralVideos(data.videos); 
-        } else {
-           alert("Gagal meracik viral pack.");
-        }
-      } catch(err) {
-        alert("Gagal memuat API.");
-      }
-      setIsGeneratingViral(false);
-    }
-
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        {/* ... (Header Card dan Dashboard Card tetap sama seperti kode Anda) ... */}
-
-        {/* Viral Factory Card */}
-        <div style={{ background: '#047857', padding: '2px', borderRadius: '14px' }}> {/* Premium Dark Green Border */}
-          <div style={{ background: '#0f172a', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ fontSize: '20px', margin: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>🎯 Viral Factory</h3>
-            <p style={{ color: '#cbd5e1', fontSize: '14px', marginBottom: '20px' }}>Generate 4 video + AI ranking + viral scoring otomatis berdasarkan tren YouTube saat ini.</p>
-            
-            {/* TOMBOL */}
-            <button 
-              onClick={handleGenerate}
-              disabled={isGeneratingViral}
-              style={{ width: '100%', padding: '14px', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '15px' }}
-            >
-              {isGeneratingViral ? "⏳ AI Sedang Menganalisis Tren YouTube..." : "⚡ Generate Viral Pack (4 Video AI)"}
-            </button>
-
-            {/* KOTAK HASIL (Muncul Otomatis Setelah AI Selesai) */}
-         {/* HASIL 4 VIDEO TERPISAH */}
-            {viralVideos.length > 0 && (
-              <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {viralVideos.map((video, idx) => {
-                  // Format teks rapi khusus untuk di-copy
-                  const copyText = `🔥 VIDEO ${idx + 1}\nTitle: ${video.title}\nDescription: ${video.description}\nHashtags: ${video.hashtags}\nBest Upload Time: ${video.uploadTime}\n\n🎬 Grok AI Video Prompts (Vertical 9:16):\n${video.prompts.map((p: string, i: number) => `- Prompt ${i + 1}: "${p}"`).join("\n")}`;
-
-                  return (
-                    <div key={idx} style={{ background: '#020617', border: '1px solid #334155', borderRadius: '8px', overflow: 'hidden' }}>
-                      
-                      {/* Header Tiap Video + Tombol Copy */}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#1e293b', padding: '12px 16px', borderBottom: '1px solid #334155' }}>
-                        <span style={{ fontSize: '14px', color: '#f8fafc', fontWeight: 'bold' }}>🔥 VIDEO {idx + 1}</span>
-                        <button 
-                          onClick={() => {
-                            navigator.clipboard.writeText(copyText);
-                            setCopiedId(idx);
-                            setTimeout(() => setCopiedId(null), 2000);
-                          }}
-                          style={{ background: copiedId === idx ? '#059669' : '#3b82f6', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', cursor: 'pointer', fontWeight: 'bold' }}
-                        >
-                          {copiedId === idx ? "✅ Berhasil Dicopy!" : `📋 Copy Video ${idx + 1}`}
-                        </button>
-                      </div>
-
-                      {/* Isi Teks Tiap Video */}
-                      <div style={{ padding: '16px', color: '#cbd5e1', fontSize: '14px', lineHeight: '1.6' }}>
-                        <p><strong>Title:</strong> <span style={{color: '#f8fafc'}}>{video.title}</span></p>
-                        <p><strong>Description:</strong> {video.description}</p>
-                        <p><strong>Hashtags:</strong> <span style={{color: '#38bdf8'}}>{video.hashtags}</span></p>
-                        <p><strong>Upload Time:</strong> {video.uploadTime}</p>
-                        
-                        <div style={{ marginTop: '12px', background: '#0f172a', padding: '12px', borderRadius: '6px', border: '1px solid #1e293b' }}>
-                          <strong style={{ display: 'block', marginBottom: '8px', color: '#f8fafc' }}>🎬 Grok AI Prompts:</strong>
-                          <ul style={{ margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            {video.prompts.map((p: string, i: number) => (
-                              <li key={i}>{p}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
-
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-            
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-function renderSutradara() {
+  function renderSutradara() {
   const niches = [
-    { name: 'Gaming / E-sports', icon: '🎮' },
-    { name: 'Finance & Crypto', icon: '💰' },
-    { name: 'Science & Tech', icon: '🔭' },
-    { name: 'Travel & Events', icon: '🌍' },
-    { name: 'Health & Fitness', icon: '🏋️' },
-    { name: 'Pets & Animals', icon: '🐾' },
-    { name: 'Education & Facts', icon: '📚' },
-    { name: 'Entertainment', icon: '🎭' },
-    { name: 'Food & Cooking', icon: '🍔' },
-    { name: 'Beauty & Fashion', icon: '💄' },
-    { name: 'Lifestyle & Motivation', icon: '✨' },
-    { name: 'Sports & Outdoors', icon: '⚽' },
-    { name: 'Music & Dance', icon: '🎵' },
-    { name: 'DIY & Crafts', icon: '🛠️' },
-    { name: 'Automotive', icon: '🚗' },
-    { name: 'News & Politics', icon: '📰' }
+    { name: 'Gaming / E-sports', icon: '🎮' }, { name: 'Finance & Crypto', icon: '💰' },
+    { name: 'Science & Tech', icon: '🔭' }, { name: 'Travel & Events', icon: '🌍' },
+    { name: 'Health & Fitness', icon: '🏋️' }, { name: 'Pets & Animals', icon: '🐾' },
+    { name: 'Education & Facts', icon: '📚' }, { name: 'Entertainment', icon: '🎭' },
+    { name: 'Food & Cooking', icon: '🍔' }, { name: 'Beauty & Fashion', icon: '💄' },
+    { name: 'Lifestyle & Motivation', icon: '✨' }, { name: 'Sports & Outdoors', icon: '⚽' },
+    { name: 'Music & Dance', icon: '🎵' }, { name: 'DIY & Crafts', icon: '🛠️' },
+    { name: 'Automotive', icon: '🚗' }, { name: 'News & Politics', icon: '📰' }
   ];
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
       
       {/* 🎯 STEP 1: DASHBOARD INPUT TARGETING */}
       <div style={{ background: '#1e293b', padding: '24px', borderRadius: '16px', border: '1px solid #3b82f6', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
         <h2 style={{ color: '#f8fafc', fontSize: '20px', margin: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          🎯 Konfigurasi Mesin Konten
+          🎯 Konfigurasi Mesin Konten Sniper
         </h2>
-        <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '24px' }}>
-          Pilih niche dan ketik topik spesifik. AI akan merancang naskah dan prompt gambar yang 100% akurat sesuai arahan ini.
-        </p>
         
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '20px' }}>
           <div>
             <label style={{ color: '#fbbf24', fontSize: '14px', fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>1. Pilih Niche Utama:</label>
-            <select 
-              value={directorNiche}
-              onChange={(e) => setDirectorNiche(e.target.value)}
-              style={{ width: '100%', padding: '14px 16px', borderRadius: '10px', background: '#0f172a', color: 'white', border: '1px solid #475569', outline: 'none', fontSize: '14px', cursor: 'pointer' }}
-            >
-              {/* Mengambil otomatis dari daftar 16 Niche yang sudah kita buat sebelumnya */}
+            <select value={directorNiche} onChange={(e) => setDirectorNiche(e.target.value)} style={{ width: '100%', padding: '14px 16px', borderRadius: '10px', background: '#0f172a', color: 'white', border: '1px solid #475569', outline: 'none' }}>
               {niches.map((niche: any, idx: number) => (
                 <option key={idx} value={niche.name}>{niche.icon} {niche.name}</option>
               ))}
             </select>
           </div>
-
           <div>
-            <label style={{ color: '#fbbf24', fontSize: '14px', fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>2. Topik Spesifik (Ide Video):</label>
-            <input 
-              type="text" 
-              value={directorTopic}
-              onChange={(e) => setDirectorTopic(e.target.value)}
-              placeholder="Contoh: Lore hero Alucard, Fakta aneh hewan laut, Penemuan Nikola Tesla..."
-              style={{ width: '100%', padding: '14px 16px', borderRadius: '10px', background: '#0f172a', color: 'white', border: '1px solid #475569', outline: 'none', fontSize: '14px' }}
-            />
+            <label style={{ color: '#fbbf24', fontSize: '14px', fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>2. Topik Dasar:</label>
+            <input type="text" value={directorTopic} onChange={(e) => setDirectorTopic(e.target.value)} placeholder="Contoh: Lore hero Alucard..." style={{ width: '100%', padding: '14px 16px', borderRadius: '10px', background: '#0f172a', color: 'white', border: '1px solid #475569', outline: 'none' }} />
           </div>
         </div>
+
+        <button onClick={handleAnalyzeAngles} disabled={analyzingAngles} style={{ width: '100%', padding: '16px', borderRadius: '10px', background: '#3b82f6', color: 'white', fontWeight: 'bold', border: 'none', cursor: 'pointer', fontSize: '16px' }}>
+          {analyzingAngles ? '⏳ AI Sedang Memindai Peluang Angle...' : '🔍 Bedah Peluang Topik (Cari Saingan Terendah)'}
+        </button>
       </div>
 
-      {/* 🚀 STEP 2: PILIHAN FORMAT EKSEKUSI */}
-      <div>
-        <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          🚀 Pilih Format Eksekusi AI:
-        </h3>
-        
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
-          
-          {/* KARTU 1: VIRAL FACTORY (SHORTS) - Langsung memanggil fungsi lama Anda di sini! */}
-          {renderSutradaraProMax()}
-
-          {/* KARTU 2: SUTRADARA AI (LONG VIDEO) */}
-          <div className="card" style={{ border: '1px solid #10b981', background: 'linear-gradient(145deg, #064e3b 0%, #022c22 100%)', padding: '24px', borderRadius: '16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', top: '-2px', right: '-2px', background: '#10b981', color: '#022c22', padding: '8px 16px', borderRadius: '0 16px 0 16px', fontSize: '12px', fontWeight: 'bold' }}>
-              👑 Paling Laris
-            </div>
-            
-            <div style={{ marginTop: '10px' }}>
-              <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#34d399', margin: '0 0 12px 0', fontSize: '20px' }}>
-                🎬 Sutradara AI (Long Video)
-              </h2>
-              <p style={{ color: '#a7f3d0', margin: '0 0 24px 0', fontSize: '13px', lineHeight: '1.6' }}>
-                Pakar naskah video panjang (5-15 Menit). Menghasilkan struktur Micro-Pacing, Voice Over, dan Prompt Gambar AI Midjourney/Bing untuk channel Automation Anda.
-              </p>
-            </div>
-            
-            <button 
-              onClick={() => {
-                if(!directorTopic) { 
-                  alert('Tolong ketik topik spesifiknya dulu di atas ya!'); 
-                  return; 
-                }
-                // Simpan input user ke memory agar terbawa ke halaman /long-video
-                localStorage.setItem('targetNiche', directorNiche);
-                localStorage.setItem('targetTopic', directorTopic);
-                window.location.href='/long-video';
-              }} 
-              style={{ width: '100%', background: '#10b981', color: '#022c22', fontWeight: 'bold', padding: '14px', borderRadius: '10px', border: 'none', cursor: 'pointer', fontSize: '15px', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)' }}
-            >
-              Masuk ke Sutradara AI 🚀
-            </button>
+      {/* 📊 STEP 2: 3 KARTU SCORECARD ANGLE */}
+      {directorAngles && directorAngles.length > 0 && (
+        <div>
+          <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>💡 Pilih Angle Terbaik Anda:</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
+            {directorAngles.map((item, idx) => (
+              <div 
+                key={idx} 
+                onClick={() => setSelectedAngle(item)}
+                style={{ background: '#0f172a', border: selectedAngle?.title === item.title ? '2px solid #10b981' : '1px solid #334155', borderRadius: '12px', padding: '20px', cursor: 'pointer', position: 'relative', transition: 'all 0.2s', opacity: selectedAngle && selectedAngle.title !== item.title ? 0.6 : 1 }}
+              >
+                {selectedAngle?.title === item.title && <div style={{ position: 'absolute', top: -10, right: -10, background: '#10b981', color: 'white', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>✓</div>}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '12px', background: '#1e293b', padding: '4px 8px', borderRadius: '6px', color: '#cbd5e1' }}>{item.searchVolume} Search</span>
+                  <span style={{ fontSize: '12px', background: item.competition === 'Rendah' ? '#064e3b' : '#7f1d1d', color: item.competition === 'Rendah' ? '#34d399' : '#fca5a5', padding: '4px 8px', borderRadius: '6px' }}>{item.competition} Comp</span>
+                </div>
+                <h4 style={{ margin: '0 0 8px 0', color: 'white', fontSize: '16px', lineHeight: '1.4' }}>"{item.title}"</h4>
+                <p style={{ margin: '0 0 16px 0', color: '#94a3b8', fontSize: '13px' }}>{item.angle}</p>
+                <div style={{ background: '#1e293b', padding: '12px', borderRadius: '8px', borderLeft: `4px solid ${item.score >= 80 ? '#10b981' : '#eab308'}` }}>
+                  <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: '#94a3b8' }}>Skor Viral</p>
+                  <h2 style={{ margin: 0, color: item.score >= 80 ? '#10b981' : '#eab308', fontSize: '28px' }}>{item.score}</h2>
+                </div>
+              </div>
+            ))}
           </div>
-
         </div>
-      </div>
+      )}
 
+      {/* 🚀 STEP 3: EKSEKUSI (HANYA MUNCUL JIKA ANGLE SUDAH DIPILIH) */}
+      {selectedAngle && (
+        <div style={{ marginTop: '20px', padding: '24px', background: '#1e293b', borderRadius: '16px', border: '1px solid #10b981' }}>
+          <h3 style={{ color: '#34d399', fontSize: '18px', marginBottom: '20px' }}>🚀 Eksekusi Angle: "{selectedAngle.title}"</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+            
+            {/* KARTU VIRAL FACTORY (SHORTS) BARU */}
+            <div className="card" style={{ border: '1px solid #3b82f6', background: 'linear-gradient(145deg, #1e3a8a 0%, #0f172a 100%)', padding: '24px', borderRadius: '16px', position: 'relative' }}>
+              <h2 style={{ color: '#60a5fa', margin: '0 0 12px 0', fontSize: '20px' }}>⚡ Viral Factory (Shorts)</h2>
+              <p style={{ color: '#93c5fd', margin: '0 0 24px 0', fontSize: '13px' }}>Hasilkan 4 script video pendek vertikal 9:16 super viral berdasarkan angle ini.</p>
+              <button 
+                onClick={() => {
+                  alert("Fitur AI Viral Factory untuk angle '" + selectedAngle.title + "' segera hadir!");
+                }} 
+                style={{ width: '100%', background: '#3b82f6', color: 'white', fontWeight: 'bold', padding: '14px', borderRadius: '10px', border: 'none', cursor: 'pointer', fontSize: '15px' }}
+              >
+                Generate Viral Pack ⚡
+              </button>
+            </div>
+
+            {/* KARTU SUTRADARA AI (LONG VIDEO) */}
+            <div className="card" style={{ border: '1px solid #10b981', background: 'linear-gradient(145deg, #064e3b 0%, #022c22 100%)', padding: '24px', borderRadius: '16px', position: 'relative' }}>
+              <div style={{ position: 'absolute', top: '-2px', right: '-2px', background: '#10b981', color: '#022c22', padding: '8px 16px', borderRadius: '0 16px 0 16px', fontSize: '12px', fontWeight: 'bold' }}>
+                👑 Paling Laris
+              </div>
+              <h2 style={{ color: '#34d399', margin: '0 0 12px 0', fontSize: '20px', marginTop: '10px' }}>🎬 Sutradara AI (Long Video)</h2>
+              <p style={{ color: '#a7f3d0', margin: '0 0 24px 0', fontSize: '13px' }}>Hasilkan script 5-15 menit & Prompt Midjourney untuk angle ini.</p>
+              <button 
+                onClick={() => {
+                  localStorage.setItem('targetNiche', directorNiche);
+                  localStorage.setItem('targetTopic', selectedAngle.title);
+                  window.location.href='/long-video';
+                }} 
+                style={{ width: '100%', background: '#10b981', color: '#022c22', fontWeight: 'bold', padding: '14px', borderRadius: '10px', border: 'none', cursor: 'pointer', fontSize: '15px' }}
+              >
+                Buat Naskah Long Video 🚀
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-      
   function renderOptimizer() {
     // FITUR LIVE PREVIEW (Update Judul, Deskripsi, dan Tags sekaligus)
     const handleLivePreview = (type: string, value: any) => {
