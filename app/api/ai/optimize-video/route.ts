@@ -22,31 +22,37 @@ export async function POST(req: Request) {
     const originalTitle = video?.snippet?.title || video?.title || "Video Tanpa Judul";
     const originalDesc = video?.snippet?.description || "";
 
-  const prompt = `You are an elite YouTube SEO Expert and Viral Content Strategist. 
-Analyze the following video content and provide highly optimized, high-CTR recommendations.
+ const prompt = `Anda adalah Pakar SEO YouTube dan Copywriter kelas dunia.
+Klien meminta optimasi metadata video YouTube agar mendapatkan ranking 1 di pencarian dan rasio klik (CTR) yang tinggi.
 
-LANGUAGE INSTRUCTION: 
-Detect the language of the video title and description provided below. 
-You MUST respond in the SAME LANGUAGE as the input video.
-
-Berikan output dengan aturan ketat berikut dalam format JSON:
-1. "recommendedTitles": [5 viral & clickbait-style titles, under 60 characters, use emojis].
-2. "description": "SEO-friendly description. First 3 lines must contain a powerful hook. Include a brief summary, CTA to subscribe, and relevant keywords."
-3. "keywords": [15-20 trending tags/hashtags related to the video topic].
-4. "caption": "Short 3-sentence caption for quick sharing."
-5. "hashtag": Sertakan 10 hashtag relevan dan trending sesuai topik.
-6. "judul_referensi": Berikan 3 pilihan judul yang sangat 'clickbait' dan memikat untuk audiens [target_bahasa] yang dipilih.
-7. "jadwal_upload_wib": Berikan saran jam upload terbaik dalam format WIB berdasarkan target negara yang dipilih (contoh: 22:00 - 05:00 WIB untuk pasar US)."
-
-Rules:
-1. All text content (titles, description, etc.) MUST be in ${targetLanguage || "English"}.
-2. Use slang, tone, and style suitable for ${targetLanguage || "English"}.
-3. DO NOT use markdown code blocks like \`\`\`json.
-4. Respond ONLY with valid JSON.
-
-Video to analyze:
+Data Video Asli:
 Judul: "${originalTitle}"
-Deskripsi: "${originalDesc.substring(0, 500)}"`;
+Deskripsi: "${originalDesc.substring(0, 500)}"
+Bahasa Target: ${targetLanguage || "English"}
+
+ATURAN KETAT (WAJIB DIIKUTI):
+1. 'titles': Buat 5 pilihan judul clickbait namun SEO-friendly. SETIAP JUDUL WAJIB diberi awalan [Skor SEO: Angka/100]. Beri skor realistis berdasarkan persaingan (contoh: "[Skor SEO: 98/100] Judul Video...").
+2. 'description': Buat naskah deskripsi YouTube yang panjang, profesional, dan kaya akan keyword SEO.
+3. 'keywords': Buat array yang berisi daftar minimal 15 hashtag. WAJIB diurutkan dari skor SEO tertinggi hingga terendah. WAJIB cantumkan skornya di samping hashtag (contoh: "#roblox (99)", "#bloxfruits (95)").
+
+Berikan hasil DALAM FORMAT JSON MURNI (Object) dengan struktur persis seperti ini:
+{
+  "titles": [
+    "[Skor SEO: 98/100] Judul Pilihan Pertama",
+    "[Skor SEO: 95/100] Judul Pilihan Kedua",
+    "[Skor SEO: 91/100] Judul Pilihan Ketiga",
+    "[Skor SEO: 88/100] Judul Pilihan Keempat",
+    "[Skor SEO: 85/100] Judul Pilihan Kelima"
+  ],
+  "description": "Tulis deskripsi video yang lengkap dan SEO friendly di sini...",
+  "keywords": [
+    "#keyword1 (99)",
+    "#keyword2 (95)",
+    "#keyword3 (90)"
+  ]
+}
+
+Gunakan bahasa yang sama dengan Bahasa Target. JANGAN gunakan format markdown seperti \`\`\`json. HANYA kembalikan JSON murni.`;
 
     const res = await fetch(endpoint, {
       method: "POST",
