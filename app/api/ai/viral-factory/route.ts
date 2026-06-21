@@ -6,7 +6,6 @@ export const runtime = "nodejs";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    // Menangkap niche, topik, dan BAHASA dari frontend
     const { niche, topic, language } = body;
 
     const apiKey = process.env.AI_API_KEYS;
@@ -18,22 +17,32 @@ export async function POST(req: Request) {
     baseUrl = baseUrl.replace(/\/+$/, "");
     const endpoint = baseUrl.endsWith("/chat/completions") ? baseUrl : `${baseUrl}/chat/completions`;
 
-    // Prompt yang sudah diupgrade untuk menyesuaikan bahasa
-    const prompt = `Anda adalah Pakar TikTok & YouTube Shorts.
-Klien meminta 4 ide konten vertikal (9:16) super viral.
+    // Prompt ini sudah diubah agar menghasilkan format Scene-by-Scene percis seperti menu Lab
+    const prompt = `Anda adalah Pakar TikTok & YouTube Shorts kelas dunia.
+Klien meminta 4 ide konten vertikal (9:16) super viral (Durasi 45-60 detik per video).
 Niche: "${niche}"
 Topik Spesifik: "${topic}"
-BAHASA NASKAH HARUS MENGGUNAKAN: "${language}"
+BAHASA NASKAH (VO) & JUDUL HARUS MENGGUNAKAN: "${language}"
 
-Berikan hasil DALAM FORMAT JSON ARRAY murni yang berisi tepat 4 objek. Struktur persis seperti ini:
+Berikan hasil DALAM FORMAT JSON ARRAY murni yang berisi tepat 4 objek video. Struktur persis seperti ini:
 [
   {
     "title": "Judul Konsep Video",
-    "hook": "Kalimat pertama (3 detik awal) yang sangat clickbait/memicu penasaran",
-    "script": "Isi naskah lengkap dari awal sampai akhir video (durasi 30-40 detik). Tuliskan dengan gaya bahasa yang sesuai dengan target negara/bahasa."
+    "hook": "Hook 3 detik pertama yang sangat mematikan",
+    "audioMood": "Rekomendasi musik background yang trending",
+    "thumbnailPrompt": "Prompt bahasa inggris untuk generate gambar thumbnail/cover awal",
+    "scenes": [
+      {
+        "waktu": "00:00 - 00:05",
+        "vo": "Teks voice over untuk adegan ini",
+        "visual": "Aksi visual/B-roll di layar",
+        "imagePrompt": "Prompt gambar AI (Midjourney/Grok) BERBAHASA INGGRIS untuk adegan ini",
+        "videoPrompt": "Prompt video AI (Kling/Runway) BERBAHASA INGGRIS untuk adegan ini"
+      }
+    ]
   }
 ]
-JANGAN gunakan format markdown seperti \`\`\`json. HANYA kembalikan array JSON murni.`;
+PENTING: Setiap video minimal harus memiliki 5-6 scenes agar durasinya pas untuk Shorts. JANGAN gunakan format markdown seperti \`\`\`json. HANYA kembalikan JSON murni.`;
 
     const res = await fetch(endpoint, {
       method: "POST",

@@ -161,10 +161,11 @@ const handleAnalyzeAngles = async () => {
     setSelectedAngle(null);
     try {
       // Pastikan alamat ini sama persis dengan susunan folder Anda di VS Code
-      const res = await fetch('/api/ai/director-angles', {
+    const res = await fetch('/api/ai/director-angles', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ niche: directorNiche, topic: directorTopic })
+        // KITA TAMBAHKAN directorLanguage DI SINI 👇
+        body: JSON.stringify({ niche: directorNiche, topic: directorTopic, language: directorLanguage }) 
       });
       
       const data = await res.json();
@@ -211,37 +212,92 @@ const handleAnalyzeAngles = async () => {
     setTimeout(() => setIsGeneratingViral(false), 500); // Tutup loading
   };
 
-  // --- TAMPILAN HASIL 4 VIDEO SHORTS (PENGGANTI FUNGSI LAMA) ---
+  // --- TAMPILAN HASIL 4 VIDEO SHORTS (FORMAT DETAIL SCENE-BY-SCENE) ---
   function renderSutradaraProMax() {
     if (!viralVideos || viralVideos.length === 0) return null;
     return (
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px', marginTop: '20px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '30px', marginTop: '20px' }}>
         {viralVideos.map((video: any, idx: number) => (
-          <div key={idx} style={{ background: '#020617', border: '1px solid #3b82f6', borderRadius: '12px', padding: '24px' }}>
-            <h3 style={{ color: '#60a5fa', margin: '0 0 16px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span>📱 Video Shorts {idx + 1}</span>
+          <div key={idx} style={{ background: '#020617', border: '1px solid #3b82f6', borderRadius: '16px', padding: '24px', position: 'relative' }}>
+            
+            {/* Header Video */}
+            <h3 style={{ color: '#60a5fa', margin: '0 0 20px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #1e3a8a', paddingBottom: '16px' }}>
+              <span style={{ fontSize: '20px' }}>📱 Shorts {idx + 1}: {video.title}</span>
               <span style={{ fontSize: '12px', background: '#1e3a8a', padding: '6px 12px', borderRadius: '8px', color: 'white' }}>🔥 Potensi Viral</span>
             </h3>
-            <div style={{ marginBottom: '16px', background: '#0f172a', padding: '16px', borderRadius: '8px', borderLeft: '4px solid #fbbf24' }}>
-              <strong style={{ color: '#fbbf24', display: 'block', marginBottom: '8px' }}>🪝 Hook (3 Detik Pertama):</strong>
-              <p style={{ margin: 0, color: 'white', fontSize: '15px' }}>{video.hook || video.judul || video.title || "Teks Hook Video"}</p>
+
+            {/* Info Audio & Thumbnail */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+              <div style={{ background: '#0f172a', padding: '16px', borderRadius: '8px', borderLeft: '4px solid #f59e0b' }}>
+                <strong style={{ color: '#f59e0b', display: 'block', marginBottom: '8px' }}>🎧 Rekomendasi Audio:</strong>
+                <p style={{ margin: 0, color: '#cbd5e1', fontSize: '13px' }}>{video.audioMood}</p>
+              </div>
+              <div style={{ background: '#0f172a', padding: '16px', borderRadius: '8px', borderLeft: '4px solid #ef4444' }}>
+                <strong style={{ color: '#ef4444', display: 'block', marginBottom: '8px' }}>🖼️ Thumbnail Prompt:</strong>
+                <p style={{ margin: 0, color: '#cbd5e1', fontSize: '13px' }}>{video.thumbnailPrompt}</p>
+              </div>
             </div>
-            <div style={{ marginBottom: '20px', background: '#0f172a', padding: '16px', borderRadius: '8px', borderLeft: '4px solid #10b981' }}>
-              <strong style={{ color: '#34d399', display: 'block', marginBottom: '8px' }}>🗣️ Naskah / Voice Over:</strong>
-              <p style={{ margin: 0, color: '#cbd5e1', whiteSpace: 'pre-wrap', lineHeight: '1.6', fontSize: '14px' }}>{video.script || video.naskah || video.narasi || "Isi naskah lengkap..."}</p>
+
+            {/* Scene by Scene Timeline */}
+            <div style={{ marginBottom: '24px', background: '#0f172a', padding: '16px', borderRadius: '12px', border: '1px solid #1e293b' }}>
+              <strong style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#10b981', marginBottom: '20px', fontSize: '16px' }}>
+                <span>🎬</span> FULL VIDEO TIMELINE
+              </strong>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {video.scenes?.map((scene: any, sIdx: number) => (
+                  <div key={sIdx} style={{ background: '#1e293b', borderRadius: '8px', padding: '16px', borderLeft: '4px solid #38bdf8' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #334155', paddingBottom: '8px', marginBottom: '12px' }}>
+                      <strong style={{ color: '#fbbf24', fontSize: '14px' }}>Scene {sIdx + 1} • {scene.waktu}</strong>
+                    </div>
+                    
+                    <div style={{ marginBottom: '12px' }}>
+                      <strong style={{ color: '#94a3b8', fontSize: '12px', display: 'block', marginBottom: '4px' }}>🎙️ VOICE OVER:</strong>
+                      <p style={{ color: '#f8fafc', margin: '0', fontSize: '15px', fontStyle: 'italic', background: '#020617', padding: '10px', borderRadius: '6px' }}>"{scene.vo}"</p>
+                    </div>
+                    
+                    <div style={{ marginBottom: '16px' }}>
+                      <strong style={{ color: '#94a3b8', fontSize: '12px', display: 'block', marginBottom: '4px' }}>🎥 VISUAL ACTION:</strong>
+                      <p style={{ color: '#cbd5e1', margin: '0', fontSize: '13px' }}>{scene.visual}</p>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+                      <div style={{ background: '#020617', padding: '12px', borderRadius: '6px', border: '1px solid #334155' }}>
+                        <strong style={{ color: '#c084fc', fontSize: '11px', display: 'block', marginBottom: '6px' }}>🖼️ IMAGE PROMPT</strong>
+                        <code style={{ color: '#e2e8f0', fontSize: '12px', whiteSpace: 'pre-wrap' }}>{scene.imagePrompt}</code>
+                      </div>
+                      <div style={{ background: '#020617', padding: '12px', borderRadius: '6px', border: '1px solid #334155' }}>
+                        <strong style={{ color: '#f472b6', fontSize: '11px', display: 'block', marginBottom: '6px' }}>🎞️ VIDEO PROMPT</strong>
+                        <code style={{ color: '#e2e8f0', fontSize: '12px', whiteSpace: 'pre-wrap' }}>{scene.videoPrompt}</code>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-            <button 
-              onClick={() => {
-                const copyText = `HOOK:\n${video.hook || video.judul || video.title}\n\nSCRIPT:\n${video.script || video.naskah || video.narasi}`;
-                navigator.clipboard.writeText(copyText);
-                alert("✅ Script Shorts berhasil disalin ke Clipboard!");
-              }}
-              style={{ width: '100%', background: '#1e293b', color: '#60a5fa', border: '1px solid #3b82f6', padding: '14px', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold', transition: 'all 0.2s' }}
-              onMouseOver={(e) => e.currentTarget.style.background = '#0f172a'}
-              onMouseOut={(e) => e.currentTarget.style.background = '#1e293b'}
-            >
-              📋 Copy Script Ini
-            </button>
+
+            {/* Kotak Copy Full VO & Visual ala Lab */}
+            <div style={{ backgroundColor: "#111827", border: "1px solid #374151", borderRadius: 8, padding: 16 }}>
+              <h4 style={{ color: "#10B981", margin: "0 0 12px 0", display: "flex", alignItems: "center", gap: 8, fontSize: "14px", fontWeight: "bold" }}>
+                <span>📝</span> READY-TO-PASTE: FULL VO & VISUAL (UNTUK NOTES)
+              </h4>
+              <textarea
+                readOnly
+                value={video.scenes?.map((s: any, i: number) => `Scene ${i + 1} [${s.waktu}]\n🎙️ VO: "${s.vo}"\n🎥 VISUAL: ${s.visual}\n`).join('\n')}
+                style={{ width: "100%", height: 120, backgroundColor: "#1F2937", color: "#E5E7EB", border: "1px solid #4B5563", borderRadius: 6, padding: 12, fontSize: 13, fontFamily: "monospace", resize: "vertical", marginBottom: '12px', boxSizing: 'border-box' }}
+              />
+              <button
+                onClick={() => {
+                  const fullText = video.scenes?.map((s: any, i: number) => `Scene ${i + 1} [${s.waktu}]\n🎙️ VO: "${s.vo}"\n🎥 VISUAL: ${s.visual}\n`).join('\n');
+                  navigator.clipboard.writeText(fullText);
+                  alert("✅ Full VO & Visual berhasil dicopy!");
+                }}
+                style={{ backgroundColor: "#3B82F6", color: "white", border: "none", padding: "12px", borderRadius: 6, cursor: "pointer", fontWeight: "bold", width: "100%" }}
+              >
+                📋 Copy Seluruh Naskah Shorts Ini
+              </button>
+            </div>
+
           </div>
         ))}
       </div>

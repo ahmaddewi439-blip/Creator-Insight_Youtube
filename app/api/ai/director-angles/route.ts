@@ -23,19 +23,22 @@ export async function POST(req: Request) {
     baseUrl = baseUrl.replace(/\/+$/, "");
     const endpoint = baseUrl.endsWith("/chat/completions") ? baseUrl : `${baseUrl}/chat/completions`;
 
-    // Prompt Khusus Sniper Angle
+ // Prompt Khusus Sniper Angle
     const prompt = `Anda adalah Pakar Algoritma YouTube dan Produser Konten spesialis channel Automation/Faceless global.
 Klien Anda memilih Niche: "${niche}" dengan Topik dasar: "${topic}".
+Target Bahasa: "${body.language || 'Indonesia'}".
 
-Tugas Anda: Carikan 3 ANGLE (Sudut Pandang) turunan dari topik dasar tersebut yang memiliki peluang viral tertinggi.
+Tugas Anda: Carikan 3 ANGLE (Sudut Pandang) turunan dari topik dasar tersebut yang memiliki peluang viral tertinggi. 
+PENTING: Judul, angle, dan alasan HARUS menggunakan bahasa "${body.language || 'Indonesia'}".
+
 Berikan hasil DALAM FORMAT JSON ARRAY murni yang berisi tepat 3 objek. Struktur persis seperti ini:
 [
   {
     "title": "Ide Judul Konten Clickbait (Maks 10 kata)",
     "angle": "Penjelasan singkat fokus materi video ini",
-    "score": 95, // Beri skor 0-100. Buat 1 angle skor tinggi (sangat disarankan), 1 sedang, 1 rendah.
-    "searchVolume": "Tinggi", // Tinggi, Sedang, atau Rendah
-    "competition": "Rendah", // Tinggi, Sedang, atau Rendah
+    "score": 95, 
+    "searchVolume": "Tinggi", 
+    "competition": "Rendah", 
     "reason": "Alasan spesifik mengapa algoritma YouTube akan menyukai sudut pandang ini."
   }
 ]
