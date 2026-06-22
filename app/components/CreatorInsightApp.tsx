@@ -574,9 +574,8 @@ const handleAnalyzeAngles = async () => {
   if (status === "loading") return <div className="login-wrap"><div className="skeleton" style={{ width: 380 }} /></div>;
   if (!session) return <LoginScreen />;
 
- return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: '#020617', color: '#f8fafc', overflow: 'hidden' }}>
-      
+      return (
+  <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', maxWidth: '100%', overflowX: 'hidden', background: '#0f172a', color: '#fff', fontFamily: 'sans-serif' }}></div>
       {/* HEADER ATAS (NAMA APP & LOGOUT) */}
       <div style={{ padding: '16px 20px', borderBottom: '1px solid #1e293b', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#0f172a', zIndex: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -748,10 +747,11 @@ const handleAnalyzeAngles = async () => {
               </span>
             </div>
           );
-        })}
+       })}
       </div>
     </div>
   );
+  
 
   function renderChannelHeader() {
     const avatar = channel?.thumbnail || channel?.snippet?.thumbnails?.high?.url || channel?.snippet?.thumbnails?.medium?.url || channel?.snippet?.thumbnails?.default?.url;

@@ -311,40 +311,63 @@ video {
   overflow-wrap: normal;
 }
 /* ========================================= */
-/* 🔥 ULTIMATE RESPONSIVE FIX (ANTI GESER) 🔥 */
+/* 🔥 DEEP RESPONSIVE FIX (ROOT CAUSE) 🔥 */
 /* ========================================= */
 
-/* 1. Paksa semua elemen agar padding tidak menambah ukuran lebar */
+/* 1. Kunci struktur terluar (Next.js Root & Body) */
+html, body, #__next, main {
+  width: 100vw !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+  margin: 0;
+  padding: 0;
+}
+
+/* 2. Paksa semua elemen agar mematuhi batas kotak (Border Box) */
 *, *::before, *::after {
   box-sizing: border-box !important;
 }
 
-/* 2. Kunci mati body web agar tidak tumpah ke samping */
-html, body {
-  width: 100%;
-  max-width: 100vw;
-  margin: 0;
-  padding: 0;
-  overflow-x: hidden !important;
-  position: relative;
+/* 3. Paksa teks panjang/link agar putus ke bawah, jangan dorong layar */
+* {
+  overflow-wrap: break-word !important;
+  word-wrap: break-word !important;
 }
 
-/* 3. Aturan khusus untuk HP */
+/* ========================================= */
+/* KHUSUS TAMPILAN HP (DI BAWAH 768px) */
+/* ========================================= */
 @media screen and (max-width: 768px) {
-  /* Tabel BISA di-swipe, tapi layar utama tetap diam */
+  
+  /* HANCURKAN PENYEBAB BOCOR: Hapus paksaan min-width 320px di panel optimasi */
+  div[style*="minWidth: 320px"], 
+  div[style*="minWidth: '320px'"] {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  /* Perbaiki Tabel agar tabelnya saja yang bisa di-scroll, bukan layarnya */
   table {
     display: block !important;
     width: 100% !important;
-    max-width: 100vw;
+    max-width: 100vw !important;
     overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch;
+    -webkit-overflow-scrolling: touch; /* Biar scroll tabel di iPhone mulus */
     border-collapse: collapse;
+    white-space: nowrap; /* Teks tabel tetap lurus, tapi dikurung di dalam kotak tabel */
   }
 
-  /* Buat padding lebih kecil di HP agar tidak sesak */
-  div[style*="padding: 32px"] { padding: 16px !important; }
-  div[style*="padding: 24px"] { padding: 16px !important; }
-  
-  /* Perkecil sedikit ukuran judul utama di HP */
- h1[style*="font-size: 42px"] { font-size: 32px !important; }
+  /* Perkecil padding di dalam semua kotak / panel agar lega di HP */
+  div[style*="padding: 24px"],
+  div[style*="padding: '24px'"],
+  div[style*="padding: 32px"],
+  div[style*="padding: '32px'"] {
+    padding: 12px !important;
+  }
+
+  /* Perkecil jarak gap antar elemen di HP */
+  div[style*="gap: 24px"],
+  div[style*="gap: '24px'"] {
+    gap: 12px !important;
+  }
 }
