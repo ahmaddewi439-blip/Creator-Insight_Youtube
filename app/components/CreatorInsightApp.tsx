@@ -698,7 +698,12 @@ const handleAnalyzeAngles = async () => {
   Hubungi Saya via WhatsApp
 </a>
             </div>
-
+{/* DISCLAIMER / LEGAL */}
+            <div style={{ marginTop: '48px', paddingTop: '24px', borderTop: '1px dashed #334155', textAlign: 'center' }}>
+              <p style={{ fontSize: '12px', color: '#64748b', lineHeight: '1.6', margin: '0', maxWidth: '800px', marginInline: 'auto' }}>
+                <strong>Disclaimer:</strong> Creator Insight adalah alat optimasi independen yang dikembangkan oleh Ahmad Syahroni dan tidak berafiliasi, didukung, atau secara resmi terhubung dengan YouTube atau Google LLC. Rekomendasi SEO dan metadata yang dihasilkan oleh mesin AI ini bersifat sebagai panduan analitik. Hasil metrik, rasio klik (CTR), dan performa video sepenuhnya tetap bergantung pada kualitas konten kreator dan algoritma penonton YouTube.
+              </p>
+            </div>
           </div>
         )}
         
