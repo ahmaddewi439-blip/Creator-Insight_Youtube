@@ -56,3 +56,7 @@ export async function fetchChannelVideos(auth?: unknown): Promise<any[]> {
     snippet: item.snippet || {}
   }));
 }
+// 🔥 TAMBAHAN BARU UNTUK MEMBUNGKAM ERROR VERCEL 🔥
+export async function fetchPublicChannelVideos() {
+  return fetchChannelVideos();
+}
