@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { LineChart, Line, XAxis, Tooltip, ResponsiveContainer } from 'recharts';
-type TabId = "overview" | "optimizer" | "competitors" | "roblox" | "reports" | "opportunity" ;
+type TabId = "overview" | "optimizer" | "competitors" | "roblox" | "reports" | "opportunity" | "portfolio";
 
 type ApiState<T> = {
   loading: boolean;
@@ -18,7 +18,7 @@ const tabs: { id: TabId; label: string; icon: string }[] = [
     { id: "competitors", label: "Riset", icon: "📈" },
     { id: "roblox", label: "Sutradara", icon: "🎬" },
     { id: "opportunity", label: "Lab", icon: "🧠" }
-    
+    { id: "portfolio", label: "Portofolio", icon: "💼" }
   ];
 function compact(value?: string | number) {
   const n = typeof value === "string" ? Number(value) : value || 0;
@@ -595,6 +595,72 @@ const handleAnalyzeAngles = async () => {
         {active === "roblox" && renderSutradara()}
         {active === "reports" && <div><h2>Laporan</h2></div>}
         {active === "opportunity" && renderOpportunityLab()}
+        {active === "portfolio" && (
+          <div style={{ padding: '32px', maxWidth: '900px', margin: '0 auto', color: '#e2e8f0', fontFamily: 'sans-serif' }}>
+            
+            {/* Header Presentasi */}
+            <div style={{ textAlign: 'center', marginBottom: '48px', paddingTop: '20px' }}>
+              <div style={{ display: 'inline-block', padding: '6px 16px', borderRadius: '50px', border: '1px solid rgba(59, 130, 246, 0.3)', backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#60a5fa', fontSize: '12px', fontWeight: 'bold', letterSpacing: '1px', marginBottom: '16px' }}>
+                SHOWCASE PROJECT
+              </div>
+              <h1 style={{ fontSize: '42px', fontWeight: '800', color: '#ffffff', margin: '0 0 16px 0', lineHeight: '1.2' }}>
+                Creator Insight <br />
+                <span style={{ color: '#3b82f6' }}>AI YouTube Optimizer</span>
+              </h1>
+              <p style={{ fontSize: '16px', color: '#94a3b8', lineHeight: '1.6', maxWidth: '600px', margin: '0 auto' }}>
+                Ekosistem kecerdasan buatan yang dirancang untuk mengotomatisasi SEO, meriset tren, dan mendominasi algoritma YouTube secara profesional.
+              </p>
+            </div>
+
+            <hr style={{ borderColor: '#1e293b', marginBottom: '40px' }} />
+
+            {/* Fitur Utama */}
+            <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#ffffff', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ color: '#3b82f6' }}>⚡</span> Fitur Unggulan
+            </h2>
+            
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '24px', marginBottom: '48px' }}>
+              {/* Card 1 */}
+              <div style={{ flex: '1 1 calc(50% - 12px)', background: '#1e293b', padding: '24px', borderRadius: '16px', border: '1px solid #334155' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#ffffff', margin: '0 0 12px 0' }}>🤖 AI SEO Optimizer</h3>
+                <p style={{ fontSize: '14px', color: '#94a3b8', margin: '0', lineHeight: '1.6' }}>
+                  Menciptakan judul clickbait ramah algoritma dan struktur deskripsi 4 elemen standar YouTube. Dilengkapi pemotong hashtag cerdas.
+                </p>
+              </div>
+
+              {/* Card 2 */}
+              <div style={{ flex: '1 1 calc(50% - 12px)', background: '#1e293b', padding: '24px', borderRadius: '16px', border: '1px solid #334155' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#ffffff', margin: '0 0 12px 0' }}>📈 Riset Tren & Lab</h3>
+                <p style={{ fontSize: '14px', color: '#94a3b8', margin: '0', lineHeight: '1.6' }}>
+                  Menganalisis persaingan pasar dan volume pencarian untuk menemukan ide konten dengan potensi viralitas tertinggi di berbagai niche.
+                </p>
+              </div>
+
+              {/* Card 3 */}
+              <div style={{ flex: '1 1 100%', background: '#1e293b', padding: '24px', borderRadius: '16px', border: '1px solid #334155' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#ffffff', margin: '0 0 12px 0' }}>🔓 API Security Bypass</h3>
+                <p style={{ fontSize: '14px', color: '#94a3b8', margin: '0', lineHeight: '1.6' }}>
+                  Sistem autentikasi Token VIP tingkat lanjut yang mampu menembus perlindungan privasi Google, memungkinkan akses penuh ke video Private/Scheduled dan Push data langsung ke YouTube Studio dalam hitungan detik.
+                </p>
+              </div>
+            </div>
+
+            <hr style={{ borderColor: '#1e293b', marginBottom: '40px' }} />
+
+            {/* Tech Stack */}
+            <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#ffffff', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ color: '#10b981' }}>🛠️</span> Teknologi di Balik Layar
+            </h2>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+              {['Next.js 14', 'TypeScript', 'Google YouTube Data API v3', 'Gemini AI Engine', 'OAuth 2.0 Security', 'Vercel Deployment'].map(tech => (
+                <span key={tech} style={{ background: '#0f172a', border: '1px solid #334155', padding: '8px 16px', borderRadius: '8px', fontSize: '13px', color: '#cbd5e1' }}>
+                  {tech}
+                </span>
+              ))}
+            </div>
+
+          </div>
+        )}
         
       </div>
 
