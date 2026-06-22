@@ -1151,10 +1151,11 @@ async function fetchCompetitionScore(keyword: string) {
                               {optimizer.error && <div className="alert error">{optimizer.error}</div>}
                               {optimizer.data && !optimizer.loading && selectedVideo?.id === v.id && (
                                 <>
-                                  <OptimizerResultView 
-                                    result={optimizer.data} 
+                                  <OptimizerResultView
+                                    result={optimizer.data}
                                     onLivePreview={handleLivePreview}
-                                  />
+                                    originalVideo={v}
+                                />
                                   {/* TOMBOL SIMPAN DITAMBAHKAN DI SINI */}
                                   <div style={{ marginTop: '24px', borderTop: '1px solid #334155', paddingTop: '20px', display: 'flex', justifyContent: 'flex-end' }}>
                                     <button
@@ -1621,22 +1622,26 @@ function renderCompetitors() {
   function renderReports() { return <div><h2 style={{color: 'white'}}>Reports (Dalam Pengembangan)</h2></div>; }
   function renderSettings() { return <div><h2 style={{color: 'white'}}>Settings (Dalam Pengembangan)</h2></div>; }
 } 
-
-// --- KOMPONEN HASIL SEO (DESAIN BARU & ANTI ERROR VERCEL) ---
 function OptimizerResultView({ result, onLivePreview, originalVideo }: { result: any; onLivePreview: any; originalVideo?: any }) {
   // 1. STATE LOKAL
-  const [activeTab, setActiveTab] = React.useState('SEO'); 
+  const [activeTab, setActiveTab] = React.useState('Judul'); 
   
-// 2. EKSTRAK DATA LAMA DARI YOUTUBE (Mencari di semua laci web Anda)
-  const originalTitle = originalVideo?.title || originalVideo?.snippet?.title || "Belum ada judul.";
+  // --- LOGIKA PENANGKAP DATA ANTI-GAGAL (CLONE VIDIQ) ---
+  // Pastikan kita punya objek yang valid untuk dibedah
+  const vidData = originalVideo || {};
+  const snippet = vidData.snippet || {};
+
+  // Ekstrak Judul (Cari di laci snippet dulu, kalau kosong cari di luar)
+  const originalTitle = snippet.title || vidData.title || "Belum ada judul di YouTube.";
   
-  const originalDesc = originalVideo?.description || originalVideo?.snippet?.description || "Belum ada deskripsi.";
+  // Ekstrak Deskripsi
+  const originalDesc = snippet.description || vidData.description || "Belum ada deskripsi di YouTube.";
   
-  // Amankan pembacaan array Tag (karena API YouTube kadang tidak mengirim tag di list video)
-  const rawTags = originalVideo?.tags || originalVideo?.snippet?.tags;
+  // Ekstrak Tag (Kadang tag berupa array, kita gabungkan jadi teks dengan koma)
+  const rawTags = snippet.tags || vidData.tags;
   const originalTags = (Array.isArray(rawTags) && rawTags.length > 0) 
-    ? rawTags.join(" ") 
-    : "Data hashtag tidak dikirim oleh API YouTube.";
+    ? rawTags.map((tag: string) => `#${tag}`).join(", ") 
+    : "Tidak ada hashtag di YouTube Studio saat ini.";
 
   // 3. EKSTRAK DATA BARU DARI AI
   const rawTitles = Array.isArray(result.recommendedTitles) ? result.recommendedTitles : Array.isArray(result.titles) ? result.titles : [];
@@ -1749,7 +1754,6 @@ function OptimizerResultView({ result, onLivePreview, originalVideo }: { result:
     </div>
   );
 }
-
 
 function OutputBlock({ title, value, compactBlock = false }: { title: string; value: any; compactBlock?: boolean }) {
   const text = Array.isArray(value) ? value.join("\n") : String(value || "-");
