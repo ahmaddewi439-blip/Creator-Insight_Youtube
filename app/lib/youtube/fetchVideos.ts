@@ -60,3 +60,35 @@ export async function fetchChannelVideos(auth?: unknown): Promise<any[]> {
 export async function fetchPublicChannelVideos() {
   return fetchChannelVideos();
 }
+
+// 🔥 KEMBALIKAN FUNGSI fetchChannelInfo AGAR VERCEL DIAM 🔥
+export async function fetchChannelInfo(auth?: unknown) {
+  const apiKey = process.env.YOUTUBE_API_KEY;
+  const channelId = process.env.YOUTUBE_CHANNEL_ID;
+
+  if (!channelId) return null;
+
+  const headers: any = {};
+  let useApiKey = true;
+
+  if (typeof auth === 'string' && auth.length > 0) {
+    headers["Authorization"] = `Bearer ${auth}`;
+    useApiKey = false;
+  } else if (!apiKey) {
+    return null;
+  }
+
+  const url = new URL("https://www.googleapis.com/youtube/v3/channels");
+  url.searchParams.set("part", "snippet,statistics");
+  url.searchParams.set("id", channelId);
+if (useApiKey) url.searchParams.set("key", apiKey as string);
+
+  try {
+    const res = await fetch(url.toString(), { headers, cache: 'no-store' });
+    const data = await res.json();
+    return data.items?.[0] || null;
+  } catch (error) {
+    console.error("Gagal mengambil info channel:", error);
+    return null;
+  }
+}
