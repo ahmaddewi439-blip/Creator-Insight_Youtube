@@ -4,6 +4,9 @@ import { authOptions } from "@/lib/auth";
 import { fetchChannelVideos } from "@/app/lib/youtube/fetchVideos";
 
 export const runtime = "nodejs";
+// 🔥 SENJATA 1 & 2: Paksa Next.js jangan pernah menyimpan ingatan (Cache)
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function GET() {
   try {
@@ -14,28 +17,30 @@ export async function GET() {
     if (accessToken) {
       videos = await fetchChannelVideos(accessToken);
     } else {
-      // fallback: pakai API key
-      const apiKey = process.env.YOUTUBE_API_KEY!;
-      videos = await fetchChannelVideos(); // fallback pakai API key internal
+      videos = await fetchChannelVideos(); 
     }
 
     const mapped = videos.map(v => ({
-      id: v.videoId || v.id,
+      id: v.id || v.videoId,
       title: v.title || v.snippet?.title || "",
-      // 🔥 KITA AMANKAN DESKRIPSI FULL-NYA DI SINI
       description: v.description || v.snippet?.description || "",
-      // 🔥 INI DIA PIPA HASHTAG YANG HILANG SELAMA 3 JAM!
-      tags: v.tags || v.snippet?.tags || [], 
+      tags: v.tags || v.snippet?.tags || [],
       thumbnail: v.thumbnail,
       publishedAt: v.publishedAt,
       status: v.status || "Published",
       views: v.views || 0,
       likes: v.likes || 0,
-      // 🔥 Bawa seluruh laci aslinya biar UI tidak pernah kehabisan data
-      snippet: v.snippet || {} 
+      snippet: v.snippet || {}
     }));
 
-    return NextResponse.json(mapped);
+    // 🔥 SENJATA 3: Paksa Browser Chrome Mas Ahmad untuk selalu minta data baru
+    return NextResponse.json(mapped, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      },
+    });
   } catch (err) {
     console.error("Failed to fetch YouTube videos:", err);
     return NextResponse.json({ error: "Failed to fetch videos" }, { status: 500 });
