@@ -1149,7 +1149,7 @@ async function fetchCompetitionScore(keyword: string) {
                                 </div>
                               )}
                               {optimizer.error && <div className="alert error">{optimizer.error}</div>}
-                              {optimizer.data && !optimizer.loading && (
+                              {optimizer.data && !optimizer.loading && selectedVideo?.id === v.id && (
                                 <>
                                   <OptimizerResultView 
                                     result={optimizer.data} 
@@ -1623,11 +1623,16 @@ function renderCompetitors() {
 } 
 
 // --- KOMPONEN HASIL SEO (DESAIN BARU & ANTI ERROR VERCEL) ---
-function OptimizerResultView({ result, onLivePreview }: { result: any; onLivePreview: any }) {
-  // 1. STATE LOKAL (Untuk Interaksi ala vidIQ)
-  const [activeTab, setActiveTab] = React.useState('SEO'); // Tab aktif: 'Judul' atau 'SEO'
+function OptimizerResultView({ result, onLivePreview, originalVideo }: { result: any; onLivePreview: any; originalVideo?: any }) {
+  // 1. STATE LOKAL
+  const [activeTab, setActiveTab] = React.useState('SEO'); 
   
-  // 2. EKSTRAK DATA JUDUL
+  // 2. EKSTRAK DATA LAMA DARI YOUTUBE (Untuk Fitur Before-After)
+  const originalTitle = originalVideo?.snippet?.title || "Belum ada judul.";
+  const originalDesc = originalVideo?.snippet?.description || "Belum ada deskripsi di YouTube.";
+  const originalTags = originalVideo?.snippet?.tags ? originalVideo.snippet.tags.join(" ") : "Belum ada hashtag di YouTube.";
+
+  // 3. EKSTRAK DATA BARU DARI AI
   const rawTitles = Array.isArray(result.recommendedTitles) ? result.recommendedTitles : Array.isArray(result.titles) ? result.titles : [];
   const aiTitles = rawTitles.map((t: string) => {
     const cleanTitle = t.replace(/\s*\[Skor SEO:\s*\d+\/100\]/i, '').trim();
@@ -1635,26 +1640,19 @@ function OptimizerResultView({ result, onLivePreview }: { result: any; onLivePre
     return { title: cleanTitle, score: scoreMatch ? parseInt(scoreMatch[1]) : 0 };
   });
 
-  // 3. EKSTRAK DATA TAG (Memisahkan Teks dan Angka Skor)
   const aiTags = result.keywords ? result.keywords.map((kw: string) => {
     const match = kw.match(/(.*?)\s*\((.*?)\)/);
     return { tag: match ? match[1].trim() : kw, score: match ? parseInt(match[2]) : 0 };
   }) : [];
 
-  // 4. STATE "STAGING" (Menampung Pilihan User sebelum di-Save)
+  // 4. STATE "STAGING"
   const [stagedTitle, setStagedTitle] = React.useState(aiTitles.length > 0 ? aiTitles[0].title : "");
   const [stagedDesc, setStagedDesc] = React.useState(result.description || "");
   const [stagedTags, setStagedTags] = React.useState<string[]>([]);
 
-  // 5. LOGIKA HASHTAG INTERAKTIF
-  const handleAddTag = (tag: string) => {
-    if (!stagedTags.includes(tag)) setStagedTags([...stagedTags, tag]);
-  };
-  const handleRemoveTag = (tag: string) => {
-    setStagedTags(stagedTags.filter(t => t !== tag));
-  };
+  const handleAddTag = (tag: string) => { if (!stagedTags.includes(tag)) setStagedTags([...stagedTags, tag]); };
+  const handleRemoveTag = (tag: string) => { setStagedTags(stagedTags.filter(t => t !== tag)); };
 
-  // 6. LOGIKA SIMPAN PERUBAHAN
   const handleApplyAll = () => {
     if (stagedTitle) onLivePreview("title", stagedTitle);
     if (stagedDesc) onLivePreview("description", stagedDesc);
@@ -1662,113 +1660,84 @@ function OptimizerResultView({ result, onLivePreview }: { result: any; onLivePre
     alert("Perubahan disiapkan! Silakan klik 'Simpan Perubahan Video' di tabel utama untuk mem-push ke YouTube.");
   };
 
-  // 7. RENDER TAMPILAN (CLONE VIDIQ)
   return (
     <div style={{ background: '#0b0f19', borderRadius: '12px', overflow: 'hidden', border: '1px solid #1e293b', color: '#fff', fontFamily: 'sans-serif' }}>
       
-      {/* TAB NAVIGASI ATAS */}
+      {/* TAB NAVIGASI */}
       <div style={{ display: 'flex', borderBottom: '1px solid #1e293b', background: '#0f172a' }}>
-        <button 
-          onClick={() => setActiveTab('Judul')}
-          style={{ flex: 1, padding: '16px', background: 'transparent', border: 'none', borderBottom: activeTab === 'Judul' ? '2px solid #3b82f6' : '2px solid transparent', color: activeTab === 'Judul' ? '#3b82f6' : '#94a3b8', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s' }}>
-          Judul
-        </button>
-        <button 
-          onClick={() => setActiveTab('SEO')}
-          style={{ flex: 1, padding: '16px', background: 'transparent', border: 'none', borderBottom: activeTab === 'SEO' ? '2px solid #3b82f6' : '2px solid transparent', color: activeTab === 'SEO' ? '#3b82f6' : '#94a3b8', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s' }}>
-          SEO
-        </button>
+        <button onClick={() => setActiveTab('Judul')} style={{ flex: 1, padding: '16px', background: 'transparent', border: 'none', borderBottom: activeTab === 'Judul' ? '2px solid #3b82f6' : '2px solid transparent', color: activeTab === 'Judul' ? '#3b82f6' : '#94a3b8', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s' }}>Judul</button>
+        <button onClick={() => setActiveTab('SEO')} style={{ flex: 1, padding: '16px', background: 'transparent', border: 'none', borderBottom: activeTab === 'SEO' ? '2px solid #3b82f6' : '2px solid transparent', color: activeTab === 'SEO' ? '#3b82f6' : '#94a3b8', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s' }}>SEO (Deskripsi & Tag)</button>
       </div>
 
-      {/* KONTEN TAB: JUDUL */}
+      {/* --- KONTEN TAB: JUDUL --- */}
       {activeTab === 'Judul' && (
         <div style={{ padding: '20px' }}>
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', color: '#94a3b8', fontSize: '13px', fontWeight: 'bold' }}>Judul Terpilih</label>
-            <textarea 
-              value={stagedTitle} 
-              onChange={(e) => setStagedTitle(e.target.value)}
-              style={{ width: '100%', padding: '12px', borderRadius: '8px', background: '#1e293b', color: '#f8fafc', border: '1px solid #334155', minHeight: '80px', resize: 'none', fontSize: '14px', lineHeight: '1.5' }} 
-            />
+          {/* DATA LAMA: JUDUL */}
+          <div style={{ marginBottom: '16px', background: '#1e293b', padding: '12px', borderRadius: '8px', borderLeft: '4px solid #64748b' }}>
+            <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>📌 Judul di YouTube Saat Ini:</span>
+            <span style={{ fontSize: '14px', color: '#cbd5e1' }}>{originalTitle}</span>
           </div>
-          <h4 style={{ color: '#f8fafc', marginBottom: '12px', fontSize: '14px' }}>Judul yang Disarankan</h4>
+
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ display: 'block', marginBottom: '8px', color: '#38bdf8', fontSize: '13px', fontWeight: 'bold' }}>✨ Judul Baru (Bisa Diedit)</label>
+            <textarea value={stagedTitle} onChange={(e) => setStagedTitle(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '8px', background: '#0f172a', color: '#f8fafc', border: '1px solid #3b82f6', minHeight: '60px', resize: 'none', fontSize: '14px', lineHeight: '1.5' }} />
+          </div>
+          <h4 style={{ color: '#f8fafc', marginBottom: '12px', fontSize: '14px' }}>Rekomendasi AI</h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {aiTitles.map((item: any, idx: number) => (
-              <div 
-                key={idx} 
-                onClick={() => setStagedTitle(item.title)} 
-                style={{ background: '#1e293b', padding: '16px', borderRadius: '8px', display: 'flex', gap: '12px', cursor: 'pointer', border: stagedTitle === item.title ? '1px solid #3b82f6' : '1px solid #334155', transition: '0.2s' }}
-              >
-                 {item.score > 0 && (
-                    <div style={{ background: '#3b82f6', color: '#fff', padding: '4px 8px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold', height: 'fit-content', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <span>🚀</span>{item.score}
-                    </div>
-                 )}
-                 <div style={{ color: '#cbd5e1', fontSize: '14px', lineHeight: '1.5' }}>{item.title}</div>
+              <div key={idx} onClick={() => setStagedTitle(item.title)} style={{ background: '#1e293b', padding: '12px', borderRadius: '8px', display: 'flex', gap: '12px', cursor: 'pointer', border: stagedTitle === item.title ? '1px solid #3b82f6' : '1px solid #334155' }}>
+                 {item.score > 0 && (<div style={{ background: '#3b82f6', color: '#fff', padding: '2px 8px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold', height: 'fit-content' }}>{item.score}</div>)}
+                 <div style={{ color: '#cbd5e1', fontSize: '14px' }}>{item.title}</div>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* KONTEN TAB: SEO (Deskripsi & Tag) */}
+      {/* --- KONTEN TAB: SEO (Deskripsi & Tag) --- */}
       {activeTab === 'SEO' && (
         <div style={{ padding: '20px' }}>
           
-          {/* Section: Deskripsi */}
-          <div style={{ marginBottom: '24px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-               <label style={{ color: '#f8fafc', fontWeight: 'bold', fontSize: '16px' }}>Deskripsi</label>
-               <button style={{ background: '#334155', color: '#cbd5e1', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', cursor: 'pointer', fontWeight: 'bold' }}>Generate</button>
+          {/* DATA LAMA: DESKRIPSI & TAG */}
+          <div style={{ marginBottom: '24px', display: 'flex', gap: '16px' }}>
+            <div style={{ flex: 1, background: '#1e293b', padding: '12px', borderRadius: '8px', borderLeft: '4px solid #64748b' }}>
+              <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>📌 Deskripsi di YouTube Saat Ini:</span>
+              <div style={{ fontSize: '13px', color: '#cbd5e1', maxHeight: '80px', overflowY: 'auto', whiteSpace: 'pre-wrap' }}>{originalDesc}</div>
             </div>
-            <textarea 
-              value={stagedDesc} 
-              onChange={(e) => setStagedDesc(e.target.value)}
-              style={{ width: '100%', padding: '16px', borderRadius: '8px', background: '#1e293b', color: '#cbd5e1', border: '1px solid #334155', minHeight: '150px', resize: 'vertical', lineHeight: '1.6', fontSize: '14px' }} 
-            />
+            <div style={{ flex: 1, background: '#1e293b', padding: '12px', borderRadius: '8px', borderLeft: '4px solid #64748b' }}>
+              <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>📌 Tag di YouTube Saat Ini:</span>
+              <div style={{ fontSize: '13px', color: '#cbd5e1', maxHeight: '80px', overflowY: 'auto' }}>{originalTags}</div>
+            </div>
           </div>
 
-          {/* Section: Tags Area (Interaktif ala vidIQ) */}
-          <div>
-            <label style={{ display: 'block', color: '#f8fafc', fontWeight: 'bold', fontSize: '16px', marginBottom: '12px' }}>Tag</label>
-            
-            {/* Kotak Tag Terpilih */}
-            <div style={{ background: '#1e293b', padding: '16px', borderRadius: '8px', border: '1px solid #334155', minHeight: '60px', display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '20px' }}>
-               {stagedTags.length === 0 && <span style={{ color: '#64748b', fontSize: '14px', fontStyle: 'italic' }}>Tambah Tag dari rekomendasi di bawah...</span>}
-               {stagedTags.map((tag, i) => (
-                  <div key={i} onClick={() => handleRemoveTag(tag)} style={{ background: '#334155', border: '1px solid #475569', borderRadius: '20px', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', transition: '0.2s' }}>
-                     <span style={{ color: '#f8fafc', fontSize: '13px' }}>{tag}</span>
-                     <span style={{ color: '#94a3b8', fontSize: '16px', lineHeight: 1 }}>×</span>
-                  </div>
-               ))}
-            </div>
+          <label style={{ display: 'block', marginBottom: '8px', color: '#38bdf8', fontSize: '14px', fontWeight: 'bold' }}>✨ Deskripsi Baru AI (Siap Edit)</label>
+          <textarea value={stagedDesc} onChange={(e) => setStagedDesc(e.target.value)} style={{ width: '100%', padding: '16px', borderRadius: '8px', background: '#0f172a', color: '#cbd5e1', border: '1px solid #3b82f6', minHeight: '120px', resize: 'vertical', lineHeight: '1.6', fontSize: '14px', marginBottom: '20px' }} />
 
-            {/* Kotak Tag Rekomendasi */}
-            <label style={{ display: 'block', color: '#f8fafc', fontWeight: 'bold', fontSize: '15px', marginBottom: '12px' }}>Direkomendasikan</label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-               {aiTags.filter((t: any) => !stagedTags.includes(t.tag)).map((t: any, i: number) => (
-                  <div 
-                    key={i} 
-                    onClick={() => handleAddTag(t.tag)} 
-                    style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '20px', padding: '4px 12px 4px 4px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', transition: '0.2s' }}
-                  >
-                     <span style={{ color: '#eab308', fontWeight: 'bold', fontSize: '12px', background: '#422006', padding: '4px 8px', borderRadius: '16px' }}>{t.score}</span>
-                     <span style={{ color: '#cbd5e1', fontSize: '13px' }}>{t.tag}</span>
-                     <span style={{ color: '#94a3b8', fontSize: '16px', lineHeight: 1 }}>+</span>
-                  </div>
-               ))}
-            </div>
+          <label style={{ display: 'block', color: '#38bdf8', fontWeight: 'bold', fontSize: '14px', marginBottom: '12px' }}>✨ Hashtag Baru (Pilih dari Rekomendasi)</label>
+          <div style={{ background: '#0f172a', padding: '16px', borderRadius: '8px', border: '1px solid #3b82f6', minHeight: '50px', display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '20px' }}>
+             {stagedTags.length === 0 && <span style={{ color: '#64748b', fontSize: '14px', fontStyle: 'italic' }}>Klik rekomendasi di bawah untuk menambah...</span>}
+             {stagedTags.map((tag, i) => (
+                <div key={i} onClick={() => handleRemoveTag(tag)} style={{ background: '#334155', border: '1px solid #475569', borderRadius: '20px', padding: '4px 10px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                   <span style={{ color: '#f8fafc', fontSize: '13px' }}>{tag}</span><span style={{ color: '#94a3b8' }}>×</span>
+                </div>
+             ))}
+          </div>
+
+          <label style={{ display: 'block', color: '#f8fafc', fontWeight: 'bold', fontSize: '14px', marginBottom: '12px' }}>Rekomendasi Tersedia:</label>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+             {aiTags.filter((t: any) => !stagedTags.includes(t.tag)).map((t: any, i: number) => (
+                <div key={i} onClick={() => handleAddTag(t.tag)} style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '20px', padding: '4px 10px 4px 4px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                   <span style={{ color: '#eab308', fontWeight: 'bold', fontSize: '11px', background: '#422006', padding: '2px 6px', borderRadius: '10px' }}>{t.score}</span>
+                   <span style={{ color: '#cbd5e1', fontSize: '12px' }}>{t.tag}</span><span style={{ color: '#94a3b8' }}>+</span>
+                </div>
+             ))}
           </div>
         </div>
       )}
 
-      {/* BOTTOM BAR: TOMBOL SIMPAN (Sticky ala vidIQ) */}
+      {/* MASTER BUTTON */}
       <div style={{ padding: '16px 20px', background: '#0f172a', borderTop: '1px solid #1e293b' }}>
-        <button 
-          onClick={handleApplyAll}
-          style={{ width: '100%', background: '#2563eb', color: '#fff', border: 'none', padding: '14px', borderRadius: '8px', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer', transition: '0.2s' }}>
-          Simpan perubahan Anda
-        </button>
+        <button onClick={handleApplyAll} style={{ width: '100%', background: '#2563eb', color: '#fff', border: 'none', padding: '14px', borderRadius: '8px', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer' }}>Simpan perubahan Anda ke Video</button>
       </div>
 
     </div>
