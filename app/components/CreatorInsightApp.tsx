@@ -144,6 +144,9 @@ function getVideoId(video: any) {
 }
 
 export default function CreatorInsightApp() {
+  const [isMounted, setIsMounted] = React.useState(false);
+  React.useEffect(() => { setIsMounted(true); }, []);
+
   // --- STATE UNTUK MENU SUTRADARA SNIPER ---
   const [directorNiche, setDirectorNiche] = useState("Gaming / E-sports");
   const [directorTopic, setDirectorTopic] = useState("");
@@ -570,22 +573,26 @@ const handleAnalyzeAngles = async () => {
     }
   }
 
-  // --- RENDER AREA ---
+ // --- RENDER AREA ---
+  if (!isMounted) return null; // JURUS PRO: Cegah Error Client Component SSR
   if (status === "loading") return <div className="login-wrap"><div className="skeleton" style={{ width: 380 }} /></div>;
   if (!session) return <LoginScreen />;
 
-      return (
-  <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', maxWidth: '100%', overflowX: 'hidden', background: '#0f172a', color: '#fff', fontFamily: 'sans-serif' }}></div>
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', maxWidth: '100%', overflowX: 'hidden', background: '#0f172a', color: '#ffffff' }}>
+      
       {/* HEADER ATAS (NAMA APP & LOGOUT) */}
-      <div style={{ padding: '16px 20px', borderBottom: '1px solid #1e293b', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#0f172a', zIndex: 10 }}>
+      <div style={{ padding: '16px 20px', borderBottom: '1px solid #1e293b', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span style={{ fontSize: '24px' }}>🚀</span>
           <h1 style={{ fontSize: '18px', fontWeight: 'bold', margin: 0 }}>Creator Insight</h1>
         </div>
-        <button onClick={() => signOut()} style={{ background: 'transparent', border: '1px solid #334155', color: '#cbd5e1', padding: '6px 12px', borderRadius: '6px', fontSize: '12px' }}>
+        <button onClick={() => signOut()} style={{ background: 'transparent', border: '1px solid #334155', color: '#cbd5e1', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>
           Logout
         </button>
       </div>
+
+      {/* AREA KONTEN UTAMA (BISA DI-SCROLL) */}
 
    {/* AREA KONTEN UTAMA (BISA DI-SCROLL) */}
 <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '16px', paddingBottom: '90px', width: '100%', boxSizing: 'border-box' }}>
