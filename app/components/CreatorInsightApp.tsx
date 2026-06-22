@@ -761,8 +761,8 @@ const handleAnalyzeAngles = async () => {
           {avatar ? <img className="avatar" src={avatar} alt="channel avatar" /> : <div className="avatar" />}
           <div>
             <h1>{channel?.title || channel?.snippet?.title || "Your YouTube Channel"}</h1>
-            <p>{channel?.snippet?.customUrl || channel?.id || "Memuat data channel..."}</p>
-            <div className="badges"><span className="badge">Global Target</span><span className="badge">Roblox Shorts</span></div>
+            <p>{channel?.snippet?.customUrl ? (channel.snippet.customUrl.startsWith('@') ? channel.snippet.customUrl : '@' + channel.snippet.customUrl) : "@" + (channel?.title || channel?.snippet?.title || "creator").replace(/\s+/g, '').toLowerCase()}</p>
+            <div className="badges"><span className="badge">Global Target</span><span className="badge">Long & Shorts</span></div>
           </div>
         </div>
         <div className="stats">
