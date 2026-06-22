@@ -371,3 +371,24 @@ html, body, #__next, main {
     gap: 12px !important;
   }
 }
+/* ========================================= */
+/* 🔥 GEMBOK LAYAR & TABEL ANTI-GESER 🔥 */
+/* ========================================= */
+html, body, #__next, main {
+  overflow-x: hidden !important;
+  max-width: 100vw !important;
+  position: relative;
+}
+
+/* Kurung tabel agar gesernya di dalam kotaknya saja */
+.table-wrapper, div[style*="overflowX: 'auto'"] {
+  overflow-x: auto !important;
+  width: 100% !important;
+  max-width: 100vw !important;
+  -webkit-overflow-scrolling: touch; 
+}
+
+/* Paksa tabel memanjang di dalam kurungannya */
+.table-wrapper table, table.table {
+  min-width: 600px !important; 
+}
