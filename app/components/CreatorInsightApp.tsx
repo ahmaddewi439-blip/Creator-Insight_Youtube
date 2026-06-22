@@ -579,7 +579,7 @@ const handleAnalyzeAngles = async () => {
   if (!session) return <LoginScreen />;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', maxWidth: '100%', overflowX: 'hidden', background: '#0f172a', color: '#ffffff' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100%', overflowX: 'hidden', overflowY: 'auto', background: '#0f172a', color: '#ffffff', position: 'relative' }}>
       
       {/* HEADER ATAS (NAMA APP & LOGOUT) */}
       <div style={{ padding: '16px 20px', borderBottom: '1px solid #1e293b', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1786,10 +1786,14 @@ function OptimizerResultView({ result, onLivePreview, originalVideo }: { result:
     <div style={{ background: '#0b0f19', borderRadius: '12px', overflow: 'hidden', border: '1px solid #1e293b', color: '#fff', fontFamily: 'sans-serif' }}>
       
      
-     {/* TAB NAVIGASI */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', borderBottom: '1px solid #1e293b', background: '#0f172a' }}>
-        <button onClick={() => setActiveTab('Judul')} style={{ flex: '1 1 140px', padding: '12px 8px', background: 'transparent', border: 'none', borderBottom: activeTab === 'Judul' ? '2px solid #3b82f6' : '2px solid transparent', color: activeTab === 'Judul' ? '#3b82f6' : '#94a3b8', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s', whiteSpace: 'normal' }}>JUDUL</button>
-        <button onClick={() => setActiveTab('SEO')} style={{ flex: '1 1 140px', padding: '12px 8px', background: 'transparent', border: 'none', borderBottom: activeTab === 'SEO' ? '2px solid #3b82f6' : '2px solid transparent', color: activeTab === 'SEO' ? '#3b82f6' : '#94a3b8', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s', whiteSpace: 'normal' }}>SEO (Deskripsi & Tag)</button>
+  {/* TAB NAVIGASI GAYA VIDIQ (50:50) */}
+      <div style={{ display: 'flex', width: '100%', borderBottom: '1px solid #1e293b', background: '#0f172a' }}>
+        <button onClick={() => setActiveTab('Judul')} style={{ flex: 1, padding: '14px 4px', background: 'transparent', border: 'none', borderBottom: activeTab === 'Judul' ? '2px solid #3b82f6' : '2px solid transparent', color: activeTab === 'Judul' ? '#3b82f6' : '#94a3b8', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s', fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          JUDUL
+        </button>
+        <button onClick={() => setActiveTab('SEO')} style={{ flex: 1, padding: '14px 4px', background: 'transparent', border: 'none', borderBottom: activeTab === 'SEO' ? '2px solid #3b82f6' : '2px solid transparent', color: activeTab === 'SEO' ? '#3b82f6' : '#94a3b8', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s', fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          SEO (Deskripsi)
+        </button>
       </div>
 
       {/* --- KONTEN TAB: JUDUL --- */}
