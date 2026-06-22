@@ -1627,10 +1627,16 @@ function OptimizerResultView({ result, onLivePreview, originalVideo }: { result:
   // 1. STATE LOKAL
   const [activeTab, setActiveTab] = React.useState('SEO'); 
   
-  // 2. EKSTRAK DATA LAMA DARI YOUTUBE (Untuk Fitur Before-After)
-  const originalTitle = originalVideo?.snippet?.title || "Belum ada judul.";
-  const originalDesc = originalVideo?.snippet?.description || "Belum ada deskripsi di YouTube.";
-  const originalTags = originalVideo?.snippet?.tags ? originalVideo.snippet.tags.join(" ") : "Belum ada hashtag di YouTube.";
+// 2. EKSTRAK DATA LAMA DARI YOUTUBE (Mencari di semua laci web Anda)
+  const originalTitle = originalVideo?.title || originalVideo?.snippet?.title || "Belum ada judul.";
+  
+  const originalDesc = originalVideo?.description || originalVideo?.snippet?.description || "Belum ada deskripsi.";
+  
+  // Amankan pembacaan array Tag (karena API YouTube kadang tidak mengirim tag di list video)
+  const rawTags = originalVideo?.tags || originalVideo?.snippet?.tags;
+  const originalTags = (Array.isArray(rawTags) && rawTags.length > 0) 
+    ? rawTags.join(" ") 
+    : "Data hashtag tidak dikirim oleh API YouTube.";
 
   // 3. EKSTRAK DATA BARU DARI AI
   const rawTitles = Array.isArray(result.recommendedTitles) ? result.recommendedTitles : Array.isArray(result.titles) ? result.titles : [];
