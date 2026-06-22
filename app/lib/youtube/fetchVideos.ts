@@ -1,3 +1,15 @@
+export type VideoItem = {
+  id: string;
+  title: string;
+  description: string;
+  thumbnail: string;
+  publishedAt: string;
+  channelTitle: string;
+  tags?: string[];
+  views?: string;
+  likes?: string;
+  snippet?: any;
+};
 // Kita hapus aturan ketat VideoItem agar Vercel tidak rewel
 export async function fetchChannelVideos(auth?: unknown): Promise<any[]> {
   const apiKey = process.env.YOUTUBE_API_KEY;
