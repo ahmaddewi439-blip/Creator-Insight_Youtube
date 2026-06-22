@@ -659,6 +659,40 @@ const handleAnalyzeAngles = async () => {
                 </span>
               ))}
             </div>
+            {/* DIVIDER */}
+            <hr style={{ borderColor: '#1e293b', marginTop: '48px', marginBottom: '40px' }} />
+
+            {/* Profil & Keahlian Tambahan */}
+            <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#ffffff', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ color: '#f59e0b' }}>👨‍💻</span> Beyond The Code: Creator Profile
+            </h2>
+            
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '24px', marginBottom: '48px' }}>
+              <div style={{ flex: '1 1 calc(50% - 12px)', background: 'linear-gradient(145deg, #1e293b 0%, #0f172a 100%)', padding: '24px', borderRadius: '16px', border: '1px solid #334155' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#ffffff', margin: '0 0 12px 0' }}>🎥 Digital Media & UGC Production</h3>
+                <p style={{ fontSize: '14px', color: '#94a3b8', margin: '0', lineHeight: '1.6' }}>
+                  Tidak hanya membangun sistem, tapi juga terjun langsung mengelola ekosistem channel YouTube. Berpengalaman dalam penyusunan storyboard, scripting, hingga eksekusi kampanye UGC (User Generated Content) dan Affiliate Marketing untuk format video vertikal (Shorts/Reels).
+                </p>
+              </div>
+
+              <div style={{ flex: '1 1 calc(50% - 12px)', background: 'linear-gradient(145deg, #1e293b 0%, #0f172a 100%)', padding: '24px', borderRadius: '16px', border: '1px solid #334155' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#ffffff', margin: '0 0 12px 0' }}>☁️ Cloud Infrastructure & Database</h3>
+                <p style={{ fontSize: '14px', color: '#94a3b8', margin: '0', lineHeight: '1.6' }}>
+                  Terbiasa merancang dan mendeploy arsitektur aplikasi berbasis cloud yang scalable. Menguasai manajemen project melalui Google Cloud, integrasi database realtime menggunakan Firebase, serta orkestrasi API eksternal.
+                </p>
+              </div>
+            </div>
+
+            {/* CALL TO ACTION */}
+            <div style={{ textAlign: 'center', background: '#1e40af', padding: '40px 24px', borderRadius: '16px', border: '1px solid #3b82f6', marginTop: '32px' }}>
+              <h2 style={{ fontSize: '28px', fontWeight: 'bold', color: '#ffffff', margin: '0 0 16px 0' }}>Siap Mendominasi Algoritma Bersama?</h2>
+              <p style={{ fontSize: '16px', color: '#bfdbfe', margin: '0 0 24px 0', maxWidth: '500px', marginInline: 'auto' }}>
+                Mari berkolaborasi untuk mengoptimalkan performa channel Anda atau membangun solusi AI kustom untuk bisnis digital Anda.
+              </p>
+              <button style={{ background: '#ffffff', color: '#1e3a8a', padding: '12px 24px', borderRadius: '8px', fontWeight: 'bold', fontSize: '16px', border: 'none', cursor: 'pointer' }}>
+                Hubungi Saya di Sini
+              </button>
+            </div>
 
           </div>
         )}
