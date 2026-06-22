@@ -592,8 +592,6 @@ const handleAnalyzeAngles = async () => {
         </button>
       </div>
 
-      {/* AREA KONTEN UTAMA (BISA DI-SCROLL) */}
-
    {/* AREA KONTEN UTAMA (BISA DI-SCROLL) */}
 <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '16px', paddingBottom: '90px', width: '100%', boxSizing: 'border-box' }}>
         {active === "overview" && renderOverview()}
@@ -1229,8 +1227,8 @@ async function fetchCompetitionScore(keyword: string) {
             </div>
           </div>
           
-          <div className="table-wrapper">
-            <table className="table">
+          <div className="table-wrapper" style={{ width: '100%', overflowX: 'auto', paddingBottom: '10px' }}>
+  <table className="table" style={{ width: '100%', minWidth: '600px', whiteSpace: 'nowrap' }}>
               <thead><tr><th>#</th><th>Video</th><th>Views</th><th>Likes</th><th>Status</th><th>Aksi</th></tr></thead>
               <tbody>
                 {sortedVideos.map((v, i) => {
@@ -1787,10 +1785,11 @@ function OptimizerResultView({ result, onLivePreview, originalVideo }: { result:
   return (
     <div style={{ background: '#0b0f19', borderRadius: '12px', overflow: 'hidden', border: '1px solid #1e293b', color: '#fff', fontFamily: 'sans-serif' }}>
       
-      {/* TAB NAVIGASI */}
-      <div style={{ display: 'flex', borderBottom: '1px solid #1e293b', background: '#0f172a' }}>
-        <button onClick={() => setActiveTab('Judul')} style={{ flex: 1, padding: '16px', background: 'transparent', border: 'none', borderBottom: activeTab === 'Judul' ? '2px solid #3b82f6' : '2px solid transparent', color: activeTab === 'Judul' ? '#3b82f6' : '#94a3b8', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s' }}>JUDUL</button>
-        <button onClick={() => setActiveTab('SEO')} style={{ flex: 1, padding: '16px', background: 'transparent', border: 'none', borderBottom: activeTab === 'SEO' ? '2px solid #3b82f6' : '2px solid transparent', color: activeTab === 'SEO' ? '#3b82f6' : '#94a3b8', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s' }}>SEO (Deskripsi & Tag)</button>
+     
+     {/* TAB NAVIGASI */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', borderBottom: '1px solid #1e293b', background: '#0f172a' }}>
+        <button onClick={() => setActiveTab('Judul')} style={{ flex: '1 1 140px', padding: '12px 8px', background: 'transparent', border: 'none', borderBottom: activeTab === 'Judul' ? '2px solid #3b82f6' : '2px solid transparent', color: activeTab === 'Judul' ? '#3b82f6' : '#94a3b8', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s', whiteSpace: 'normal' }}>JUDUL</button>
+        <button onClick={() => setActiveTab('SEO')} style={{ flex: '1 1 140px', padding: '12px 8px', background: 'transparent', border: 'none', borderBottom: activeTab === 'SEO' ? '2px solid #3b82f6' : '2px solid transparent', color: activeTab === 'SEO' ? '#3b82f6' : '#94a3b8', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s', whiteSpace: 'normal' }}>SEO (Deskripsi & Tag)</button>
       </div>
 
       {/* --- KONTEN TAB: JUDUL --- */}
