@@ -31,27 +31,40 @@ Deskripsi: "${originalDesc.substring(0, 500)}"
 Bahasa Target: ${targetLanguage || "English"}
 
 ATURAN KETAT ANALISA & PENULISAN (WAJIB DIIKUTI):
-1. 'recommendedTitles': Buat TEPAT 5 pilihan judul clickbait namun SEO-friendly. SETIAP JUDUL WAJIB diberi skor di bagian AKHIR judul (contoh: "Judul Video [Skor SEO: 95/100]"). SKOR HARUS REALISTIS hasil analisa potensi klik.
-2. 'description': Buat naskah deskripsi YouTube yang memikat dan profesional. 
-   - WAJIB memasukkan "Kata Kunci (Keywords)" yang sangat relevan dengan video/judul.
-   - Kata kunci harus menyatu secara natural di dalam struktur paragraf (seperti gaya bahasa manusia, bukan mesin).
-   - DILARANG KERAS MENULISKAN HASHTAG (#) APAPUN DI DALAM DESKRIPSI INI! (Karena hashtag akan diurus di bagian terpisah).
-3. 'keywords': Buat array yang berisi daftar minimal 15 hashtag. WAJIB diurutkan dari skor SEO tertinggi hingga terendah. WAJIB cantumkan skornya di samping hashtag (contoh: "#roblox (99)").
+1. 'recommendedTitles': Buat TEPAT 5 pilihan judul clickbait namun SEO-friendly. SETIAP JUDUL WAJIB diberi skor di bagian AKHIR judul (contoh: "Judul Video [Skor SEO: 95/100]").
+2. 'recommendedDescriptions': Buat TEPAT 3 variasi naskah deskripsi YouTube yang memikat dan profesional.
+   - WAJIB memasukkan "Kata Kunci (Keywords)" secara natural di dalam paragraf.
+   - DILARANG KERAS MENULISKAN HASHTAG (#) APAPUN DI DALAM DESKRIPSI INI!
+   - Berikan skor SEO (angka 1-100) untuk setiap variasi deskripsi.
+3. 'keywords': Buat array daftar minimal 15 hashtag berurutan dari skor SEO tertinggi. Cantumkan skornya di samping hashtag (contoh: "#roblox (99)").
 
-Berikan hasil DALAM FORMAT JSON MURNI (Object) dengan struktur persis seperti ini (Ganti "XX" dengan ANGKA SKOR ASLI):
+Berikan hasil DALAM FORMAT JSON MURNI (Object) dengan struktur persis seperti ini:
 {
   "recommendedTitles": [
-    "Ketik Judul Pilihan Pertama Di Sini [Skor SEO: XX/100]",
-    "Ketik Judul Pilihan Kedua Di Sini [Skor SEO: XX/100]",
-    "Ketik Judul Pilihan Ketiga Di Sini [Skor SEO: XX/100]",
-    "Ketik Judul Pilihan Keempat Di Sini [Skor SEO: XX/100]",
-    "Ketik Judul Pilihan Kelima Di Sini [Skor SEO: XX/100]"
+    "Ketik Judul Pilihan Pertama Di Sini [Skor SEO: 95/100]",
+    "Ketik Judul Pilihan Kedua Di Sini [Skor SEO: 92/100]",
+    "Ketik Judul Pilihan Ketiga Di Sini [Skor SEO: 90/100]",
+    "Ketik Judul Pilihan Keempat Di Sini [Skor SEO: 88/100]",
+    "Ketik Judul Pilihan Kelima Di Sini [Skor SEO: 85/100]"
   ],
-  "description": "Tulis deskripsi yang kaya akan KATA KUNCI natural di sini, TANPA ADA SATU PUN HASHTAG (#)...",
+  "recommendedDescriptions": [
+    {
+      "text": "Tulis variasi deskripsi pertama yang sangat kaya keyword di sini tanpa hashtag...",
+      "score": 98
+    },
+    {
+      "text": "Tulis variasi deskripsi kedua dengan gaya penulisan berbeda di sini tanpa hashtag...",
+      "score": 94
+    },
+    {
+      "text": "Tulis variasi deskripsi ketiga yang memicu rasa penasaran penonton di sini tanpa hashtag...",
+      "score": 90
+    }
+  ],
   "keywords": [
-    "#keywordTerbaik (XX)",
-    "#keywordKedua (XX)",
-    "#keywordKetiga (XX)"
+    "#keywordTerbaik (98)",
+    "#keywordKedua (95)",
+    "#keywordKetiga (90)"
   ]
 }
 
