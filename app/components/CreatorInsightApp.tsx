@@ -668,14 +668,14 @@ const handleAnalyzeAngles = async () => {
             </h2>
             
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '24px', marginBottom: '48px' }}>
-              <div style={{ flex: '1 1 calc(50% - 12px)', background: 'linear-gradient(145deg, #1e293b 0%, #0f172a 100%)', padding: '24px', borderRadius: '16px', border: '1px solid #334155' }}>
+              <div style={{ flex: '1 1 300px', background: 'linear-gradient(145deg, #1e293b 0%, #0f172a 100%)', padding: '24px', borderRadius: '16px', border: '1px solid #334155' }}>
                 <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#ffffff', margin: '0 0 12px 0' }}>🎥 Digital Media & UGC Production</h3>
                 <p style={{ fontSize: '14px', color: '#94a3b8', margin: '0', lineHeight: '1.6' }}>
                   Tidak hanya membangun sistem, tapi juga terjun langsung mengelola ekosistem channel YouTube. Berpengalaman dalam penyusunan storyboard, scripting, hingga eksekusi kampanye UGC (User Generated Content) dan Affiliate Marketing untuk format video vertikal (Shorts/Reels).
                 </p>
               </div>
 
-              <div style={{ flex: '1 1 calc(50% - 12px)', background: 'linear-gradient(145deg, #1e293b 0%, #0f172a 100%)', padding: '24px', borderRadius: '16px', border: '1px solid #334155' }}>
+              <div style={{ flex: '1 1 300px', background: 'linear-gradient(145deg, #1e293b 0%, #0f172a 100%)', padding: '24px', borderRadius: '16px', border: '1px solid #334155' }}>
                 <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#ffffff', margin: '0 0 12px 0' }}>☁️ Cloud Infrastructure & Database</h3>
                 <p style={{ fontSize: '14px', color: '#94a3b8', margin: '0', lineHeight: '1.6' }}>
                   Terbiasa merancang dan mendeploy arsitektur aplikasi berbasis cloud yang scalable. Menguasai manajemen project melalui Google Cloud, integrasi database realtime menggunakan Firebase, serta orkestrasi API eksternal.
