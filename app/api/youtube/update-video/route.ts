@@ -3,13 +3,11 @@ import { getToken } from "next-auth/jwt";
 
 export async function POST(req: NextRequest) {
   try {
-    // 1. Cek Token Akses Login Google
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
     if (!token || !token.accessToken) {
       return NextResponse.json({ error: "Sesi habis. Silakan Logout dan Login kembali." }, { status: 401 });
     }
 
-    // 2. Tangkap data yang dikirim dari tombol Simpan web Mas Ahmad
     const body = await req.json();
     const { videoId, title, description, tags } = body;
 
@@ -17,10 +15,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Video ID dan Judul tidak boleh kosong" }, { status: 400 });
     }
 
-    // =================================================================
-    // TRIK RAHASIA: Ambil data asli (Paket Lengkap) dari YouTube dulu!
-    // Supaya Google tidak marah karena ada data yang kurang
-    // =================================================================
+    // 1. Ambil data asli dari YouTube
     const getRes = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}`, {
       headers: { Authorization: `Bearer ${token.accessToken}` }
     });
@@ -32,26 +27,32 @@ export async function POST(req: NextRequest) {
 
     const originalSnippet = getData.items[0].snippet;
 
-    // =================================================================
-    // TIMPA DATA LAMA DENGAN DATA BARU
-    // =================================================================
+    // 2. Timpa Judul dan Deskripsi
     originalSnippet.title = title;
     originalSnippet.description = description;
 
-    // Bersihkan Tags (YouTube menolak tag yang masih ada simbol '#')
-    let cleanTags: string[] = [];
+    // =================================================================
+    // 🔥 PISAU PEMOTONG HASHTAG SUPER CERDAS 🔥
+    // =================================================================
+    let rawTagsString = "";
+    // Ubah ke string tunggal apapun format dari frontend
     if (Array.isArray(tags)) {
-      cleanTags = tags.map((t: string) => t.replace(/^#/, '').trim());
+      rawTagsString = tags.join(" "); 
     } else if (typeof tags === 'string') {
-      cleanTags = tags.split(',').map((t: string) => t.replace(/^#/, '').trim());
+      rawTagsString = tags;
     }
-    
-    // Masukkan tag bersih ke paket
-    originalSnippet.tags = cleanTags.filter(Boolean);
 
-    // =================================================================
-    // KIRIM BALIK PAKET LENGKAP KE YOUTUBE
-    // =================================================================
+    // Potong teks setiap kali ada Spasi atau Koma (/[\s,]+/)
+    // Lalu hapus semua tanda # dan buang elemen yang kosong
+    let cleanTags = rawTagsString
+      .split(/[\s,]+/) 
+      .map((t: string) => t.replace(/#/g, '').trim()) 
+      .filter(Boolean); 
+
+    // Masukkan tag yang sudah terpotong rapi ke dalam paket
+    originalSnippet.tags = cleanTags;
+
+    // 3. Kirim paket lengkap ke YouTube
     const putRes = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet`, {
       method: "PUT",
       headers: {
@@ -60,7 +61,7 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify({
         id: videoId,
-        snippet: originalSnippet // Kirim paket komplit hasil editan
+        snippet: originalSnippet 
       }),
     });
 
