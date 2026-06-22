@@ -589,7 +589,7 @@ const handleAnalyzeAngles = async () => {
       </div>
 
    {/* AREA KONTEN UTAMA (BISA DI-SCROLL) */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '16px', paddingBottom: '90px' }}>
+<div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '16px', paddingBottom: '90px', width: '100%', boxSizing: 'border-box' }}>
         {active === "overview" && renderOverview()}
         {active === "optimizer" && renderOptimizer()}
         {active === "competitors" && renderCompetitors()}

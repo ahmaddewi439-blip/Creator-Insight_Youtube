@@ -310,3 +310,27 @@ video {
   word-break: keep-all;
   overflow-wrap: normal;
 }
+/* ========================================= */
+/* 🔥 RESPONSIVE MOBILE FIX (ANTI GESER) 🔥 */
+/* ========================================= */
+html, body {
+  overflow-x: hidden !important;
+  width: 100vw;
+  max-width: 100%;
+}
+
+@media screen and (max-width: 768px) {
+  /* Bikin Tabel BISA Di-Swipe ke samping di HP tanpa merusak layar */
+  table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+  }
+  
+  /* Bikin jarak kotak lebih lega di HP */
+  div[style*="padding: 24px"] {
+    padding: 16px !important;
+  }
+}
