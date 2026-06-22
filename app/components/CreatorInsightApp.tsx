@@ -1749,7 +1749,7 @@ function OptimizerResultView({ result, onLivePreview, originalVideo }: { result:
                       ))}
                    </div>
                 ) : (
-                   <div style={{ fontSize: '13px', color: '#94a3b8' }}>Data tag tidak dikirim oleh server YouTube untuk mode ini.</div>
+                   <div style={{ fontSize: '13px', color: '#94a3b8' }}>Video ini belum memiliki hashtag di YouTube Studio saat ini.</div>
                 )}
              </div>
 
