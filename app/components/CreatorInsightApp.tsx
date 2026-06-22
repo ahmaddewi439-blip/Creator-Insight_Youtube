@@ -689,9 +689,14 @@ const handleAnalyzeAngles = async () => {
               <p style={{ fontSize: '16px', color: '#bfdbfe', margin: '0 0 24px 0', maxWidth: '500px', marginInline: 'auto' }}>
                 Mari berkolaborasi untuk mengoptimalkan performa channel Anda atau membangun solusi AI kustom untuk bisnis digital Anda.
               </p>
-              <button style={{ background: '#ffffff', color: '#1e3a8a', padding: '12px 24px', borderRadius: '8px', fontWeight: 'bold', fontSize: '16px', border: 'none', cursor: 'pointer' }}>
-                Hubungi Saya di Sini
-              </button>
+              <a 
+  href="https://wa.me/6282213838737?text=Halo%20Mas%20Ahmad,%20saya%20melihat%20portofolio%20Creator%20Insight.%20Saya%20tertarik%20untuk%20diskusi%20lebih%20lanjut!" 
+  target="_blank" 
+  rel="noopener noreferrer"
+  style={{ display: 'inline-block', background: '#ffffff', color: '#1e3a8a', padding: '12px 24px', borderRadius: '8px', fontWeight: 'bold', fontSize: '16px', textDecoration: 'none', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
+>
+  Hubungi Saya via WhatsApp
+</a>
             </div>
 
           </div>
