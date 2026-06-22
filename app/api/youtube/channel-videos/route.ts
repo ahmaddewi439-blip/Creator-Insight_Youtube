@@ -20,14 +20,19 @@ export async function GET() {
     }
 
     const mapped = videos.map(v => ({
-      id: v.videoId,
-      title: v.title,
-      description: v.description,
+      id: v.videoId || v.id,
+      title: v.title || v.snippet?.title || "",
+      // 🔥 KITA AMANKAN DESKRIPSI FULL-NYA DI SINI
+      description: v.description || v.snippet?.description || "",
+      // 🔥 INI DIA PIPA HASHTAG YANG HILANG SELAMA 3 JAM!
+      tags: v.tags || v.snippet?.tags || [], 
       thumbnail: v.thumbnail,
       publishedAt: v.publishedAt,
       status: v.status || "Published",
       views: v.views || 0,
-      likes: v.likes || 0
+      likes: v.likes || 0,
+      // 🔥 Bawa seluruh laci aslinya biar UI tidak pernah kehabisan data
+      snippet: v.snippet || {} 
     }));
 
     return NextResponse.json(mapped);
