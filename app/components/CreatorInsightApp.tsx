@@ -1009,38 +1009,35 @@ async function fetchCompetitionScore(keyword: string) {
 }
   function renderOptimizer() {
     // FITUR LIVE PREVIEW (Update Judul, Deskripsi, dan Tags sekaligus)
-    const handleLivePreview = (type: string, value: any) => {
-      if (!selectedVideo) return;
-      const currentId = getVideoId(selectedVideo);
+   const handleLivePreview = (field: string, value: string) => {
+    setVideosState((prev: any) => {
+      if (!prev.data) return prev;
       
-      // Update data di state utama
-      setVideosState(prev => ({
+      return {
         ...prev,
-        data: prev.data?.map(v => {
-          if (getVideoId(v) === currentId) {
-            let updatedSnippet = { ...(v.snippet || {}) };
-            if (type === "title") updatedSnippet.title = value;
-            if (type === "description") updatedSnippet.description = value;
-            if (type === "tags") updatedSnippet.tags = value;
-            return { ...v, title: type === "title" ? value : (v.title || updatedSnippet.title), snippet: updatedSnippet };
-          }
-          return v;
-        }) || []
-      }));
-      
-      // Update data di panel yang sedang terbuka
-      setSelectedVideo((prev: any) => {
-        let updatedSnippet = { ...(prev?.snippet || {}) };
-        if (type === "title") updatedSnippet.title = value;
-        if (type === "description") updatedSnippet.description = value;
-        if (type === "tags") updatedSnippet.tags = value;
-        return { ...prev, title: type === "title" ? value : (prev?.title || updatedSnippet.title), snippet: updatedSnippet };
-      });
+        data: prev.data.map((vid: any) => {
+          // 1. Dapatkan ID yang akurat (Anti-Rabun)
+          const currentId = typeof vid?.id === 'string' ? vid.id : (vid?.id?.videoId || vid?.snippet?.resourceId?.videoId);
+          const activeId = typeof selectedVideo?.id === 'string' ? selectedVideo.id : (selectedVideo?.id?.videoId || selectedVideo?.snippet?.resourceId?.videoId);
 
-      // Memberikan notifikasi visual sukses diterapkan
-      if (type === "description") alert("📝 Deskripsi baru berhasil diterapkan pada video! Jangan lupa klik 'Simpan Perubahan'.");
-      if (type === "tags") alert("🏷️ Hashtags berhasil diterapkan pada video! Jangan lupa klik 'Simpan Perubahan'.");
-    };
+          // 2. KUNCI UTAMA: HANYA UPDATE VIDEO YANG ID-NYA SAMA (YANG SEDANG DIKLIK)
+          if (activeId && currentId === activeId) {
+            return {
+              ...vid,
+              [field]: value, // Update laci luar
+              snippet: {
+                ...(vid.snippet || {}),
+                [field]: value // Update laci dalam
+              }
+            };
+          }
+          
+          // 3. JIKA BEDA VIDEO, BIARKAN ASLI (JANGAN IKUT TERGANTI!)
+          return vid; 
+        })
+      };
+    });
+  };
 
  // FUNGSI TOMBOL SIMPAN KE YOUTUBE (Tembus Tanpa Blokir Frontend)
     const handleSaveToYouTube = async (e: any, currentVideo: any) => {
