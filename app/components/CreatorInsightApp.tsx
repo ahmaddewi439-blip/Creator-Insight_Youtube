@@ -13,13 +13,14 @@ type ApiState<T> = {
 };
 
 const tabs: { id: TabId; label: string; icon: string }[] = [
-    { id: "overview", label: "Dasbor", icon: "🏠" },
-    { id: "optimizer", label: "Optimasi", icon: "🪄" },
-    { id: "competitors", label: "Riset", icon: "📈" },
-    { id: "roblox", label: "Sutradara", icon: "🎬" },
-    { id: "opportunity", label: "Lab", icon: "🧠" }
-    { id: "portfolio", label: "Portofolio", icon: "💼" }
-  ];
+  { id: "overview", label: "Dasbor", icon: "🏠" },
+  { id: "optimizer", label: "Optimasi", icon: "🚀" },
+  { id: "competitors", label: "Riset", icon: "📈" },
+  { id: "roblox", label: "Sutradara", icon: "🎬" },
+  { id: "opportunity", label: "Lab", icon: "🧠" },
+  { id: "portfolio", label: "Portofolio", icon: "💼" }
+];
+
 function compact(value?: string | number) {
   const n = typeof value === "string" ? Number(value) : value || 0;
   if (!Number.isFinite(n)) return "0";
