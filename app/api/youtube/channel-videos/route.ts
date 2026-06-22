@@ -4,7 +4,6 @@ import { authOptions } from "@/lib/auth";
 import { fetchChannelVideos } from "@/app/lib/youtube/fetchVideos";
 
 export const runtime = "nodejs";
-// 🔥 SENJATA 1 & 2: Paksa Next.js jangan pernah menyimpan ingatan (Cache)
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
@@ -20,20 +19,20 @@ export async function GET() {
       videos = await fetchChannelVideos(); 
     }
 
-    const mapped = videos.map(v => ({
-      id: v.id || v.videoId,
+    // Kita gunakan (v: any) agar TypeScript tidak menghentikan Vercel Build!
+    const mapped = videos.map((v: any) => ({
+      id: v.id || v.videoId || "",
       title: v.title || v.snippet?.title || "",
       description: v.description || v.snippet?.description || "",
       tags: v.tags || v.snippet?.tags || [],
-      thumbnail: v.thumbnail,
-      publishedAt: v.publishedAt,
+      thumbnail: v.thumbnail || "",
+      publishedAt: v.publishedAt || "",
       status: v.status || "Published",
       views: v.views || 0,
       likes: v.likes || 0,
       snippet: v.snippet || {}
     }));
 
-    // 🔥 SENJATA 3: Paksa Browser Chrome Mas Ahmad untuk selalu minta data baru
     return NextResponse.json(mapped, {
       headers: {
         'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
