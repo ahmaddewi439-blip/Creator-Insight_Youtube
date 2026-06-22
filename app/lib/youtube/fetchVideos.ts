@@ -101,7 +101,7 @@ export async function fetchChannelInfo(auth?: unknown) {
   const url = new URL("https://www.googleapis.com/youtube/v3/channels");
   url.searchParams.set("part", "snippet,statistics");
   url.searchParams.set("id", channelId);
-  if (useApiKey) url.searchParams.set("key", apiKey);
+ if (useApiKey) url.searchParams.set("key", apiKey as string);
 
   try {
     const res = await fetch(url.toString(), { headers, cache: 'no-store' });
