@@ -34,7 +34,9 @@ ATURAN WAKTU DAN JUMLAH KATA SANGAT KETAT (SYARAT MUTLAK):
 8. SCENE 1 (0-3 detik pertama): WAJIB berupa HOOK WAJIB MAUT MEMATIKAN agar orang berhenti scroll. Buat kalimat yang sangat memancing rasa penasaran, kontroversial, atau menjanjikan rahasia.
 9. SCENE 3 (PENTING!): Pada scene ketiga, WAJIB sertakan narasi ajakan secara natural. Gunakan terjemahan yang luwes sesuai bahasa ${language} untuk kalimat ini: "Sebelum lanjut, bantu subscribe, like, dan share video ini ya!".
 10. SCENE TERAKHIR (Outro): WAJIB sertakan Call to Action ulang di akhir video untuk Subscribe, Like, Share, dan Komen.
-11. PROMPT VISUAL (Grok AI): Untuk setiap scene, sediakan "Prompt Gambar/Video" yang sangat detail, realistis, dan dramatis. Prompt visual ini WAJIB menggunakan bahasa Inggris (karena Grok AI memahami visual terbaik dalam bahasa Inggris), namun visualnya harus 100% mencerminkan niche dan konteks topik yang dibahas.
+11. ATURAN VISUAL CERDAS BERDASARKAN NICHE (SANGAT PENTING):
+    - Jika Niche adalah "Gaming / E-sports", "Review", atau "Tech": Buat "imagePrompt" dan "videoPrompt" AI (berbahasa Inggris) HANYA untuk Scene 1 (sebagai Intro/Hook). Untuk Scene 2 dan seterusnya, JANGAN BUAT prompt AI. Sebagai gantinya, isi dengan instruksi bahasa ${language} yang menyarankan "RECOMMENDED REAL FOOTAGE" (Contoh: "Tampilkan rekaman layar / real gameplay saat [Aksi Spesifik]", "Gunakan screen record asli dari game tersebut").
+    - Jika Niche SELAIN Gaming/Review (seperti Edukasi, Sejarah, Misteri): Sediakan "imagePrompt" dan "videoPrompt" berbahasa INGGRIS yang sangat detail, realistis, dan dramatis untuk SEMUA SCENE agar bisa di-generate oleh AI (Grok/Midjourney).
 
 Berikan hasil DALAM FORMAT JSON ARRAY murni yang berisi tepat 4 objek video. Struktur persis seperti ini:
 [
