@@ -18,17 +18,29 @@ export async function POST(req: Request) {
     const endpoint = baseUrl.endsWith("/chat/completions") ? baseUrl : `${baseUrl}/chat/completions`;
 
     // Prompt dengan Ancaman Matematika 5 Detik
-    const prompt = `Anda adalah Pakar TikTok & YouTube Shorts kelas dunia spesialis Faceless Channel.
-Klien meminta 4 ide konten vertikal (9:16) super viral.
+    const prompt = `Kamu adalah Sutradara YouTube Shorts Profesional. Buatkan 4 script video pendek vertikal (9:16) berdasarkan topik dan angle yang diberikan.
 Niche: "${niche}"
 Topik Spesifik: "${topic}"
 BAHASA NASKAH (VO) & JUDUL HARUS MENGGUNAKAN: "${language}"
 
 ATURAN WAKTU DAN JUMLAH KATA SANGAT KETAT (SYARAT MUTLAK):
-1. Setiap video WAJIB memiliki antara 8 hingga 12 scene (agar durasi total 40-60 detik).
+1. Setiap video WAJIB memiliki antara 8 hingga 10 scene (agar durasi total 40-55 detik).
 2. SETIAP SCENE HARUS BERDURASI TEPAT 5 DETIK. Format waktu wajib kelipatan 5 detik (Contoh: "00:00 - 00:05", "00:05 - 00:10").
 3. SYARAT MUTLAK VOICE OVER (VO): Kecepatan bicara manusia adalah 2.5 kata per detik. Oleh karena itu, teks VO UNTUK SETIAP SCENE WAJIB BERJUMLAH TEPAT 12 HINGGA 14 KATA. 
 4. JANGAN KURANG DARI 10 KATA, JANGAN LEBIH DARI 13 KATA! Hitung manual kata-kata Anda sebelum menuliskannya. Jika kurang dari 12 kata, naskah akan ada jeda diam. Jika lebih dari 14 kata, naskah akan terpotong sebelum selesai dibaca.
+5. BAHASA: Seluruh naskah narasi (Voice Over) HARUS menggunakan bahasa: [MASUKKAN_VARIABLE_BAHASA_DISINI].
+6. DURASI: Sesuaikan panjang teks narasi agar pas diucapkan dalam durasi [MASUKKAN_VARIABLE_DURASI_DISINI] detik. Jangan terlalu pendek, jangan kepanjangan.
+7. SCENE 1 (0-3 detik pertama): WAJIB berupa HOOK MAUT. Buat kalimat yang sangat memancing rasa penasaran, kontroversial, atau menjanjikan rahasia.
+8. SCENE 3 (PENTING!): Pada scene ketiga, WAJIB sertakan narasi ajakan secara natural. Gunakan terjemahan yang tepat sesuai bahasa yang dipilih untuk kalimat ini: "Sebelum lanjut, bantu subscribe, like, dan share video ini ya!".
+9. SCENE TERAKHIR (Outro): WAJIB sertakan Call to Action ulang di akhir video untuk Subscribe, Like, Share, dan Komen.
+10. PROMPT VISUAL (Grok AI): Untuk setiap scene, sediakan "Prompt Gambar/Video" yang sangat detail, realistis, dan dramatis. Prompt visual ini WAJIB menggunakan bahasa Inggris (karena Grok AI memahami visual terbaik dalam bahasa Inggris), namun visualnya harus 100% mencerminkan niche dan konteks topik yang dibahas.
+
+Format Output (berikan 4 script dengan struktur ini):
+[Judul Script 1]
+- Scene 1 (Hook 3 Detik): [Narasi Bahasa Target] | Visual Prompt untuk Grok AI: [Prompt Inggris Detail]
+- Scene 2: [Narasi Bahasa Target] | Visual Prompt: [Prompt Inggris Detail]
+- Scene 3 (Wajib CTA): [Narasi CTA Bahasa Target] | Visual Prompt: [Prompt Inggris Detail]
+... dan seterusnya sampai Scene Terakhir.
 
 Berikan hasil DALAM FORMAT JSON ARRAY murni yang berisi tepat 4 objek video. Struktur persis seperti ini:
 [

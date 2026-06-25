@@ -1054,21 +1054,32 @@ async function fetchCompetitionScore(keyword: string) {
             <div className="card" style={{ border: '1px solid #3b82f6', background: 'linear-gradient(145deg, #1e3a8a 0%, #0f172a 100%)', padding: '24px', borderRadius: '16px', position: 'relative' }}>
               <h2 style={{ color: '#60a5fa', margin: '0 0 12px 0', fontSize: '20px' }}>⚡ Viral Factory (Shorts)</h2>
               <p style={{ color: '#93c5fd', margin: '0 0 24px 0', fontSize: '13px' }}>Hasilkan 4 script video pendek vertikal 9:16 super viral berdasarkan angle ini.</p>
-              <button 
-                onClick={() => {
-                  // 1. Masukkan angle yang dipilih ke state input Anda
-                  setTrendQuery(selectedAngle.title); 
-                  
-                  // 2. Gulir layar sedikit ke atas agar user melihat proses loading
-                  window.scrollTo({ top: 100, behavior: 'smooth' });
-                  
-                  // 3. Panggil fungsi pembuat Shorts asli Anda
-                  handleGenerate(); 
-                }} 
-                style={{ width: '100%', background: '#3b82f6', color: 'white', fontWeight: 'bold', padding: '14px', borderRadius: '10px', border: 'none', cursor: 'pointer', fontSize: '15px' }}
-              >
-                Generate Viral Pack ⚡
-              </button>
+              {/* PILIHAN DURASI SHORTS (45 DETIK & 55 DETIK) */}
+          <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
+            <button
+              onClick={() => {
+                localStorage.setItem('shortsDuration', '45'); // Simpan durasi 45
+                setTrendQuery(selectedAngle.title);
+                window.scrollTo({ top: 100, behavior: 'smooth' });
+                handleGenerate();
+              }}
+              style={{ flex: 1, background: '#10b981', color: 'white', fontWeight: 'bold', padding: '14px', borderRadius: '10px', border: 'none', cursor: 'pointer', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}
+            >
+              ⏱️ Buat 45 Detik
+            </button>
+
+            <button
+              onClick={() => {
+                localStorage.setItem('shortsDuration', '55'); // Simpan durasi 55
+                setTrendQuery(selectedAngle.title);
+                window.scrollTo({ top: 100, behavior: 'smooth' });
+                handleGenerate();
+              }}
+              style={{ flex: 1, background: '#f59e0b', color: 'white', fontWeight: 'bold', padding: '14px', borderRadius: '10px', border: 'none', cursor: 'pointer', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}
+            >
+              ⏱️ Buat 55 Detik
+            </button>
+          </div>
             </div>
 
             {/* KARTU SUTRADARA AI (LONG VIDEO) */}
