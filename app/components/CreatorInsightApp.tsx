@@ -196,12 +196,19 @@ const handleAnalyzeAngles = async () => {
     setTimeout(() => setViralLoadingStep(2), 2000); 
     setTimeout(() => setViralLoadingStep(3), 4500); 
 
-    try {
+   try {
+      // 1. Tangkap durasi dari tombol yang Mas klik tadi
+      const targetDuration = localStorage.getItem('shortsDuration') || '45';
+
       const res = await fetch('/api/ai/viral-factory', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        // Mengirimkan Bahasa ke Backend!
-        body: JSON.stringify({ niche: directorNiche, topic: selectedAngle?.title || directorTopic, language: directorLanguage })
+        body: JSON.stringify({ 
+          niche: directorNiche, 
+          topic: selectedAngle?.title || directorTopic, 
+          language: directorLanguage,
+          duration: targetDuration // 2. Kirim durasinya ke Backend!
+        })
       });
       const data = await res.json();
       if (data.success) {
