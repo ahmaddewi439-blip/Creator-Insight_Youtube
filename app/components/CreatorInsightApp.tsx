@@ -1785,19 +1785,9 @@ function OptimizerResultView({ result, onLivePreview, originalVideo }: { result:
   return (
     <div style={{ background: '#0b0f19', borderRadius: '12px', overflow: 'hidden', border: '1px solid #1e293b', color: '#fff', fontFamily: 'sans-serif' }}>
       
-     
-  {/* TAB NAVIGASI GAYA VIDIQ (50:50) */}
-      <div style={{ display: 'flex', width: '100%', borderBottom: '1px solid #1e293b', background: '#0f172a' }}>
-        <button onClick={() => setActiveTab('Judul')} style={{ flex: 1, padding: '14px 4px', background: 'transparent', border: 'none', borderBottom: activeTab === 'Judul' ? '2px solid #3b82f6' : '2px solid transparent', color: activeTab === 'Judul' ? '#3b82f6' : '#94a3b8', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s', fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-          JUDUL
-        </button>
-        <button onClick={() => setActiveTab('SEO')} style={{ flex: 1, padding: '14px 4px', background: 'transparent', border: 'none', borderBottom: activeTab === 'SEO' ? '2px solid #3b82f6' : '2px solid transparent', color: activeTab === 'SEO' ? '#3b82f6' : '#94a3b8', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s', fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-          SEO (Deskripsi)
-        </button>
-      </div>
 
       {/* --- KONTEN TAB: JUDUL --- */}
-      {activeTab === 'Judul' && (
+      {true && (
         <div style={{ padding: '20px' }}>
           <div style={{ marginBottom: '16px', background: '#1e293b', padding: '12px', borderRadius: '8px', borderLeft: '4px solid #64748b' }}>
             <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>📌 Judul di YouTube Saat Ini:</span>
@@ -1820,7 +1810,7 @@ function OptimizerResultView({ result, onLivePreview, originalVideo }: { result:
       )}
 
       {/* --- KONTEN TAB: SEO (DESKRIPSI & TAG DIBAGI 2 KOLOM) --- */}
-      {activeTab === 'SEO' && (
+      {true && (
         <div style={{ padding: '20px', display: 'flex', flexWrap: 'wrap', gap: '24px' }}>
           
           {/* ================= KOLOM KIRI (DESKRIPSI) ================= */}
