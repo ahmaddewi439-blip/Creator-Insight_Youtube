@@ -148,13 +148,18 @@ export default function CreatorInsightApp() {
   React.useEffect(() => { setIsMounted(true); }, []);
 
   // --- STATE UNTUK MENU SUTRADARA SNIPER ---
-  const [directorNiche, setDirectorNiche] = useState("Gaming / E-sports");
-  const [directorTopic, setDirectorTopic] = useState("");
-  const [analyzingAngles, setAnalyzingAngles] = useState(false);
-  const [directorAngles, setDirectorAngles] = useState<any[]>([]);
-  const [selectedAngle, setSelectedAngle] = useState<any>(null);
-  const [directorLanguage, setDirectorLanguage] = useState("Indonesia");
-  const [viralLoadingStep, setViralLoadingStep] = useState(0); // Untuk efek loading menurun
+const [directorNiche, setDirectorNiche] = useLocalStorage<string>("niche_tersimpan", "Gaming / E-sports");
+const [directorTopic, setDirectorTopic] = useLocalStorage<string>("topik_tersimpan", "");
+const [directorLanguage, setDirectorLanguage] = useLocalStorage<string>("bahasa_tersimpan", "Indonesia");
+const [directorAngles, setDirectorAngles] = useLocalStorage<any[]>("angle_tersimpan", []);
+const [selectedAngle, setSelectedAngle] = useLocalStorage<any>("pilihan_angle_tersimpan", null);
+const [viralVideos, setViralVideos] = useLocalStorage<any[]>("hasil_video_tersimpan", []);
+
+// Kembalikan variabel yang nggak sengaja kehapus:
+const [analyzingAngles, setAnalyzingAngles] = useState(false);
+const [viralLoadingStep, setViralLoadingStep] = useState(0);
+const [isGeneratingViral, setIsGeneratingViral] = useState(false);
+
   // --- FUNGSI AI PEMBEDAH PELUANG ANGLE ---
 const handleAnalyzeAngles = async () => {
     if (!directorTopic) {
@@ -359,8 +364,8 @@ const handleAnalyzeAngles = async () => {
   const [videosState, setVideosState] = useState<ApiState<any[]>>({ loading: false, error: "", data: [] });
   const [selectedVideo, setSelectedVideo] = useState<any>(null);
   const [optimizer, setOptimizer] = useState<ApiState<any>>({ loading: false, error: "", data: null });
-  const [isGeneratingViral, setIsGeneratingViral] = useState(false);
-  const [viralVideos, setViralVideos] = useState<any[]>([]);
+  
+  
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const [dailyTarget, setDailyTarget] = useState<ApiState<any>>({ loading: false, error: "", data: null });
   const [dailyScripts, setDailyScripts] = useState<Record<number, any>>({});
