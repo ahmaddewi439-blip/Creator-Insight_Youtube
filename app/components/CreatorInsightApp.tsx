@@ -20,6 +20,17 @@ const tabs: { id: TabId; label: string; icon: string }[] = [
   { id: "opportunity", label: "Lab", icon: "🧠" },
   { id: "portfolio", label: "Portofolio", icon: "💼" }
 ];
+const risetMenus = [
+  { id: 'label', name: 'Mau Riset apa hari ini?', disabled: true, icon: '🙌' },
+  { id: 'vph', name: 'VPH RISET', disabled: false, icon: '🔥' },
+  { id: 'hidden-gems', name: 'Hidden Gems', disabled: false, icon: '💎' },
+  { id: 'intai', name: 'Intai Kompetitor', disabled: false, icon: '🕵️‍♂️' },
+  { id: 'lagu', name: 'Lagu Trending', disabled: false, icon: '🎵' },
+  { id: 'seo', name: 'Optimasi SEO', disabled: false, icon: '🔍' },
+  { id: 'keyword', name: 'Cari Kata Kunci', disabled: false, icon: '✨' },
+  { id: 'bikin-channel', name: 'Bikin Channel', disabled: false, icon: '🛠️' },
+  { id: 'cek-value', name: 'Cek Value Channel', disabled: false, icon: '💰' },
+];
 
 function compact(value?: string | number) {
   const n = typeof value === "string" ? Number(value) : value || 0;
@@ -144,6 +155,7 @@ function getVideoId(video: any) {
 }
 
 export default function CreatorInsightApp() {
+  const [activeRisetMenu, setActiveRisetMenu] = useState('vph');
   const [isMounted, setIsMounted] = React.useState(false);
   React.useEffect(() => { setIsMounted(true); }, []);
 
@@ -1321,6 +1333,30 @@ async function fetchCompetitionScore(keyword: string) {
 function renderCompetitors() { 
     return (
       <div className="grid">
+        {/* --- AWAL MENU KAPSUL --- */}
+          <div style={{ display: 'flex', overflowX: 'auto', gap: '12px', paddingBottom: '16px', marginBottom: '16px', width: '100%' }}>
+            {risetMenus.map((menu) => (
+              <button
+                key={menu.id}
+                onClick={() => !menu.disabled && setActiveRisetMenu(menu.id)}
+                disabled={menu.disabled}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '8px',
+                  padding: '8px 20px', borderRadius: '999px',
+                  whiteSpace: 'nowrap', fontSize: '14px', fontWeight: '600',
+                  cursor: menu.disabled ? 'default' : 'pointer',
+                  border: activeRisetMenu === menu.id ? 'none' : '1px solid #334155',
+                  backgroundColor: activeRisetMenu === menu.id ? '#dc2626' : 'transparent',
+                  color: activeRisetMenu === menu.id ? '#ffffff' : (menu.disabled ? '#64748b' : '#cbd5e1'),
+                  transition: 'all 0.2s'
+                }}
+              >
+                <span>{menu.icon}</span>
+                <span>{menu.name}</span>
+              </button>
+            ))}
+          </div>
+          {/* --- AKHIR MENU KAPSUL --- */}
         <div className="card">
           <h2 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>📈 Riset Tren Real-Time (Google & YouTube Data)</h2>
           <p className="muted">Grafik fluktuasi pencarian 30 hari terakhir & kata kunci terkait (100% Asli).</p>
