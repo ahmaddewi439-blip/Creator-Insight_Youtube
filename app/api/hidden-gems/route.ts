@@ -67,9 +67,9 @@ export async function POST(req: Request) {
       };
     });
 
-    // 5. FILTER RAHASIA: Hanya ambil channel Kecil (<50rb Subs) yang viral (Views minimal 2x lipat subs)
+    // 5. FILTER RAHASIA: Hanya ambil channel Kecil (<500rb Subs) yang viral (Views minimal 2x lipat subs)
     const gems = rawResults
-      .filter((r: any) => r.subsNum < 50000 && r.multiplierNum > 2)
+      .filter((r: any) => r.subsNum < 500000 && r.multiplierNum > 2)
       .sort((a: any, b: any) => b.multiplierNum - a.multiplierNum) // Urutkan ledakan paling besar di atas
       .slice(0, 10); 
 
