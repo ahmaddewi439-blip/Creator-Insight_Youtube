@@ -155,6 +155,8 @@ function getVideoId(video: any) {
 }
 
 export default function CreatorInsightApp() {
+  const [trendingResults, setTrendingResults] = useState<any[]>([]);
+  const [isTrendingLoading, setIsTrendingLoading] = useState(false);
   const [keywordQuery, setKeywordQuery] = useState('');
   const [keywordResults, setKeywordResults] = useState<string[]>([]);
   const [isKeywordLoading, setIsKeywordLoading] = useState(false);
@@ -1767,6 +1769,72 @@ function renderCompetitors() {
                        </div>
                      ))}
                    </div>
+                 )}
+              </div>
+            </div>
+          )}
+          {/* Tampilan khusus untuk menu LAGU TRENDING */}
+          {activeRisetMenu === 'lagu-trending' && (
+            <div style={{ background: '#1e293b', padding: '24px', borderRadius: '16px', border: '1px solid #334155', marginTop: '20px' }}>
+              <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#f8fafc', fontSize: '18px', marginBottom: '8px' }}>
+                🎵 Radar Lagu Trending (YouTube Music)
+              </h2>
+              <p style={{ color: '#94a3b8', marginBottom: '24px', fontSize: '14px', lineHeight: '1.6' }}>
+                Temukan lagu dan musik latar yang sedang viral saat ini. Menggunakan backsound yang sedang tren bisa meningkatkan peluang video (terutama Shorts) Anda direkomendasikan algoritma!
+              </p>
+
+              <div style={{ marginBottom: '24px' }}>
+                <button 
+                  onClick={() => {
+                    setIsTrendingLoading(true);
+                    setTrendingResults([]);
+                    // Simulasi UI sementara
+                    setTimeout(() => {
+                      setTrendingResults([
+                        { title: "Gala Bunga Matahari", artist: "Sal Priadi", views: "15M", trend: "🔥 Sedang Viral" },
+                        { title: "Penjaga Hati", artist: "Nadhif Basalamah", views: "45M", trend: "📈 Naik Daun" },
+                        { title: "DJ Malam Pagi (Remix)", artist: "Fuji", views: "10M", trend: "🔥 Sedang Viral" }
+                      ]);
+                      setIsTrendingLoading(false);
+                    }, 1500);
+                  }}
+                  disabled={isTrendingLoading}
+                  style={{ 
+                    padding: '12px 24px', borderRadius: '8px', border: 'none', 
+                    background: isTrendingLoading ? '#64748b' : '#ec4899', 
+                    color: 'white', fontWeight: 'bold', cursor: isTrendingLoading ? 'not-allowed' : 'pointer' 
+                  }}>
+                  {isTrendingLoading ? 'Memindai Radar...' : 'Cari Lagu Trending Saat Ini'}
+                </button>
+              </div>
+
+              {/* Wadah Hasil Lagu */}
+              <div style={{ minHeight: '150px', display: 'flex', flexDirection: 'column', border: trendingResults.length > 0 ? 'none' : '2px dashed #334155', borderRadius: '8px', overflow: 'hidden' }}>
+                 {trendingResults.length === 0 ? (
+                   <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                     <p style={{ color: '#64748b' }}>Klik tombol di atas untuk memindai lagu yang sedang viral di Indonesia.</p>
+                   </div>
+                 ) : (
+                   <table style={{ width: '100%', textAlign: 'left', color: 'white', borderCollapse: 'collapse' }}>
+                     <thead>
+                       <tr style={{ background: '#334155', borderBottom: '1px solid #475569' }}>
+                         <th style={{ padding: '12px' }}>Judul Lagu</th>
+                         <th style={{ padding: '12px' }}>Artis / Kreator</th>
+                         <th style={{ padding: '12px' }}>Total Views</th>
+                         <th style={{ padding: '12px' }}>Status Trend</th>
+                       </tr>
+                     </thead>
+                     <tbody>
+                       {trendingResults.map((song, idx) => (
+                         <tr key={idx} style={{ borderBottom: '1px solid #334155' }}>
+                           <td style={{ padding: '12px', fontWeight: 'bold' }}>{song.title}</td>
+                           <td style={{ padding: '12px', color: '#94a3b8' }}>{song.artist}</td>
+                           <td style={{ padding: '12px', color: '#4ade80' }}>{song.views}</td>
+                           <td style={{ padding: '12px', color: '#fbbf24' }}>{song.trend}</td>
+                         </tr>
+                       ))}
+                     </tbody>
+                   </table>
                  )}
               </div>
             </div>
