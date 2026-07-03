@@ -1357,6 +1357,42 @@ function renderCompetitors() {
             ))}
           </div>
           {/* --- AKHIR MENU KAPSUL --- */}
+          {/* --- AREA KONTEN DINAMIS BERDASARKAN MENU YANG DIKLIK --- */}
+          
+          {/* Tampilan khusus untuk menu VPH RISET */}
+          {activeRisetMenu === 'vph' && (
+            <div style={{ background: '#1e293b', padding: '24px', borderRadius: '16px', border: '1px solid #334155', marginTop: '20px' }}>
+              <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>
+                🔥 Top Performers - VPH Riset
+              </h2>
+              
+              {/* Kolom Pencarian VPH */}
+              <div style={{ display: 'flex', gap: '10px', marginBottom: '24px' }}>
+                <input 
+                  type="text" 
+                  placeholder="Ketik kata kunci (contoh: cara membuat pakan unggas)" 
+                  style={{ flex: 1, padding: '12px 16px', borderRadius: '8px', border: '1px solid #334155', background: '#0f172a', color: 'white' }}
+                />
+                <button style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: '#dc2626', color: 'white', fontWeight: 'bold', cursor: 'pointer' }}>
+                  Riset Sekarang
+                </button>
+              </div>
+
+              {/* Wadah Tabel VPH */}
+              <div style={{ height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px dashed #334155', borderRadius: '8px' }}>
+                 <p style={{ color: '#64748b' }}>Tabel data kompetitor YouTube akan muncul di sini</p>
+              </div>
+            </div>
+          )}
+
+          {/* Tampilan khusus untuk menu Cek Value */}
+          {activeRisetMenu === 'cek-value' && (
+            <div style={{ background: '#1e293b', padding: '24px', borderRadius: '16px', border: '1px solid #334155', marginTop: '20px' }}>
+              <h2 style={{ color: '#f8fafc', marginBottom: '16px' }}>💰 Estimasi Value & Pendapatan Channel</h2>
+              <p style={{ color: '#94a3b8' }}>Fitur kalkulasi akan segera hadir.</p>
+            </div>
+          )}
+          
         <div className="card">
           <h2 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>📈 Riset Tren Real-Time (Google & YouTube Data)</h2>
           <p className="muted">Grafik fluktuasi pencarian 30 hari terakhir & kata kunci terkait (100% Asli).</p>
