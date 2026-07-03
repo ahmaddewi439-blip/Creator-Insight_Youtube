@@ -156,6 +156,9 @@ function getVideoId(video: any) {
 
 export default function CreatorInsightApp() {
   const [activeRisetMenu, setActiveRisetMenu] = useState('vph');
+  const [vphQuery, setVphQuery] = useState('');
+  const [vphResults, setVphResults] = useState<any[]>([]);
+  const [isVphLoading, setIsVphLoading] = useState(false);
   const [isMounted, setIsMounted] = React.useState(false);
   React.useEffect(() => { setIsMounted(true); }, []);
 
@@ -1365,25 +1368,64 @@ function renderCompetitors() {
               <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>
                 🔥 Top Performers - VPH Riset
               </h2>
-              
+                  
               {/* Kolom Pencarian VPH */}
               <div style={{ display: 'flex', gap: '10px', marginBottom: '24px' }}>
                 <input 
                   type="text" 
+                  value={vphQuery}
+                  onChange={(e) => setVphQuery(e.target.value)}
                   placeholder="Ketik kata kunci (contoh: cara membuat pakan unggas)" 
                   style={{ flex: 1, padding: '12px 16px', borderRadius: '8px', border: '1px solid #334155', background: '#0f172a', color: 'white' }}
                 />
-                <button style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: '#dc2626', color: 'white', fontWeight: 'bold', cursor: 'pointer' }}>
-                  Riset Sekarang
+                <button 
+                  onClick={() => {
+                    setIsVphLoading(true);
+                    // Simulasi loading selama 2 detik sebelum nanti kita ganti dengan API YouTube asli
+                    setTimeout(() => {
+                      setVphResults([{ title: "Video Contoh 1", vph: "1.2K", views: "150K" }, { title: "Video Contoh 2", vph: "800", views: "50K" }]);
+                      setIsVphLoading(false);
+                    }, 2000);
+                  }}
+                  disabled={isVphLoading || vphQuery === ''}
+                  style={{ 
+                    padding: '12px 24px', borderRadius: '8px', border: 'none', 
+                    background: isVphLoading || vphQuery === '' ? '#64748b' : '#dc2626', 
+                    color: 'white', fontWeight: 'bold', cursor: isVphLoading || vphQuery === '' ? 'not-allowed' : 'pointer' 
+                  }}>
+                  {isVphLoading ? 'Mencari...' : 'Riset Sekarang'}
                 </button>
               </div>
 
               {/* Wadah Tabel VPH */}
-              <div style={{ height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px dashed #334155', borderRadius: '8px' }}>
-                 <p style={{ color: '#64748b' }}>Tabel data kompetitor YouTube akan muncul di sini</p>
-              </div>
-            </div>
-          )}
+              <div style={{ minHeight: '200px', display: 'flex', flexDirection: 'column', border: vphResults.length > 0 ? 'none' : '2px dashed #334155', borderRadius: '8px', overflow: 'hidden' }}>
+                 {vphResults.length === 0 ? (
+                   <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                     <p style={{ color: '#64748b' }}>Ketik kata kunci dan klik Riset untuk melihat data kompetitor.</p>
+                   </div>
+                 ) : (
+                   <table style={{ width: '100%', textAlign: 'left', color: 'white', borderCollapse: 'collapse' }}>
+                     <thead>
+                       <tr style={{ background: '#334155', borderBottom: '1px solid #475569' }}>
+                         <th style={{ padding: '12px' }}>Video</th>
+                         <th style={{ padding: '12px' }}>VPH 📈</th>
+                         <th style={{ padding: '12px' }}>Total Views</th>
+                       </tr>
+                     </thead>
+                     <tbody>
+                       {vphResults.map((video, idx) => (
+                         <tr key={idx} style={{ borderBottom: '1px solid #334155' }}>
+                           <td style={{ padding: '12px' }}>{video.title}</td>
+                           <td style={{ padding: '12px', color: '#4ade80', fontWeight: 'bold' }}>{video.vph}/h</td>
+                           <td style={{ padding: '12px' }}>{video.views}</td>
+                         </tr>
+                       ))}
+                     </tbody>
+                  </table>
+           )}
+        </div>
+      </div>
+    )}
 
           {/* Tampilan khusus untuk menu Cek Value */}
           {activeRisetMenu === 'cek-value' && (
@@ -1392,7 +1434,7 @@ function renderCompetitors() {
               <p style={{ color: '#94a3b8' }}>Fitur kalkulasi akan segera hadir.</p>
             </div>
           )}
-          
+
         <div className="card">
           <h2 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>📈 Riset Tren Real-Time (Google & YouTube Data)</h2>
           <p className="muted">Grafik fluktuasi pencarian 30 hari terakhir & kata kunci terkait (100% Asli).</p>
