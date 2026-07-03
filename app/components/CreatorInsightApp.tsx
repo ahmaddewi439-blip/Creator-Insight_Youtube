@@ -1717,21 +1717,28 @@ function renderCompetitors() {
                   placeholder="Ketik topik dasar (contoh: cara ternak lele)" 
                   style={{ flex: 1, padding: '12px 16px', borderRadius: '8px', border: '1px solid #334155', background: '#0f172a', color: 'white' }}
                 />
-                <button 
-                  onClick={() => {
+          <button 
+                  onClick={async () => {
                     setIsKeywordLoading(true);
                     setKeywordResults([]);
-                    // Simulasi UI sementara
-                    setTimeout(() => {
-                      setKeywordResults([
-                        "cara ternak lele pemula",
-                        "cara ternak lele di ember",
-                        "cara ternak lele kolam terpal",
-                        "cara ternak lele bioflok",
-                        "cara ternak lele agar cepat besar"
-                      ]);
-                      setIsKeywordLoading(false);
-                    }, 1500);
+                    try {
+                      // Menembak ke mesin API Autocomplete Asli
+                      const res = await fetch('/api/cari-kata-kunci', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query: keywordQuery })
+                      });
+                      const data = await res.json();
+                      
+                      if (data.success) {
+                        setKeywordResults(data.result);
+                      } else {
+                        alert("Gagal menggali kata kunci: " + data.error);
+                      }
+                    } catch (error) {
+                      alert("Terjadi kesalahan jaringan saat mengambil kata kunci.");
+                    }
+                    setIsKeywordLoading(false);
                   }}
                   disabled={isKeywordLoading || keywordQuery === ''}
                   style={{ 
@@ -1739,7 +1746,7 @@ function renderCompetitors() {
                     background: isKeywordLoading || keywordQuery === '' ? '#64748b' : '#8b5cf6', 
                     color: 'white', fontWeight: 'bold', cursor: isKeywordLoading || keywordQuery === '' ? 'not-allowed' : 'pointer' 
                   }}>
-                  {isKeywordLoading ? 'Menggali...' : 'Cari Kata Kunci'}
+                  {isKeywordLoading ? 'Menggali Data Asli...' : 'Cari Kata Kunci'}
                 </button>
               </div>
 
