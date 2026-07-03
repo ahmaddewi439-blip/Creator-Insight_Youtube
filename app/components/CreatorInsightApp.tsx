@@ -155,6 +155,9 @@ function getVideoId(video: any) {
 }
 
 export default function CreatorInsightApp() {
+  const [seoQuery, setSeoQuery] = useState('');
+  const [seoResult, setSeoResult] = useState<any>(null);
+  const [isSeoLoading, setIsSeoLoading] = useState(false);
   const [trendingResults, setTrendingResults] = useState<any[]>([]);
   const [isTrendingLoading, setIsTrendingLoading] = useState(false);
   const [keywordQuery, setKeywordQuery] = useState('');
@@ -1844,6 +1847,77 @@ function renderCompetitors() {
               </div>
             </div>
           )}
+          {/* Tampilan khusus untuk menu OPTIMASI SEO */}
+          {activeRisetMenu === 'seo' && (
+            <div style={{ background: '#1e293b', padding: '24px', borderRadius: '16px', border: '1px solid #334155', marginTop: '20px' }}>
+              <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#f8fafc', fontSize: '18px', marginBottom: '8px' }}>
+                🔍 Mesin Optimasi SEO (AI Generator)
+              </h2>
+              <p style={{ color: '#94a3b8', marginBottom: '24px', fontSize: '14px', lineHeight: '1.6' }}>
+                Ubah topik mentah menjadi Judul yang memancing klik, Deskripsi ramah algoritma, dan deretan Tags siap pakai.
+              </p>
+
+              <div style={{ display: 'flex', gap: '10px', marginBottom: '24px' }}>
+                <input 
+                  type="text" 
+                  value={seoQuery}
+                  onChange={(e) => setSeoQuery(e.target.value)}
+                  placeholder="Ketik topik video (contoh: cara meracik pakan unggas)" 
+                  style={{ flex: 1, padding: '12px 16px', borderRadius: '8px', border: '1px solid #334155', background: '#0f172a', color: 'white' }}
+                />
+                <button 
+                  onClick={() => {
+                    setIsSeoLoading(true);
+                    setSeoResult(null);
+                    // Simulasi UI sementara
+                    setTimeout(() => {
+                      setSeoResult({
+                        title: "Bongkar Rahasia! Cara Meracik Pakan Ternak Murah & Cepat Panen",
+                        description: "Ingin menghemat biaya pakan tapi ternak tetap sehat dan gemuk? Di video ini kita akan membahas tuntas cara meracik pakan unggas alternatif dari bahan seadanya...\n\nJangan lupa subscribe untuk tips pertanian lainnya!\n\n#PakanUnggas #Peternakan #PakanMurah",
+                        tags: "pakan unggas, cara meracik pakan, pakan murah, ide peternakan, ternak sukses, pakan alternatif"
+                      });
+                      setIsSeoLoading(false);
+                    }, 2000);
+                  }}
+                  disabled={isSeoLoading || seoQuery === ''}
+                  style={{ 
+                    padding: '12px 24px', borderRadius: '8px', border: 'none', 
+                    background: isSeoLoading || seoQuery === '' ? '#64748b' : '#3b82f6', 
+                    color: 'white', fontWeight: 'bold', cursor: isSeoLoading || seoQuery === '' ? 'not-allowed' : 'pointer' 
+                  }}>
+                  {isSeoLoading ? 'Meracik SEO...' : 'Buat SEO'}
+                </button>
+              </div>
+
+              {/* Wadah Hasil SEO */}
+              <div style={{ minHeight: '150px', display: 'flex', flexDirection: 'column', border: seoResult ? 'none' : '2px dashed #334155', borderRadius: '8px', overflow: 'hidden' }}>
+                 {!seoResult ? (
+                   <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                     <p style={{ color: '#64748b' }}>Ketik topik video Anda dan biarkan AI meracik SEO-nya.</p>
+                   </div>
+                 ) : (
+                   <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                     {/* Box Judul */}
+                     <div style={{ background: '#0f172a', padding: '16px', borderRadius: '8px', border: '1px solid #334155' }}>
+                       <p style={{ color: '#3b82f6', fontSize: '13px', fontWeight: 'bold', marginBottom: '8px' }}>Rekomendasi Judul (Clickbait & SEO-Friendly):</p>
+                       <h3 style={{ color: 'white', margin: 0, fontSize: '18px' }}>{seoResult.title}</h3>
+                     </div>
+                     {/* Box Deskripsi */}
+                     <div style={{ background: '#0f172a', padding: '16px', borderRadius: '8px', border: '1px solid #334155' }}>
+                       <p style={{ color: '#3b82f6', fontSize: '13px', fontWeight: 'bold', marginBottom: '8px' }}>Draft Deskripsi Video:</p>
+                       <p style={{ color: '#e2e8f0', margin: 0, fontSize: '14px', whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>{seoResult.description}</p>
+                     </div>
+                     {/* Box Tags */}
+                     <div style={{ background: '#0f172a', padding: '16px', borderRadius: '8px', border: '1px solid #334155' }}>
+                       <p style={{ color: '#3b82f6', fontSize: '13px', fontWeight: 'bold', marginBottom: '8px' }}>Tags (Copy & Paste):</p>
+                       <p style={{ color: '#94a3b8', margin: 0, fontSize: '14px' }}>{seoResult.tags}</p>
+                     </div>
+                   </div>
+                 )}
+              </div>
+            </div>
+          )}
+          
         <div className="card">
           <h2 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>📈 Riset Tren Real-Time (Google & YouTube Data)</h2>
           <p className="muted">Grafik fluktuasi pencarian 30 hari terakhir & kata kunci terkait (100% Asli).</p>
