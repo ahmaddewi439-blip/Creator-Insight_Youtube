@@ -155,6 +155,9 @@ function getVideoId(video: any) {
 }
 
 export default function CreatorInsightApp() {
+  const [valueQuery, setValueQuery] = useState('');
+  const [valueResult, setValueResult] = useState<any>(null);
+  const [isValueLoading, setIsValueLoading] = useState(false);
   const [intaiQuery, setIntaiQuery] = useState('');
   const [intaiResults, setIntaiResults] = useState<any[]>([]);
   const [isIntaiLoading, setIsIntaiLoading] = useState(false);
@@ -1613,11 +1616,77 @@ function renderCompetitors() {
             </div>
           )}
 
-          {/* Tampilan khusus untuk menu Cek Value */}
+        {/* Tampilan khusus untuk menu CEK VALUE CHANNEL */}
           {activeRisetMenu === 'cek-value' && (
             <div style={{ background: '#1e293b', padding: '24px', borderRadius: '16px', border: '1px solid #334155', marginTop: '20px' }}>
-              <h2 style={{ color: '#f8fafc', marginBottom: '16px' }}>💰 Estimasi Value & Pendapatan Channel</h2>
-              <p style={{ color: '#94a3b8' }}>Fitur kalkulasi akan segera hadir.</p>
+              <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#f8fafc', fontSize: '18px', marginBottom: '8px' }}>
+                💰 Kalkulator Estimasi Pendapatan Channel
+              </h2>
+              <p style={{ color: '#94a3b8', marginBottom: '24px', fontSize: '14px', lineHeight: '1.6' }}>
+                Intip estimasi pendapatan (AdSense) dari channel kompetitor. Masukkan nama channel atau handle (contoh: @SoniaOfficial7).
+              </p>
+
+              <div style={{ display: 'flex', gap: '10px', marginBottom: '24px' }}>
+                <input 
+                  type="text" 
+                  value={valueQuery}
+                  onChange={(e) => setValueQuery(e.target.value)}
+                  placeholder="Ketik handle channel..." 
+                  style={{ flex: 1, padding: '12px 16px', borderRadius: '8px', border: '1px solid #334155', background: '#0f172a', color: 'white' }}
+                />
+                <button 
+                  onClick={() => {
+                    setIsValueLoading(true);
+                    setValueResult(null);
+                    // Simulasi UI sementara sebelum pasang API asli
+                    setTimeout(() => {
+                      setValueResult({
+                        channelName: "Sonia Official",
+                        subs: "30.7K",
+                        views: "5.2M",
+                        estMonthly: "$250 - $4,000",
+                        estYearly: "$3,000 - $48,000"
+                      });
+                      setIsValueLoading(false);
+                    }, 1500);
+                  }}
+                  disabled={isValueLoading || valueQuery === ''}
+                  style={{ 
+                    padding: '12px 24px', borderRadius: '8px', border: 'none', 
+                    background: isValueLoading || valueQuery === '' ? '#64748b' : '#eab308', 
+                    color: '#1e293b', fontWeight: 'bold', cursor: isValueLoading || valueQuery === '' ? 'not-allowed' : 'pointer' 
+                  }}>
+                  {isValueLoading ? 'Menghitung...' : 'Cek Pendapatan'}
+                </button>
+              </div>
+
+              {/* Wadah Hasil Kalkulasi */}
+              <div style={{ minHeight: '150px', display: 'flex', flexDirection: 'column', border: valueResult ? 'none' : '2px dashed #334155', borderRadius: '8px', overflow: 'hidden' }}>
+                 {!valueResult ? (
+                   <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                     <p style={{ color: '#64748b' }}>Ketik target channel untuk mengintip estimasi pendapatannya.</p>
+                   </div>
+                 ) : (
+                   <div style={{ background: '#0f172a', padding: '20px', borderRadius: '8px', border: '1px solid #334155', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+                      <div>
+                        <p style={{ color: '#94a3b8', fontSize: '13px', marginBottom: '4px' }}>Nama Channel</p>
+                        <h3 style={{ color: 'white', fontSize: '18px', margin: 0 }}>{valueResult.channelName}</h3>
+                      </div>
+                      <div>
+                        <p style={{ color: '#94a3b8', fontSize: '13px', marginBottom: '4px' }}>Total Subscribers</p>
+                        <h3 style={{ color: '#60a5fa', fontSize: '18px', margin: 0 }}>{valueResult.subs}</h3>
+                      </div>
+                      <div>
+                        <p style={{ color: '#94a3b8', fontSize: '13px', marginBottom: '4px' }}>Estimasi Pendapatan / Bulan</p>
+                        <h3 style={{ color: '#4ade80', fontSize: '20px', margin: 0 }}>{valueResult.estMonthly}</h3>
+                      </div>
+                      <div>
+                        <p style={{ color: '#94a3b8', fontSize: '13px', marginBottom: '4px' }}>Estimasi Pendapatan / Tahun</p>
+                        <h3 style={{ color: '#4ade80', fontSize: '20px', margin: 0 }}>{valueResult.estYearly}</h3>
+                      </div>
+                   </div>
+                 )}
+              </div>
             </div>
           )}
 
