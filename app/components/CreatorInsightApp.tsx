@@ -1784,19 +1784,24 @@ function renderCompetitors() {
               </p>
 
               <div style={{ marginBottom: '24px' }}>
-                <button 
-                  onClick={() => {
+           <button 
+                  onClick={async () => {
                     setIsTrendingLoading(true);
                     setTrendingResults([]);
-                    // Simulasi UI sementara
-                    setTimeout(() => {
-                      setTrendingResults([
-                        { title: "Gala Bunga Matahari", artist: "Sal Priadi", views: "15M", trend: "🔥 Sedang Viral" },
-                        { title: "Penjaga Hati", artist: "Nadhif Basalamah", views: "45M", trend: "📈 Naik Daun" },
-                        { title: "DJ Malam Pagi (Remix)", artist: "Fuji", views: "10M", trend: "🔥 Sedang Viral" }
-                      ]);
-                      setIsTrendingLoading(false);
-                    }, 1500);
+                    try {
+                      // Menembak ke mesin API Lagu Trending Asli (menggunakan GET karena tidak butuh input teks)
+                      const res = await fetch('/api/lagu-trending');
+                      const data = await res.json();
+                      
+                      if (data.success) {
+                        setTrendingResults(data.result);
+                      } else {
+                        alert("Gagal memindai lagu: " + data.error);
+                      }
+                    } catch (error) {
+                      alert("Terjadi kesalahan jaringan saat mengambil data lagu.");
+                    }
+                    setIsTrendingLoading(false);
                   }}
                   disabled={isTrendingLoading}
                   style={{ 
@@ -1804,7 +1809,7 @@ function renderCompetitors() {
                     background: isTrendingLoading ? '#64748b' : '#ec4899', 
                     color: 'white', fontWeight: 'bold', cursor: isTrendingLoading ? 'not-allowed' : 'pointer' 
                   }}>
-                  {isTrendingLoading ? 'Memindai Radar...' : 'Cari Lagu Trending Saat Ini'}
+                  {isTrendingLoading ? 'Memindai Radar Asli...' : 'Cari Lagu Trending Saat Ini'}
                 </button>
               </div>
 
