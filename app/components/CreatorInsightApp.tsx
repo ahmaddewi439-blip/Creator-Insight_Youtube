@@ -1702,7 +1702,7 @@ function renderCompetitors() {
             </div>
           )}
 {/* Tampilan khusus untuk menu CARI KATA KUNCI */}
-          {activeRisetMenu === 'cari-kata-kunci' && (
+          {activeRisetMenu === 'keyword' && (
             <div style={{ background: '#1e293b', padding: '24px', borderRadius: '16px', border: '1px solid #334155', marginTop: '20px' }}>
               <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#f8fafc', fontSize: '18px', marginBottom: '8px' }}>
                 ✨ Penggali Kata Kunci (YouTube Autocomplete)
