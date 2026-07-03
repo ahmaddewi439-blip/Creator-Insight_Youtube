@@ -5,14 +5,14 @@ export async function POST(req: Request) {
     const { query } = await req.json();
     
     // Kita menggunakan Gemini API untuk otaknya
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.AI_API_KEYS;
 
     if (!query) return NextResponse.json({ error: 'Topik tidak boleh kosong' }, { status: 400 });
     if (!apiKey) return NextResponse.json({ error: 'API Key Gemini belum dipasang di sistem' }, { status: 500 });
 
     // Perintah khusus (Prompt) untuk meracik SEO
-    const prompt = `Anda adalah pakar SEO YouTube profesional. Buatkan optimasi SEO untuk topik video berikut: "${query}".
-    Berikan balasan HANYA dalam format JSON murni dengan struktur seperti ini (tanpa awalan/akhiran markdown apapun):
+    const prompt = `Anda adalah pakar SEO YouTube sangat profesional. Buatkan optimasi SEO untuk topik video berikut: "${query}".
+    di 3 detik awal hook harus sangat kuat,agar semua orang berhenti scrool setelah melihat video,Dan Berikan balasan HANYA dalam format JSON murni dengan struktur seperti ini (tanpa awalan/akhiran markdown apapun):
     {
       "title": "Tulis 1 Judul yang sangat clickbait, memancing rasa penasaran, dan SEO friendly",
       "description": "Tulis deskripsi video yang menarik, informatif, dan mengandung kata kunci SEO secara natural (maksimal 2 paragraf).",
