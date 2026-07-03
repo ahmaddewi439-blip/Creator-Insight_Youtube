@@ -1634,21 +1634,28 @@ function renderCompetitors() {
                   placeholder="Ketik handle channel..." 
                   style={{ flex: 1, padding: '12px 16px', borderRadius: '8px', border: '1px solid #334155', background: '#0f172a', color: 'white' }}
                 />
-                <button 
-                  onClick={() => {
+          <button 
+                  onClick={async () => {
                     setIsValueLoading(true);
                     setValueResult(null);
-                    // Simulasi UI sementara sebelum pasang API asli
-                    setTimeout(() => {
-                      setValueResult({
-                        channelName: "Sonia Official",
-                        subs: "30.7K",
-                        views: "5.2M",
-                        estMonthly: "$250 - $4,000",
-                        estYearly: "$3,000 - $48,000"
+                    try {
+                      // Menembak ke mesin API Kalkulator Asli
+                      const res = await fetch('/api/cek-value', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query: valueQuery })
                       });
-                      setIsValueLoading(false);
-                    }, 1500);
+                      const data = await res.json();
+                      
+                      if (data.success) {
+                        setValueResult(data.result);
+                      } else {
+                        alert("Gagal menghitung: " + data.error);
+                      }
+                    } catch (error) {
+                      alert("Terjadi kesalahan jaringan saat menghitung pendapatan.");
+                    }
+                    setIsValueLoading(false);
                   }}
                   disabled={isValueLoading || valueQuery === ''}
                   style={{ 
@@ -1656,7 +1663,7 @@ function renderCompetitors() {
                     background: isValueLoading || valueQuery === '' ? '#64748b' : '#eab308', 
                     color: '#1e293b', fontWeight: 'bold', cursor: isValueLoading || valueQuery === '' ? 'not-allowed' : 'pointer' 
                   }}>
-                  {isValueLoading ? 'Menghitung...' : 'Cek Pendapatan'}
+                  {isValueLoading ? 'Menghitung Asli...' : 'Cek Pendapatan'}
                 </button>
               </div>
 
