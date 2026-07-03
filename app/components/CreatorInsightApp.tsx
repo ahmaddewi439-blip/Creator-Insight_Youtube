@@ -1866,18 +1866,27 @@ function renderCompetitors() {
                   style={{ flex: 1, padding: '12px 16px', borderRadius: '8px', border: '1px solid #334155', background: '#0f172a', color: 'white' }}
                 />
                 <button 
-                  onClick={() => {
+                  onClick={async () => {
                     setIsSeoLoading(true);
                     setSeoResult(null);
-                    // Simulasi UI sementara
-                    setTimeout(() => {
-                      setSeoResult({
-                        title: "Bongkar Rahasia! Cara Meracik Pakan Ternak Murah & Cepat Panen",
-                        description: "Ingin menghemat biaya pakan tapi ternak tetap sehat dan gemuk? Di video ini kita akan membahas tuntas cara meracik pakan unggas alternatif dari bahan seadanya...\n\nJangan lupa subscribe untuk tips pertanian lainnya!\n\n#PakanUnggas #Peternakan #PakanMurah",
-                        tags: "pakan unggas, cara meracik pakan, pakan murah, ide peternakan, ternak sukses, pakan alternatif"
+                    try {
+                      // Menembak ke mesin API AI Asli
+                      const res = await fetch('/api/seo', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query: seoQuery })
                       });
-                      setIsSeoLoading(false);
-                    }, 2000);
+                      const data = await res.json();
+                      
+                      if (data.success) {
+                        setSeoResult(data.result);
+                      } else {
+                        alert("Gagal meracik SEO: " + data.error);
+                      }
+                    } catch (error) {
+                      alert("Terjadi kesalahan jaringan saat meracik SEO.");
+                    }
+                    setIsSeoLoading(false);
                   }}
                   disabled={isSeoLoading || seoQuery === ''}
                   style={{ 
@@ -1885,7 +1894,7 @@ function renderCompetitors() {
                     background: isSeoLoading || seoQuery === '' ? '#64748b' : '#3b82f6', 
                     color: 'white', fontWeight: 'bold', cursor: isSeoLoading || seoQuery === '' ? 'not-allowed' : 'pointer' 
                   }}>
-                  {isSeoLoading ? 'Meracik SEO...' : 'Buat SEO'}
+                  {isSeoLoading ? 'AI Sedang Meracik...' : 'Buat SEO'}
                 </button>
               </div>
 
@@ -1917,7 +1926,7 @@ function renderCompetitors() {
               </div>
             </div>
           )}
-          
+
         <div className="card">
           <h2 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>📈 Riset Tren Real-Time (Google & YouTube Data)</h2>
           <p className="muted">Grafik fluktuasi pencarian 30 hari terakhir & kata kunci terkait (100% Asli).</p>
