@@ -1378,14 +1378,28 @@ function renderCompetitors() {
                   placeholder="Ketik kata kunci (contoh: cara membuat pakan unggas)" 
                   style={{ flex: 1, padding: '12px 16px', borderRadius: '8px', border: '1px solid #334155', background: '#0f172a', color: 'white' }}
                 />
-                <button 
-                  onClick={() => {
+         <button 
+                  onClick={async () => {
                     setIsVphLoading(true);
-                    // Simulasi loading selama 2 detik sebelum nanti kita ganti dengan API YouTube asli
-                    setTimeout(() => {
-                      setVphResults([{ title: "Video Contoh 1", vph: "1.2K", views: "150K" }, { title: "Video Contoh 2", vph: "800", views: "50K" }]);
-                      setIsVphLoading(false);
-                    }, 2000);
+                    setVphResults([]); // Mengosongkan tabel sebelum mencari
+                    try {
+                      // Menembak ke mesin API yang baru Anda buat
+                      const res = await fetch('/api/vph', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query: vphQuery })
+                      });
+                      const data = await res.json();
+                      
+                      if (data.success) {
+                        setVphResults(data.result);
+                      } else {
+                        alert("Gagal menarik data: " + data.error);
+                      }
+                    } catch (error) {
+                      alert("Terjadi kesalahan. Pastikan API Key benar.");
+                    }
+                    setIsVphLoading(false);
                   }}
                   disabled={isVphLoading || vphQuery === ''}
                   style={{ 
@@ -1393,7 +1407,7 @@ function renderCompetitors() {
                     background: isVphLoading || vphQuery === '' ? '#64748b' : '#dc2626', 
                     color: 'white', fontWeight: 'bold', cursor: isVphLoading || vphQuery === '' ? 'not-allowed' : 'pointer' 
                   }}>
-                  {isVphLoading ? 'Mencari...' : 'Riset Sekarang'}
+                  {isVphLoading ? 'Mencari Data Asli...' : 'Riset Sekarang'}
                 </button>
               </div>
 
