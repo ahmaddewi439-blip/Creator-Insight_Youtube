@@ -1548,18 +1548,28 @@ function renderCompetitors() {
                   placeholder="Ketik nama channel (contoh: @PondokLele)" 
                   style={{ flex: 1, padding: '12px 16px', borderRadius: '8px', border: '1px solid #334155', background: '#0f172a', color: 'white' }}
                 />
-                <button 
-                  onClick={() => {
+               <button 
+                  onClick={async () => {
                     setIsIntaiLoading(true);
                     setIntaiResults([]); 
-                    // Simulasi UI sementara sebelum disambung ke backend API
-                    setTimeout(() => {
-                      setIntaiResults([
-                        { title: "Rahasia Pakan Lele Cepat Panen", views: "2.5M", likes: "120K", published: "2 Bulan lalu" },
-                        { title: "Kolam Terpal untuk Pemula", views: "1.1M", likes: "45K", published: "5 Bulan lalu" }
-                      ]);
-                      setIsIntaiLoading(false);
-                    }, 1500);
+                    try {
+                      // Menembak ke mesin API Intai Asli
+                      const res = await fetch('/api/intai', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query: intaiQuery })
+                      });
+                      const data = await res.json();
+                      
+                      if (data.success) {
+                        setIntaiResults(data.result);
+                      } else {
+                        alert("Gagal mengintai: " + data.error);
+                      }
+                    } catch (error) {
+                      alert("Terjadi kesalahan jaringan saat mengintai channel.");
+                    }
+                    setIsIntaiLoading(false);
                   }}
                   disabled={isIntaiLoading || intaiQuery === ''}
                   style={{ 
@@ -1567,7 +1577,7 @@ function renderCompetitors() {
                     background: isIntaiLoading || intaiQuery === '' ? '#64748b' : '#ef4444', 
                     color: 'white', fontWeight: 'bold', cursor: isIntaiLoading || intaiQuery === '' ? 'not-allowed' : 'pointer' 
                   }}>
-                  {isIntaiLoading ? 'Mengintai...' : 'Intai Sekarang'}
+                  {isIntaiLoading ? 'Mengintai Asli...' : 'Intai Sekarang'}
                 </button>
               </div>
 
@@ -1602,7 +1612,7 @@ function renderCompetitors() {
               </div>
             </div>
           )}
-          
+
           {/* Tampilan khusus untuk menu Cek Value */}
           {activeRisetMenu === 'cek-value' && (
             <div style={{ background: '#1e293b', padding: '24px', borderRadius: '16px', border: '1px solid #334155', marginTop: '20px' }}>
