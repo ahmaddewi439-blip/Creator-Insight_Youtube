@@ -155,6 +155,9 @@ function getVideoId(video: any) {
 }
 
 export default function CreatorInsightApp() {
+  const [keywordQuery, setKeywordQuery] = useState('');
+  const [keywordResults, setKeywordResults] = useState<string[]>([]);
+  const [isKeywordLoading, setIsKeywordLoading] = useState(false);
   const [valueQuery, setValueQuery] = useState('');
   const [valueResult, setValueResult] = useState<any>(null);
   const [isValueLoading, setIsValueLoading] = useState(false);
@@ -1696,7 +1699,71 @@ function renderCompetitors() {
               </div>
             </div>
           )}
+{/* Tampilan khusus untuk menu CARI KATA KUNCI */}
+          {activeRisetMenu === 'cari-kata-kunci' && (
+            <div style={{ background: '#1e293b', padding: '24px', borderRadius: '16px', border: '1px solid #334155', marginTop: '20px' }}>
+              <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#f8fafc', fontSize: '18px', marginBottom: '8px' }}>
+                ✨ Penggali Kata Kunci (YouTube Autocomplete)
+              </h2>
+              <p style={{ color: '#94a3b8', marginBottom: '24px', fontSize: '14px', lineHeight: '1.6' }}>
+                Temukan kata kunci turunan yang paling sering diketik orang di kolom pencarian YouTube. Sangat bagus untuk Judul dan Tag video Anda!
+              </p>
 
+              <div style={{ display: 'flex', gap: '10px', marginBottom: '24px' }}>
+                <input 
+                  type="text" 
+                  value={keywordQuery}
+                  onChange={(e) => setKeywordQuery(e.target.value)}
+                  placeholder="Ketik topik dasar (contoh: cara ternak lele)" 
+                  style={{ flex: 1, padding: '12px 16px', borderRadius: '8px', border: '1px solid #334155', background: '#0f172a', color: 'white' }}
+                />
+                <button 
+                  onClick={() => {
+                    setIsKeywordLoading(true);
+                    setKeywordResults([]);
+                    // Simulasi UI sementara
+                    setTimeout(() => {
+                      setKeywordResults([
+                        "cara ternak lele pemula",
+                        "cara ternak lele di ember",
+                        "cara ternak lele kolam terpal",
+                        "cara ternak lele bioflok",
+                        "cara ternak lele agar cepat besar"
+                      ]);
+                      setIsKeywordLoading(false);
+                    }, 1500);
+                  }}
+                  disabled={isKeywordLoading || keywordQuery === ''}
+                  style={{ 
+                    padding: '12px 24px', borderRadius: '8px', border: 'none', 
+                    background: isKeywordLoading || keywordQuery === '' ? '#64748b' : '#8b5cf6', 
+                    color: 'white', fontWeight: 'bold', cursor: isKeywordLoading || keywordQuery === '' ? 'not-allowed' : 'pointer' 
+                  }}>
+                  {isKeywordLoading ? 'Menggali...' : 'Cari Kata Kunci'}
+                </button>
+              </div>
+
+              {/* Wadah Hasil Keyword */}
+              <div style={{ minHeight: '150px', display: 'flex', flexDirection: 'column', border: keywordResults.length > 0 ? 'none' : '2px dashed #334155', borderRadius: '8px', overflow: 'hidden' }}>
+                 {keywordResults.length === 0 ? (
+                   <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                     <p style={{ color: '#64748b' }}>Ketik topik untuk melihat apa yang sedang dicari penonton.</p>
+                   </div>
+                 ) : (
+                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', padding: '10px 0' }}>
+                     {keywordResults.map((kw, idx) => (
+                       <div key={idx} style={{ 
+                         background: '#0f172a', border: '1px solid #334155', borderRadius: '20px', 
+                         padding: '10px 16px', color: '#e2e8f0', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' 
+                       }}>
+                         <span style={{ color: '#8b5cf6' }}>🔍</span> {kw}
+                       </div>
+                     ))}
+                   </div>
+                 )}
+              </div>
+            </div>
+          )}
         <div className="card">
           <h2 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>📈 Riset Tren Real-Time (Google & YouTube Data)</h2>
           <p className="muted">Grafik fluktuasi pencarian 30 hari terakhir & kata kunci terkait (100% Asli).</p>
