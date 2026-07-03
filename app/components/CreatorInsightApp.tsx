@@ -155,6 +155,9 @@ function getVideoId(video: any) {
 }
 
 export default function CreatorInsightApp() {
+  const [gemsQuery, setGemsQuery] = useState('');
+  const [gemsResults, setGemsResults] = useState<any[]>([]);
+  const [isGemsLoading, setIsGemsLoading] = useState(false);
   const [activeRisetMenu, setActiveRisetMenu] = useState('vph');
   const [vphQuery, setVphQuery] = useState('');
   const [vphResults, setVphResults] = useState<any[]>([]);
@@ -1440,7 +1443,78 @@ function renderCompetitors() {
         </div>
       </div>
     )}
+{/* Tampilan khusus untuk menu HIDDEN GEMS */}
+          {activeRisetMenu === 'hidden-gems' && (
+            <div style={{ background: '#1e293b', padding: '24px', borderRadius: '16px', border: '1px solid #334155', marginTop: '20px' }}>
+              <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#f8fafc', fontSize: '18px', marginBottom: '8px' }}>
+                💎 Pencari Harta Karun (Hidden Gems)
+              </h2>
+              <p style={{ color: '#94a3b8', marginBottom: '24px', fontSize: '14px', lineHeight: '1.6' }}>
+                Temukan video dari channel kecil yang tiba-tiba meledak. Ini menandakan topik atau thumbnail tersebut sangat disukai algoritma tanpa memandang jumlah subscriber!
+              </p>
 
+              {/* Kolom Pencarian Gems */}
+              <div style={{ display: 'flex', gap: '10px', marginBottom: '24px' }}>
+                <input 
+                  type="text" 
+                  value={gemsQuery}
+                  onChange={(e) => setGemsQuery(e.target.value)}
+                  placeholder="Ketik topik (contoh: budidaya lele)" 
+                  style={{ flex: 1, padding: '12px 16px', borderRadius: '8px', border: '1px solid #334155', background: '#0f172a', color: 'white' }}
+                />
+                <button 
+                  onClick={() => {
+                    setIsGemsLoading(true);
+                    setGemsResults([]); 
+                    // Simulasi UI sementara sebelum disambung ke backend API
+                    setTimeout(() => {
+                      setGemsResults([
+                        { title: "Cara Ampuh Tanam Kangkung Botol Bekas", views: "500K", subs: "1.2K", multiplier: "416x" }
+                      ]);
+                      setIsGemsLoading(false);
+                    }, 1500);
+                  }}
+                  disabled={isGemsLoading || gemsQuery === ''}
+                  style={{ 
+                    padding: '12px 24px', borderRadius: '8px', border: 'none', 
+                    background: isGemsLoading || gemsQuery === '' ? '#64748b' : '#3b82f6', 
+                    color: 'white', fontWeight: 'bold', cursor: isGemsLoading || gemsQuery === '' ? 'not-allowed' : 'pointer' 
+                  }}>
+                  {isGemsLoading ? 'Mencari Harta Karun...' : 'Cari Hidden Gems'}
+                </button>
+              </div>
+
+              {/* Wadah Tabel Gems */}
+              <div style={{ minHeight: '200px', display: 'flex', flexDirection: 'column', border: gemsResults.length > 0 ? 'none' : '2px dashed #334155', borderRadius: '8px', overflow: 'hidden' }}>
+                 {gemsResults.length === 0 ? (
+                   <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                     <p style={{ color: '#64748b' }}>Ketik kata kunci untuk mulai mencari video outlier.</p>
+                   </div>
+                 ) : (
+                   <table style={{ width: '100%', textAlign: 'left', color: 'white', borderCollapse: 'collapse' }}>
+                     <thead>
+                       <tr style={{ background: '#334155', borderBottom: '1px solid #475569' }}>
+                         <th style={{ padding: '12px' }}>Video Outlier</th>
+                         <th style={{ padding: '12px' }}>Views</th>
+                         <th style={{ padding: '12px' }}>Subs Channel</th>
+                         <th style={{ padding: '12px', color: '#fbbf24' }}>Skor Ledakan 🚀</th>
+                       </tr>
+                     </thead>
+                     <tbody>
+                       {gemsResults.map((video, idx) => (
+                         <tr key={idx} style={{ borderBottom: '1px solid #334155' }}>
+                           <td style={{ padding: '12px' }}>{video.title}</td>
+                           <td style={{ padding: '12px', color: '#4ade80' }}>{video.views}</td>
+                           <td style={{ padding: '12px', color: '#94a3b8' }}>{video.subs}</td>
+                           <td style={{ padding: '12px', color: '#fbbf24', fontWeight: 'bold' }}>{video.multiplier}</td>
+                         </tr>
+                       ))}
+                     </tbody>
+                   </table>
+                 )}
+              </div>
+            </div>
+          )}
           {/* Tampilan khusus untuk menu Cek Value */}
           {activeRisetMenu === 'cek-value' && (
             <div style={{ background: '#1e293b', padding: '24px', borderRadius: '16px', border: '1px solid #334155', marginTop: '20px' }}>
