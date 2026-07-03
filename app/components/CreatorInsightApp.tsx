@@ -1462,17 +1462,28 @@ function renderCompetitors() {
                   placeholder="Ketik topik (contoh: budidaya lele)" 
                   style={{ flex: 1, padding: '12px 16px', borderRadius: '8px', border: '1px solid #334155', background: '#0f172a', color: 'white' }}
                 />
-                <button 
-                  onClick={() => {
+               <button 
+                  onClick={async () => {
                     setIsGemsLoading(true);
                     setGemsResults([]); 
-                    // Simulasi UI sementara sebelum disambung ke backend API
-                    setTimeout(() => {
-                      setGemsResults([
-                        { title: "Cara Ampuh Tanam Kangkung Botol Bekas", views: "500K", subs: "1.2K", multiplier: "416x" }
-                      ]);
-                      setIsGemsLoading(false);
-                    }, 1500);
+                    try {
+                      // Menembak ke mesin API Hidden Gems Asli
+                      const res = await fetch('/api/hidden-gems', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query: gemsQuery })
+                      });
+                      const data = await res.json();
+                      
+                      if (data.success) {
+                        setGemsResults(data.result);
+                      } else {
+                        alert("Gagal menarik data: " + data.error);
+                      }
+                    } catch (error) {
+                      alert("Terjadi kesalahan jaringan saat memuat Hidden Gems.");
+                    }
+                    setIsGemsLoading(false);
                   }}
                   disabled={isGemsLoading || gemsQuery === ''}
                   style={{ 
@@ -1480,7 +1491,7 @@ function renderCompetitors() {
                     background: isGemsLoading || gemsQuery === '' ? '#64748b' : '#3b82f6', 
                     color: 'white', fontWeight: 'bold', cursor: isGemsLoading || gemsQuery === '' ? 'not-allowed' : 'pointer' 
                   }}>
-                  {isGemsLoading ? 'Mencari Harta Karun...' : 'Cari Hidden Gems'}
+                  {isGemsLoading ? 'Mencari Harta Karun Asli...' : 'Cari Hidden Gems'}
                 </button>
               </div>
 
