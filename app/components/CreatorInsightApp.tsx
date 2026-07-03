@@ -1774,7 +1774,7 @@ function renderCompetitors() {
             </div>
           )}
           {/* Tampilan khusus untuk menu LAGU TRENDING */}
-          {activeRisetMenu === 'lagu-trending' && (
+          {activeRisetMenu === 'lagu' && (
             <div style={{ background: '#1e293b', padding: '24px', borderRadius: '16px', border: '1px solid #334155', marginTop: '20px' }}>
               <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#f8fafc', fontSize: '18px', marginBottom: '8px' }}>
                 🎵 Radar Lagu Trending (YouTube Music)
