@@ -155,6 +155,9 @@ function getVideoId(video: any) {
 }
 
 export default function CreatorInsightApp() {
+  const [intaiQuery, setIntaiQuery] = useState('');
+  const [intaiResults, setIntaiResults] = useState<any[]>([]);
+  const [isIntaiLoading, setIsIntaiLoading] = useState(false);
   const [gemsQuery, setGemsQuery] = useState('');
   const [gemsResults, setGemsResults] = useState<any[]>([]);
   const [isGemsLoading, setIsGemsLoading] = useState(false);
@@ -1526,6 +1529,80 @@ function renderCompetitors() {
               </div>
             </div>
           )}
+          {/* Tampilan khusus untuk menu INTAI KOMPETITOR */}
+          {activeRisetMenu === 'intai' && (
+            <div style={{ background: '#1e293b', padding: '24px', borderRadius: '16px', border: '1px solid #334155', marginTop: '20px' }}>
+              <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#f8fafc', fontSize: '18px', marginBottom: '8px' }}>
+                🕵️‍♂️ Mata-Mata Channel Kompetitor
+              </h2>
+              <p style={{ color: '#94a3b8', marginBottom: '24px', fontSize: '14px', lineHeight: '1.6' }}>
+                Bongkar video apa saja yang paling banyak mendulang views dari channel saingan Anda. Masukkan nama channel atau handle (contoh: @TukangTani).
+              </p>
+
+              {/* Kolom Pencarian Intai */}
+              <div style={{ display: 'flex', gap: '10px', marginBottom: '24px' }}>
+                <input 
+                  type="text" 
+                  value={intaiQuery}
+                  onChange={(e) => setIntaiQuery(e.target.value)}
+                  placeholder="Ketik nama channel (contoh: @PondokLele)" 
+                  style={{ flex: 1, padding: '12px 16px', borderRadius: '8px', border: '1px solid #334155', background: '#0f172a', color: 'white' }}
+                />
+                <button 
+                  onClick={() => {
+                    setIsIntaiLoading(true);
+                    setIntaiResults([]); 
+                    // Simulasi UI sementara sebelum disambung ke backend API
+                    setTimeout(() => {
+                      setIntaiResults([
+                        { title: "Rahasia Pakan Lele Cepat Panen", views: "2.5M", likes: "120K", published: "2 Bulan lalu" },
+                        { title: "Kolam Terpal untuk Pemula", views: "1.1M", likes: "45K", published: "5 Bulan lalu" }
+                      ]);
+                      setIsIntaiLoading(false);
+                    }, 1500);
+                  }}
+                  disabled={isIntaiLoading || intaiQuery === ''}
+                  style={{ 
+                    padding: '12px 24px', borderRadius: '8px', border: 'none', 
+                    background: isIntaiLoading || intaiQuery === '' ? '#64748b' : '#ef4444', 
+                    color: 'white', fontWeight: 'bold', cursor: isIntaiLoading || intaiQuery === '' ? 'not-allowed' : 'pointer' 
+                  }}>
+                  {isIntaiLoading ? 'Mengintai...' : 'Intai Sekarang'}
+                </button>
+              </div>
+
+              {/* Wadah Tabel Intai */}
+              <div style={{ minHeight: '200px', display: 'flex', flexDirection: 'column', border: intaiResults.length > 0 ? 'none' : '2px dashed #334155', borderRadius: '8px', overflow: 'hidden' }}>
+                 {intaiResults.length === 0 ? (
+                   <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                     <p style={{ color: '#64748b' }}>Ketik nama channel kompetitor untuk membedah daftar videonya.</p>
+                   </div>
+                 ) : (
+                   <table style={{ width: '100%', textAlign: 'left', color: 'white', borderCollapse: 'collapse' }}>
+                     <thead>
+                       <tr style={{ background: '#334155', borderBottom: '1px solid #475569' }}>
+                         <th style={{ padding: '12px' }}>Video Top Performer</th>
+                         <th style={{ padding: '12px' }}>Total Views 📈</th>
+                         <th style={{ padding: '12px' }}>Likes 👍</th>
+                         <th style={{ padding: '12px' }}>Umur Video</th>
+                       </tr>
+                     </thead>
+                     <tbody>
+                       {intaiResults.map((video, idx) => (
+                         <tr key={idx} style={{ borderBottom: '1px solid #334155' }}>
+                           <td style={{ padding: '12px' }}>{video.title}</td>
+                           <td style={{ padding: '12px', color: '#4ade80', fontWeight: 'bold' }}>{video.views}</td>
+                           <td style={{ padding: '12px', color: '#60a5fa' }}>{video.likes}</td>
+                           <td style={{ padding: '12px', color: '#94a3b8' }}>{video.published}</td>
+                         </tr>
+                       ))}
+                     </tbody>
+                   </table>
+                 )}
+              </div>
+            </div>
+          )}
+          
           {/* Tampilan khusus untuk menu Cek Value */}
           {activeRisetMenu === 'cek-value' && (
             <div style={{ background: '#1e293b', padding: '24px', borderRadius: '16px', border: '1px solid #334155', marginTop: '20px' }}>
