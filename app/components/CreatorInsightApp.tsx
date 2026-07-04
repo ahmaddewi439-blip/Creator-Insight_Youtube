@@ -1709,14 +1709,15 @@ function renderCompetitors() {
             </div>
           )}
          
-      {/* Tampilan khusus untuk menu INTAI KOMPETITOR */}
+      
+     {/* Tampilan khusus untuk menu INTAI KOMPETITOR */}
         {activeRisetMenu === 'intai' && (
           <div style={{ background: '#1e293b', padding: '24px', borderRadius: '16px', border: '1px solid #334155', marginTop: '20px' }}>
             <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#f8fafc', fontSize: '18px', marginBottom: '8px' }}>
               🕵️ Mata-Mata Channel Kompetitor
             </h2>
             <p style={{ color: '#94a3b8', marginBottom: '24px', fontSize: '14px', lineHeight: '1.6' }}>
-              Bongkar video apa saja yang paling banyak mendulang views dari channel saingan Anda. Masukkan nama channel atau handle (contoh: @TukangTani).
+              Ketik topik (contoh: roblox) untuk melihat Top 5 Kompetitor, atau ketik handle (contoh: @TukangTani) untuk melacak 1 target spesifik.
             </p>
 
             {/* Kolom Pencarian Intai */}
@@ -1725,7 +1726,7 @@ function renderCompetitors() {
                 type="text"
                 value={intaiQuery}
                 onChange={(e) => setIntaiQuery(e.target.value)}
-                placeholder="Ketik nama channel (contoh: @PondokLele)"
+                placeholder="Ketik topik atau @handle kompetitor..."
                 style={{ flex: 1, padding: '12px 16px', borderRadius: '8px', border: '1px solid #334155', background: '#0f172a', color: 'white' }}
               />
               <button
@@ -1741,8 +1742,12 @@ function renderCompetitors() {
                     const data = await res.json();
 
                     if (data.success) {
-                      // Simpan data gabungan (Profil + Video) ke dalam indeks ke-0 dengan status buka/tutup video
-                      setIntaiResults([{ channelInfo: data.channelInfo, videos: data.videos, showVideos: false }]);
+                      // Pasang status showVideos = false untuk semua channel yang ditemukan
+                      const formattedResults = data.results.map((item: any) => ({
+                        ...item,
+                        showVideos: false
+                      }));
+                      setIntaiResults(formattedResults);
                     } else {
                       alert("Gagal mengintai: " + data.error);
                     }
@@ -1758,67 +1763,73 @@ function renderCompetitors() {
                   color: 'white', fontWeight: 'bold', cursor: isIntaiLoading || intaiQuery === '' ? 'not-allowed' : 'pointer'
                 }}
               >
-                {isIntaiLoading ? 'Mengintai...' : 'Intai Sekarang'}
+                {isIntaiLoading ? 'Menganalisis Target...' : 'Intai Sekarang'}
               </button>
             </div>
 
-            {/* Wadah Tabel Intai 2 Tahapan */}
-            <div style={{ minHeight: '200px', display: 'flex', flexDirection: 'column', border: intaiResults.length > 0 ? 'none' : '2px dashed #334155', borderRadius: '12px', justifyContent: 'center' }}>
-              {intaiResults.length === 0 ? (
-                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <p style={{ color: '#64748b' }}>Ketik nama channel kompetitor untuk membedah profil dan daftar videonya.</p>
+            {/* Wadah Daftar Channel Kompetitor (Bisa Banyak) */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {intaiResults.length === 0 && !isIntaiLoading && (
+                <div style={{ padding: '40px', textAlign: 'center', border: '2px dashed #334155', borderRadius: '12px' }}>
+                  <p style={{ color: '#64748b', margin: 0 }}>Mulai ketikkan target untuk membedah data video mereka.</p>
                 </div>
-              ) : (
-                <>
-                  {/* TAHAP 1: KARTU PROFIL CHANNEL */}
+              )}
+              
+              {intaiResults.map((result: any, idx: number) => (
+                <div key={idx} style={{ background: '#0f172a', borderRadius: '12px', border: '1px solid #3b82f6', overflow: 'hidden' }}>
+                  
+                  {/* Bagian Profil (Klik untuk membuka/menutup) */}
                   <div 
-                    style={{ background: '#0f172a', padding: '20px', borderRadius: '12px', border: '1px solid #3b82f6', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', transition: '0.3s' }}
+                    style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', transition: '0.3s' }}
                     onClick={() => {
-                      // Logika untuk membuka/menutup tabel video saat profil diklik
                       const newData = [...intaiResults];
-                      newData[0].showVideos = !newData[0].showVideos;
+                      newData[idx].showVideos = !newData[idx].showVideos;
                       setIntaiResults(newData);
                     }}
                   >
-                    <img src={intaiResults[0].channelInfo.thumbnail} alt="avatar" style={{ width: '80px', height: '80px', borderRadius: '50%', border: '2px solid #ef4444' }} />
+                    <img src={result.channelInfo.thumbnail} alt="avatar" style={{ width: '60px', height: '60px', borderRadius: '50%', border: '2px solid #ef4444' }} />
                     <div style={{ flex: 1 }}>
-                      <h3 style={{ color: 'white', margin: '0 0 5px 0', fontSize: '20px' }}>{intaiResults[0].channelInfo.title}</h3>
-                      <p style={{ color: '#94a3b8', margin: 0, fontSize: '14px' }}>{intaiResults[0].channelInfo.handle}</p>
+                      <h3 style={{ color: 'white', margin: '0 0 5px 0', fontSize: '18px' }}>{result.channelInfo.title}</h3>
+                      <p style={{ color: '#94a3b8', margin: 0, fontSize: '13px' }}>{result.channelInfo.handle}</p>
                     </div>
-                    <button style={{ background: intaiResults[0].showVideos ? '#334155' : '#3b82f6', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
-                      {intaiResults[0].showVideos ? 'Tutup Data Video ▲' : 'Bongkar Data Video ▼'}
+                    <button style={{ background: result.showVideos ? '#334155' : '#3b82f6', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
+                      {result.showVideos ? 'Tutup Data ▲' : 'Bongkar Data ▼'}
                     </button>
                   </div>
 
-                  {/* TAHAP 2: TABEL DATA VIDEO MENDALAM */}
-                  {intaiResults[0].showVideos && (
-                    <div style={{ marginTop: '20px', overflowX: 'auto' }}>
-                      <table style={{ width: '100%', textAlign: 'left', color: 'white', borderCollapse: 'collapse' }}>
+                  {/* Bagian Tabel Video yang Tersembunyi */}
+                  {result.showVideos && (
+                    <div style={{ padding: '0 20px 20px 20px', overflowX: 'auto' }}>
+                      <table style={{ width: '100%', textAlign: 'left', color: 'white', borderCollapse: 'collapse', marginTop: '10px' }}>
                         <thead>
                           <tr style={{ background: '#334155', borderBottom: '1px solid #475569' }}>
-                            <th style={{ padding: '12px' }}>Video Top Performer</th>
-                            <th style={{ padding: '12px' }}>Total Views 📈</th>
-                            <th style={{ padding: '12px' }}>Likes 👍</th>
-                            <th style={{ padding: '12px' }}>Tanggal Upload 📅</th>
-                            <th style={{ padding: '12px' }}>Jam Rilis ⏰</th>
+                            <th style={{ padding: '12px', fontSize: '13px' }}>Video Top Performer</th>
+                            <th style={{ padding: '12px', fontSize: '13px' }}>Total Views 📈</th>
+                            <th style={{ padding: '12px', fontSize: '13px' }}>Likes 👍</th>
+                            <th style={{ padding: '12px', fontSize: '13px' }}>Tgl Upload 📅</th>
+                            <th style={{ padding: '12px', fontSize: '13px' }}>Jam Rilis ⏰</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {intaiResults[0].videos.map((video: any, idx: number) => (
-                            <tr key={idx} style={{ borderBottom: '1px solid #334155' }}>
-                              <td style={{ padding: '12px', maxWidth: '300px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{video.title}</td>
-                              <td style={{ padding: '12px', color: '#4ade80', fontWeight: 'bold' }}>{video.views}</td>
-                              <td style={{ padding: '12px', color: '#60a5fa' }}>{video.likes}</td>
-                              <td style={{ padding: '12px', color: '#facc15' }}>{video.published}</td>
-                              <td style={{ padding: '12px', color: '#f87171', fontWeight: 'bold' }}>{video.time}</td>
-                            </tr>
-                          ))}
+                          {result.videos.length === 0 ? (
+                            <tr><td colSpan={5} style={{ padding: '12px', textAlign: 'center', color: '#94a3b8' }}>Tidak ada data video.</td></tr>
+                          ) : (
+                            result.videos.map((video: any, vIdx: number) => (
+                              <tr key={vIdx} style={{ borderBottom: '1px solid #334155' }}>
+                                <td style={{ padding: '12px', maxWidth: '250px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '14px' }}>{video.title}</td>
+                                <td style={{ padding: '12px', color: '#4ade80', fontWeight: 'bold', fontSize: '14px' }}>{video.views}</td>
+                                <td style={{ padding: '12px', color: '#60a5fa', fontSize: '14px' }}>{video.likes}</td>
+                                <td style={{ padding: '12px', color: '#facc15', fontSize: '13px' }}>{video.published}</td>
+                                <td style={{ padding: '12px', color: '#f87171', fontWeight: 'bold', fontSize: '13px' }}>{video.time}</td>
+                              </tr>
+                            ))
+                          )}
                         </tbody>
                       </table>
                     </div>
                   )}
-                </>
-              )}
+                </div>
+              ))}
             </div>
           </div>
         )}
