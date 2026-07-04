@@ -114,7 +114,53 @@ function VideoRow({ video, index, onSelect }: { video: any; index: number; onSel
       </td>
       <td>{compact(video?.views ?? video?.statistics?.viewCount)}</td>
       <td>{compact(video?.likes ?? video?.statistics?.likeCount)}</td>
-      <td><span className={privacy === "public" ? "status-pill" : (privacy === "scheduled" ? "status-pill yellow" : "status-pill red")}>{privacy}</span></td>
+      <td>
+            {(() => {
+              // Ambil status asli
+              let currentStatus = video?.status?.privacyStatus || video?.privacyStatus;
+              if (!currentStatus || currentStatus === 'Published') currentStatus = 'public'; // Fallback default
+              
+              // Cek apakah terjadwal
+              const publishDate = new Date(video?.snippet?.publishedAt || video?.snippet?.scheduledStartTime);
+              const now = new Date();
+              if (currentStatus === 'private' && publishDate > now) {
+                currentStatus = 'scheduled';
+              }
+
+              // Set warna default (Biru untuk Published/Public)
+              let badgeBg = 'rgba(37, 99, 235, 0.1)'; 
+              let badgeColor = '#3b82f6'; 
+              let badgeText = 'Published';
+
+              // Ubah warna jika Private atau Terjadwal
+              if (currentStatus === 'private' || currentStatus === 'unlisted') {
+                badgeBg = 'rgba(220, 38, 38, 0.1)'; // Merah
+                badgeColor = '#ef4444';
+                badgeText = 'Private';
+              } else if (currentStatus === 'scheduled') {
+                badgeBg = 'rgba(234, 88, 12, 0.1)'; // Orange
+                badgeColor = '#f97316';
+                badgeText = 'Terjadwal';
+              }
+
+              return (
+                <div style={{
+                  background: badgeBg,
+                  color: badgeColor,
+                  padding: '6px 12px',
+                  borderRadius: '8px',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  display: 'inline-block',
+                  border: `1px solid ${badgeColor}`,
+                  textAlign: 'center',
+                  minWidth: '80px'
+                }}>
+                  {badgeText}
+                </div>
+              );
+            })()}
+          </td>
       {onSelect && <td><button className="btn" onClick={() => onSelect(video)}>Optimize</button></td>}
     </tr>
   );
