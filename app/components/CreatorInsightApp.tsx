@@ -179,6 +179,23 @@ export default function CreatorInsightApp() {
   const [isMounted, setIsMounted] = React.useState(false);
   React.useEffect(() => { setIsMounted(true); }, []);
 
+  // 1. KODE MENGAMBIL DATA DARI BRANKAS HP SAAT WEB DIBUKA
+  React.useEffect(() => {
+    const savedChannelName = localStorage.getItem('youtube_channel_name');
+    if (savedChannelName) {
+      // GANTI 'setChannelName' DI BAWAH INI SESUAI NAMA STATE ANDA
+      setChannelName(savedChannelName); 
+    }
+  }, []);
+
+  // 2. KODE MENYIMPAN DATA KE BRANKAS HP SETIAP KALI LOGIN BERHASIL
+  // GANTI 'channelName' SESUAI NAMA STATE ANDA
+  React.useEffect(() => {
+    if (channelName && channelName !== '') {
+      localStorage.setItem('youtube_channel_name', channelName);
+    }
+  }, [channelName]);
+  
   // --- STATE UNTUK MENU SUTRADARA SNIPER ---
 const [directorNiche, setDirectorNiche] = useLocalStorage<string>("niche_tersimpan", "Gaming / E-sports");
 const [directorTopic, setDirectorTopic] = useLocalStorage<string>("topik_tersimpan", "");
