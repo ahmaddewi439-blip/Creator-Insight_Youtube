@@ -179,6 +179,8 @@ export default function CreatorInsightApp() {
   const [isMounted, setIsMounted] = React.useState(false);
   React.useEffect(() => { setIsMounted(true); }, []);
 
+
+
  // 1. KODE MENGAMBIL DATA DARI BRANKAS HP SAAT WEB DIBUKA
   React.useEffect(() => {
     const savedChannelName = localStorage.getItem('youtube_channel_name');
@@ -411,7 +413,25 @@ const handleAnalyzeAngles = async () => {
   const [videosState, setVideosState] = useState<ApiState<any[]>>({ loading: false, error: "", data: [] });
   const [selectedVideo, setSelectedVideo] = useState<any>(null);
   const [optimizer, setOptimizer] = useState<ApiState<any>>({ loading: false, error: "", data: null });
-  
+  // 1. MENGAMBIL DATA PROFIL CHANNEL DARI BRANKAS
+  React.useEffect(() => {
+    const savedChannelData = localStorage.getItem('youtube_channel_data_permanen');
+    if (savedChannelData) {
+      try {
+        const parsedData = JSON.parse(savedChannelData);
+        setChannelState({ loading: false, error: "", data: parsedData });
+      } catch (e) {
+        console.error("Gagal membuka brankas data channel");
+      }
+    }
+  }, []);
+
+  // 2. MENYIMPAN DATA PROFIL CHANNEL KE BRANKAS
+  React.useEffect(() => {
+    if (channelState && channelState.data) {
+      localStorage.setItem('youtube_channel_data_permanen', JSON.stringify(channelState.data));
+    }
+  }, [channelState]);
   
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const [dailyTarget, setDailyTarget] = useState<ApiState<any>>({ loading: false, error: "", data: null });
