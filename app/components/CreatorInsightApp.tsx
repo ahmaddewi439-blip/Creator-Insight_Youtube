@@ -98,6 +98,7 @@ function ScoreRing({ value, label }: { value: number; label: string }) {
 }
 
 function VideoRow({ video, index, onSelect }: { video: any; index: number; onSelect?: (video: any) => void }) {
+  console.log("ISI DATA VIDEO DARI GOOGLE:", video);
   const thumb = video?.thumbnail || video?.snippet?.thumbnails?.medium?.url || video?.snippet?.thumbnails?.default?.url;
   const privacy = video?.status?.privacyStatus || video?.privacyStatus || (typeof video?.status === "string" ? video.status : "Published");
   return (
