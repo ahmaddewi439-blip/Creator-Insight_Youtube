@@ -8,6 +8,7 @@ export type VideoItem = {
   tags?: string[];
   views?: string;
   likes?: string;
+  status?: any; // 🔥 1. Tambahkan wadah status di sini
   snippet?: any;
 };
 
@@ -52,10 +53,13 @@ export async function fetchChannelVideos(auth?: unknown): Promise<any[]> {
   if (!videoIds) return [];
 
   // =================================================================
-  // LANGKAH 2: Tarik Full Data VIP (Deskripsi & Tags Utuh)
+  // LANGKAH 2: Tarik Full Data VIP (Deskripsi, Tags, & STATUS Utuh)
   // =================================================================
   const videoUrl = new URL("https://www.googleapis.com/youtube/v3/videos");
-  videoUrl.searchParams.set("part", "snippet,statistics");
+  
+  // 🔥 2. INI KUNCI SAKTINYA! Tambahkan kata 'status' di sini:
+  videoUrl.searchParams.set("part", "snippet,statistics,status"); 
+  
   videoUrl.searchParams.set("id", videoIds);
   if (useApiKey) videoUrl.searchParams.set("key", apiKey as string);
 
@@ -74,6 +78,7 @@ export async function fetchChannelVideos(auth?: unknown): Promise<any[]> {
     channelTitle: item.snippet?.channelTitle ?? "",
     views: item.statistics?.viewCount ?? "0",
     likes: item.statistics?.likeCount ?? "0",
+    status: item.status || null, // 🔥 3. Tangkap statusnya dan kirim ke depan!
     snippet: item.snippet || {}
   }));
 }
@@ -101,7 +106,7 @@ export async function fetchChannelInfo(auth?: unknown) {
   const url = new URL("https://www.googleapis.com/youtube/v3/channels");
   url.searchParams.set("part", "snippet,statistics");
   url.searchParams.set("id", channelId);
- if (useApiKey) url.searchParams.set("key", apiKey as string);
+  if (useApiKey) url.searchParams.set("key", apiKey as string);
 
   try {
     const res = await fetch(url.toString(), { headers, cache: 'no-store' });
