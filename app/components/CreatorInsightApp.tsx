@@ -1,9 +1,9 @@
 "use client";
-
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import React, { useEffect, useMemo, useState } from "react";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { useLocalStorage } from "../hooks/useLocalStorage";
-import { LineChart, Line, XAxis, Tooltip, ResponsiveContainer } from 'recharts';
+
 type TabId = "overview" | "optimizer" | "competitors" | "roblox" | "reports" | "opportunity" | "portfolio";
 
 type ApiState<T> = {
@@ -224,6 +224,26 @@ export default function CreatorInsightApp() {
   const [keywordQuery, setKeywordQuery] = useState('');
   const [keywordResults, setKeywordResults] = useState<string[]>([]);
   const [isKeywordLoading, setIsKeywordLoading] = useState(false);
+ const [selectedKeyword, setSelectedKeyword] = useState('');
+  const [chartTrendData, setChartTrendData] = useState<any[]>([]);
+  const [isChartTrendLoading, setIsChartTrendLoading] = useState(false);
+  const [chartTrendTimeframe, setChartTrendTimeframe] = useState('30d');
+
+  // Fungsi untuk menyedot data saat kata kunci diklik
+  const fetchTrend = async (keyword: string, time: string) => {
+    setSelectedKeyword(keyword);
+    setIsChartTrendLoading(true);
+    try {
+      const res = await fetch('/api/tren-kata-kunci', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ keyword, timeframe: time })
+      });
+      const data = await res.json();
+      if (data.success) setChartTrendData(data.data);
+    } catch (err) {}
+    setIsChartTrendLoading(false);
+  };
   const [valueQuery, setValueQuery] = useState('');
   const [valueResult, setValueResult] = useState<any>(null);
   const [isValueLoading, setIsValueLoading] = useState(false);
@@ -1985,114 +2005,140 @@ function renderCompetitors() {
             </div>
           )}
 {/* Tampilan khusus untuk menu CARI KATA KUNCI */}
-          {activeRisetMenu === 'keyword' && (
-            <div style={{ background: '#1e293b', padding: '24px', borderRadius: '16px', border: '1px solid #334155', marginTop: '20px' }}>
-              <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#f8fafc', fontSize: '18px', marginBottom: '8px' }}>
-                ✨ Penggali Kata Kunci (YouTube Autocomplete)
-              </h2>
-              <p style={{ color: '#94a3b8', marginBottom: '24px', fontSize: '14px', lineHeight: '1.6' }}>
-                Temukan kata kunci turunan yang paling sering diketik orang di kolom pencarian YouTube. Sangat bagus untuk Judul dan Tag video Anda!
-              </p>
+        {activeRisetMenu === 'keyword' && (
+          <div style={{ background: '#1e293b', padding: '24px', borderRadius: '16px', border: '1px solid #334155', marginTop: '20px' }}>
+            <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#f8fafc', fontSize: '18px', marginBottom: '8px' }}>
+              ✨ Penggali Kata Kunci (YouTube Autocomplete & Trends)
+            </h2>
+            <p style={{ color: '#94a3b8', marginBottom: '24px', fontSize: '14px', lineHeight: '1.6' }}>
+              Temukan kata kunci turunan dan lihat grafik minat penonton secara Real-Time. Klik kata kunci untuk melihat tren grafiknya!
+            </p>
 
-              <div style={{ display: 'flex', gap: '10px', marginBottom: '24px' }}>
-                <input 
-                  type="text" 
-                  value={keywordQuery}
-                  onChange={(e) => setKeywordQuery(e.target.value)}
-                  placeholder="Ketik topik dasar (contoh: cara ternak lele)" 
-                  style={{ flex: 1, padding: '12px 16px', borderRadius: '8px', border: '1px solid #334155', background: '#0f172a', color: 'white' }}
-                />
-          <button 
-                  onClick={async () => {
-                    setIsKeywordLoading(true);
-                    setKeywordResults([]);
-                    try {
-                      // Menembak ke mesin API Autocomplete Asli
-                      const res = await fetch('/api/cari-kata-kunci', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ query: keywordQuery })
-                      });
-                      const data = await res.json();
-                      
-                      if (data.success) {
-                        setKeywordResults(data.result);
-                      } else {
-                        alert("Gagal menggali kata kunci: " + data.error);
-                      }
-                    } catch (error) {
-                      alert("Terjadi kesalahan jaringan saat mengambil kata kunci.");
-                    }
-                    setIsKeywordLoading(false);
-                  }}
-                  disabled={isKeywordLoading || keywordQuery === ''}
-                  style={{ 
-                    padding: '12px 24px', borderRadius: '8px', border: 'none', 
-                    background: isKeywordLoading || keywordQuery === '' ? '#64748b' : '#8b5cf6', 
-                    color: 'white', fontWeight: 'bold', cursor: isKeywordLoading || keywordQuery === '' ? 'not-allowed' : 'pointer' 
-                  }}>
-                  {isKeywordLoading ? 'Menggali Data Asli...' : 'Cari Kata Kunci'}
-                </button>
-              </div>
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '24px' }}>
+              <input
+                type="text"
+                value={keywordQuery}
+                onChange={(e) => setKeywordQuery(e.target.value)}
+                placeholder="Ketik topik dasar (contoh: cara ternak lele)"
+                style={{ flex: 1, padding: '12px 16px', borderRadius: '8px', border: '1px solid #334155', background: '#0f172a', color: 'white' }}
+              />
+              <button
+                onClick={async () => {
+                  setIsKeywordLoading(true);
+                  setKeywordResults([]);
+                  setSelectedKeyword(''); 
+                  try {
+                    const res = await fetch('/api/cari-kata-kunci', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ query: keywordQuery })
+                    });
+                    const data = await res.json();
+                    if (data.success) setKeywordResults(data.result);
+                    else alert("Gagal menggali kata kunci: " + data.error);
+                  } catch (error) {
+                    alert("Terjadi kesalahan jaringan.");
+                  }
+                  setIsKeywordLoading(false);
+                }}
+                disabled={isKeywordLoading || keywordQuery === ''}
+                style={{
+                  padding: '12px 24px', borderRadius: '8px', border: 'none',
+                  background: isKeywordLoading || keywordQuery === '' ? '#64748b' : '#8b5cf6',
+                  color: 'white', fontWeight: 'bold', cursor: isKeywordLoading || keywordQuery === '' ? 'not-allowed' : 'pointer'
+                }}
+              >
+                {isKeywordLoading ? 'Menggali Data...' : 'Cari Kata Kunci'}
+              </button>
+            </div>
 
-          {/* Wadah Hasil Keyword ala vidIQ */}
-            <div style={{ minHeight: '150px', display: 'flex', flexDirection: 'column', border: keywordResults.length > 0 ? 'none' : '2px dashed #334155', borderRadius: '12px', marginTop: '16px' }}>
-              {keywordResults.length === 0 ? (
-                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px' }}>
-                  <p style={{ color: '#64748b' }}>Ketik topik untuk melihat apa yang sedang dicari penonton.</p>
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', background: '#0b1120', borderRadius: '12px', border: '1px solid #1e293b', overflow: 'hidden' }}>
-                  
-                  {/* Header ala vidIQ */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px', borderBottom: '1px solid #1e293b', background: '#0f172a' }}>
-                    <span style={{ color: '#94a3b8', fontSize: '14px', fontWeight: 'bold' }}>Peluang kata kunci teratas</span>
-                    <span style={{ color: '#94a3b8', fontSize: '14px' }}>Skor Keseluruhan</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              
+              {/* === LAYAR GRAFIK TRENDING === */}
+              {selectedKeyword && (
+                <div style={{ background: '#0b1120', padding: '20px', borderRadius: '12px', border: '1px solid #3b82f6' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
+                    <h3 style={{ color: 'white', margin: 0, fontSize: '16px' }}>Grafik Minat Penonton: <span style={{ color: '#4ade80' }}>{selectedKeyword}</span></h3>
+                    <select
+                      value={chartTrendTimeframe}
+                      onChange={(e) => { 
+                        setChartTrendTimeframe(e.target.value); 
+                        fetchTrend(selectedKeyword, e.target.value); 
+                      }}
+                      style={{ background: '#1e293b', color: 'white', border: '1px solid #3b82f6', padding: '8px 12px', borderRadius: '8px', outline: 'none' }}
+                    >
+                      <option value="7d">7 Hari Terakhir</option>
+                      <option value="30d">30 Hari Terakhir</option>
+                    </select>
                   </div>
 
-                  {/* List Kata Kunci */}
-                  {keywordResults.map((kw, idx) => {
-                    // Trik Hacker: Bikin skor turun berurutan
-                    const staticScore = Math.max(32, 96 - (idx * 7));
-
-                    // Logika Warna ala vidIQ
-                    let badgeColor = '#ef4444'; 
-                    if (staticScore >= 60) badgeColor = '#4ade80'; 
-                    else if (staticScore >= 45) badgeColor = '#facc15'; 
-
-                    return (
-                      <div key={idx} style={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
-                        alignItems: 'center', 
-                        padding: '16px', 
-                        borderBottom: idx === keywordResults.length - 1 ? 'none' : '1px solid #1e293b',
-                        cursor: 'pointer',
-                        transition: 'background 0.2s'
-                      }}
-                      onMouseOver={(e) => e.currentTarget.style.background = '#1e293b'}
-                      onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
-                      >
-                        <span style={{ color: '#94a3b8', fontSize: '15px' }}>{kw}</span>
-                        
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                          <div style={{ 
-                            background: badgeColor, color: '#0f172a', fontWeight: 'bold', padding: '4px 12px', 
-                            borderRadius: '16px', fontSize: '13px', minWidth: '36px', textAlign: 'center' 
-                          }}>
-                            {staticScore}
-                          </div>
-                          <span style={{ color: '#475569', fontSize: '18px', fontWeight: 'bold' }}>›</span>
-                        </div>
-                      </div>
-                    );
-                  })}
+                  {isChartTrendLoading ? (
+                    <div style={{ height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <p style={{ color: '#94a3b8' }}>Menarik data dari satelit Google...</p>
+                    </div>
+                  ) : (
+                    <div style={{ height: '250px', width: '100%' }}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={chartTrendData}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
+                          <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} tickMargin={10} minTickGap={20} />
+                          <YAxis stroke="#94a3b8" fontSize={12} />
+                          <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid #3b82f6', borderRadius: '8px', color: 'white' }} />
+                          <Line type="monotone" dataKey="skor" stroke="#4ade80" strokeWidth={3} dot={{ r: 4, fill: '#4ade80', stroke: '#0f172a' }} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
                 </div>
               )}
+
+              {/* === WADAH HASIL KATA KUNCI === */}
+              <div style={{ minHeight: '150px', display: 'flex', flexDirection: 'column', border: keywordResults.length > 0 ? 'none' : '2px dashed #334155', borderRadius: '12px' }}>
+                {keywordResults.length === 0 ? (
+                  <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px' }}>
+                    <p style={{ color: '#64748b' }}>Ketik topik untuk melihat apa yang sedang dicari penonton.</p>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', background: '#0b1120', borderRadius: '12px', border: '1px solid #1e293b', overflow: 'hidden' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px', borderBottom: '1px solid #1e293b', background: '#0f172a' }}>
+                      <span style={{ color: '#94a3b8', fontSize: '14px', fontWeight: 'bold' }}>Peluang kata kunci teratas (Klik untuk lihat grafik)</span>
+                      <span style={{ color: '#94a3b8', fontSize: '14px' }}>Skor</span>
+                    </div>
+
+                    {keywordResults.map((kw: string, idx: number) => {
+                      const staticScore = Math.max(32, 96 - (idx * 7));
+                      let badgeColor = '#ef4444'; 
+                      if (staticScore >= 60) badgeColor = '#4ade80'; 
+                      else if (staticScore >= 45) badgeColor = '#facc15'; 
+
+                      return (
+                        <div key={idx} 
+                          onClick={() => fetchTrend(kw, chartTrendTimeframe)}
+                          style={{ 
+                          display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
+                          padding: '16px', borderBottom: idx === keywordResults.length - 1 ? 'none' : '1px solid #1e293b',
+                          cursor: 'pointer', transition: 'background 0.2s',
+                          background: selectedKeyword === kw ? '#1e293b' : 'transparent'
+                        }}
+                        onMouseOver={(e) => e.currentTarget.style.background = '#1e293b'}
+                        onMouseOut={(e) => e.currentTarget.style.background = selectedKeyword === kw ? '#1e293b' : 'transparent'}
+                        >
+                          <span style={{ color: 'white', fontSize: '15px' }}>{kw}</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                            <div style={{ background: badgeColor, color: '#0f172a', fontWeight: 'bold', padding: '4px 12px', borderRadius: '16px', fontSize: '13px', minWidth: '36px', textAlign: 'center' }}>
+                              {staticScore}
+                            </div>
+                            <span style={{ color: '#475569', fontSize: '18px', fontWeight: 'bold' }}>›</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
-          
           {/* Tampilan khusus untuk menu LAGU TRENDING */}
           {activeRisetMenu === 'lagu' && (
             <div style={{ background: '#1e293b', padding: '24px', borderRadius: '16px', border: '1px solid #334155', marginTop: '20px' }}>
