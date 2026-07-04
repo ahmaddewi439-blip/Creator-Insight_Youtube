@@ -1780,6 +1780,76 @@ function renderCompetitors() {
             </div>
           )}
 
+{/* Tampilan khusus untuk menu BIKIN CHANNEL */}
+        {activeRisetMenu === 'bikin' && (
+          <div style={{ background: '#1e293b', padding: '24px', borderRadius: '16px', border: '1px solid #334155', marginTop: '20px' }}>
+            <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#f8fafc', fontSize: '18px', marginBottom: '8px' }}>
+              🛠️ Arsitek Channel (AI)
+            </h2>
+            <p style={{ color: '#94a3b8', marginBottom: '24px', fontSize: '14px', lineHeight: '1.6' }}>
+              Berikan ide kasar Anda, dan AI akan meracikkan konsep channel yang matang dari nol.
+            </p>
+            
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '24px' }}>
+              <input
+                type="text"
+                value={bikinQuery}
+                onChange={(e) => setBikinQuery(e.target.value)}
+                placeholder="Contoh: Ide channel tentang otomotif motor klasik..."
+                style={{ flex: 1, padding: '12px 16px', borderRadius: '8px', border: '1px solid #334155', background: '#0f172a', color: 'white' }}
+              />
+              <button 
+                className="btn primary" 
+                onClick={async () => {
+                  if (!bikinQuery) return;
+                  setIsBikinLoading(true);
+                  setBikinResult(null);
+                  try {
+                    const res = await fetch('/api/bikin-channel', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ niche: bikinQuery })
+                    });
+                    const data = await res.json();
+                    if (data.success) setBikinResult(data.result);
+                    else alert("Error: " + data.error);
+                  } catch (err) {
+                    alert("Gagal memanggil AI Bikin Channel");
+                  } finally {
+                    setIsBikinLoading(false);
+                  }
+                }}
+                disabled={isBikinLoading}
+              >
+                {isBikinLoading ? 'Sedang Meracik...' : 'Buat Konsep'}
+              </button>
+            </div>
+
+            {bikinResult && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ background: '#0f172a', padding: '16px', borderRadius: '8px', border: '1px solid #334155' }}>
+                  <h3 style={{ color: '#3b82f6', marginBottom: '12px', fontSize: '16px' }}>Rekomendasi Nama Channel</h3>
+                  <ul style={{ paddingLeft: '20px', margin: 0, color: '#f8fafc' }}>
+                    {bikinResult.channelNames?.map((name: string, i: number) => <li key={i} style={{ marginBottom: '4px' }}><strong>{name}</strong></li>)}
+                  </ul>
+                </div>
+                
+                <div style={{ background: '#0f172a', padding: '16px', borderRadius: '8px', border: '1px solid #334155' }}>
+                  <h3 style={{ color: '#8b5cf6', marginBottom: '12px', fontSize: '16px' }}>Target Penonton & Deskripsi</h3>
+                  <p style={{ color: '#f8fafc', marginBottom: '12px' }}><strong>Target Penonton:</strong> {bikinResult.targetAudience}</p>
+                  <p style={{ color: '#94a3b8', fontSize: '14px', lineHeight: '1.6' }}><strong>Deskripsi Profil:</strong><br/>{bikinResult.description}</p>
+                </div>
+
+                <div style={{ background: '#0f172a', padding: '16px', borderRadius: '8px', border: '1px solid #334155' }}>
+                  <h3 style={{ color: '#f59e0b', marginBottom: '12px', fontSize: '16px' }}>5 Ide Video Pertama Anda</h3>
+                  <ul style={{ paddingLeft: '20px', margin: 0, color: '#f8fafc' }}>
+                    {bikinResult.first5Videos?.map((vid: string, i: number) => <li key={i} style={{ marginBottom: '8px' }}>{vid}</li>)}
+                  </ul>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
         {/* Tampilan khusus untuk menu CEK VALUE CHANNEL */}
           {activeRisetMenu === 'cek-value' && (
             <div style={{ background: '#1e293b', padding: '24px', borderRadius: '16px', border: '1px solid #334155', marginTop: '20px' }}>

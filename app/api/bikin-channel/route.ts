@@ -4,7 +4,6 @@ export async function POST(req: Request) {
   try {
     const { niche } = await req.json();
     
-    // Mengambil API Key Koboi dari Vercel
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (!niche) return NextResponse.json({ error: 'Topik/Niche tidak boleh kosong' }, { status: 400 });
@@ -20,7 +19,6 @@ export async function POST(req: Request) {
       "first5Videos": ["Judul Video 1", "Judul Video 2", "Judul Video 3", "Judul Video 4", "Judul Video 5"]
     }`;
 
-    // Menembak ke Server Koboi LLM
     const response = await fetch(`https://lite.koboillm.com/v1/chat/completions`, {
       method: 'POST',
       headers: { 
