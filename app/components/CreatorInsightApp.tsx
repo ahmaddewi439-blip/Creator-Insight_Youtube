@@ -116,29 +116,35 @@ function VideoRow({ video, index, onSelect }: { video: any; index: number; onSel
       <td>{compact(video?.likes ?? video?.statistics?.likeCount)}</td>
       <td>
             {(() => {
-              // Ambil status asli
-              let currentStatus = video?.status?.privacyStatus || video?.privacyStatus;
-              if (!currentStatus || currentStatus === 'Published') currentStatus = 'public'; // Fallback default
-              
-              // Cek apakah terjadwal
-              const publishDate = new Date(video?.snippet?.publishedAt || video?.snippet?.scheduledStartTime);
+              // 1. Tangkap semua kemungkinan format tanggal dari YouTube
+              const dateString = video?.snippet?.publishedAt || video?.snippet?.scheduledStartTime || video?.status?.publishAt || video?.publishAt;
+              const publishDate = dateString ? new Date(dateString) : new Date();
               const now = new Date();
-              if (currentStatus === 'private' && publishDate > now) {
-                currentStatus = 'scheduled';
+
+              // 2. Cek status dasar
+              let rawStatus = video?.status?.privacyStatus || video?.privacyStatus;
+              let finalStatus = 'public'; // Fallback aman
+              
+              if (rawStatus === 'private' || rawStatus === 'unlisted') {
+                finalStatus = rawStatus;
               }
 
-              // Set warna default (Biru untuk Published/Public)
+              // 3. LOGIKA KUNCI: Jika jam/tanggal rilisnya LEBIH BESAR dari jam sekarang = TERJADWAL
+              if (publishDate > now) {
+                finalStatus = 'scheduled';
+              }
+
+              // 4. Proses pewarnaan
               let badgeBg = 'rgba(37, 99, 235, 0.1)'; 
               let badgeColor = '#3b82f6'; 
               let badgeText = 'Published';
 
-              // Ubah warna jika Private atau Terjadwal
-              if (currentStatus === 'private' || currentStatus === 'unlisted') {
-                badgeBg = 'rgba(220, 38, 38, 0.1)'; // Merah
+              if (finalStatus === 'private' || finalStatus === 'unlisted') {
+                badgeBg = 'rgba(220, 38, 38, 0.1)'; 
                 badgeColor = '#ef4444';
-                badgeText = 'Private';
-              } else if (currentStatus === 'scheduled') {
-                badgeBg = 'rgba(234, 88, 12, 0.1)'; // Orange
+                badgeText = finalStatus === 'unlisted' ? 'Unlisted' : 'Private';
+              } else if (finalStatus === 'scheduled') {
+                badgeBg = 'rgba(234, 88, 12, 0.1)'; 
                 badgeColor = '#f97316';
                 badgeText = 'Terjadwal';
               }
