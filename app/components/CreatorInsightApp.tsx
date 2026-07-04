@@ -1369,7 +1369,7 @@ function renderCompetitors() {
     return (
       <div className="grid">
         {/* --- AWAL MENU KAPSUL --- */}
-          <div style={{ display: 'flex', overflowX: 'auto', gap: '12px', paddingBottom: '16px', marginBottom: '16px', width: '100%' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', paddingBottom: '16px', marginBottom: '16px', width: '100%', justifyContent: 'center' }}>
             {risetMenus.map((menu) => (
               <button
                 key={menu.id}
