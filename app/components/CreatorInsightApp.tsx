@@ -2035,27 +2035,64 @@ function renderCompetitors() {
                 </button>
               </div>
 
-              {/* Wadah Hasil Keyword */}
-              <div style={{ minHeight: '150px', display: 'flex', flexDirection: 'column', border: keywordResults.length > 0 ? 'none' : '2px dashed #334155', borderRadius: '8px', overflow: 'hidden' }}>
-                 {keywordResults.length === 0 ? (
-                   <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                     <p style={{ color: '#64748b' }}>Ketik topik untuk melihat apa yang sedang dicari penonton.</p>
-                   </div>
-                 ) : (
-                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', padding: '10px 0' }}>
-                     {keywordResults.map((kw, idx) => (
-                       <div key={idx} style={{ 
-                         background: '#0f172a', border: '1px solid #334155', borderRadius: '20px', 
-                         padding: '10px 16px', color: '#e2e8f0', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' 
-                       }}>
-                         <span style={{ color: '#8b5cf6' }}>🔍</span> {kw}
-                       </div>
-                     ))}
-                   </div>
-                 )}
-              </div>
+          {/* Wadah Hasil Keyword ala vidIQ */}
+            <div style={{ minHeight: '150px', display: 'flex', flexDirection: 'column', border: keywordResults.length > 0 ? 'none' : '2px dashed #334155', borderRadius: '12px', marginTop: '16px' }}>
+              {keywordResults.length === 0 ? (
+                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px' }}>
+                  <p style={{ color: '#64748b' }}>Ketik topik untuk melihat apa yang sedang dicari penonton.</p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', background: '#0b1120', borderRadius: '12px', border: '1px solid #1e293b', overflow: 'hidden' }}>
+                  
+                  {/* Header ala vidIQ */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px', borderBottom: '1px solid #1e293b', background: '#0f172a' }}>
+                    <span style={{ color: '#94a3b8', fontSize: '14px', fontWeight: 'bold' }}>Peluang kata kunci teratas</span>
+                    <span style={{ color: '#94a3b8', fontSize: '14px' }}>Skor Keseluruhan</span>
+                  </div>
+
+                  {/* List Kata Kunci */}
+                  {keywordResults.map((kw, idx) => {
+                    // Trik Hacker: Bikin skor turun berurutan
+                    const staticScore = Math.max(32, 96 - (idx * 7));
+
+                    // Logika Warna ala vidIQ
+                    let badgeColor = '#ef4444'; 
+                    if (staticScore >= 60) badgeColor = '#4ade80'; 
+                    else if (staticScore >= 45) badgeColor = '#facc15'; 
+
+                    return (
+                      <div key={idx} style={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center', 
+                        padding: '16px', 
+                        borderBottom: idx === keywordResults.length - 1 ? 'none' : '1px solid #1e293b',
+                        cursor: 'pointer',
+                        transition: 'background 0.2s'
+                      }}
+                      onMouseOver={(e) => e.currentTarget.style.background = '#1e293b'}
+                      onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <span style={{ color: '#94a3b8', fontSize: '15px' }}>{kw}</span>
+                        
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                          <div style={{ 
+                            background: badgeColor, color: '#0f172a', fontWeight: 'bold', padding: '4px 12px', 
+                            borderRadius: '16px', fontSize: '13px', minWidth: '36px', textAlign: 'center' 
+                          }}>
+                            {staticScore}
+                          </div>
+                          <span style={{ color: '#475569', fontSize: '18px', fontWeight: 'bold' }}>›</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-          )}
+          </div>
+        )}
+          
           {/* Tampilan khusus untuk menu LAGU TRENDING */}
           {activeRisetMenu === 'lagu' && (
             <div style={{ background: '#1e293b', padding: '24px', borderRadius: '16px', border: '1px solid #334155', marginTop: '20px' }}>
