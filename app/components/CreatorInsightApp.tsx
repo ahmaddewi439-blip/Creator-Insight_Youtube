@@ -114,22 +114,26 @@ function VideoRow({ video, index, onSelect }: { video: any; index: number; onSel
       </td>
       <td>{compact(video?.views ?? video?.statistics?.viewCount)}</td>
       <td>{compact(video?.likes ?? video?.statistics?.likeCount)}</td>
-      <td>
+    <td>
             {(() => {
-              // 1. Tangkap semua kemungkinan format tanggal dari YouTube
+              // 1. Ambil status asli (Mendukung format Teks Langsung ATAU format Objek YouTube)
+              let rawStatus = 'public'; // Default aman
+              
+              if (typeof video?.status === 'string') {
+                rawStatus = video.status.toLowerCase(); // Tangkap dari format teks
+              } else if (video?.status?.privacyStatus || video?.privacyStatus) {
+                rawStatus = (video?.status?.privacyStatus || video?.privacyStatus).toLowerCase(); // Tangkap dari format objek
+              }
+
+              // 2. Ambil tanggal rilis
               const dateString = video?.snippet?.publishedAt || video?.snippet?.scheduledStartTime || video?.status?.publishAt || video?.publishAt;
               const publishDate = dateString ? new Date(dateString) : new Date();
               const now = new Date();
 
-              // 2. Cek status dasar
-              let rawStatus = video?.status?.privacyStatus || video?.privacyStatus;
-              let finalStatus = 'public'; // Fallback aman
+              // 3. Tentukan Final Status
+              let finalStatus = rawStatus;
               
-              if (rawStatus === 'private' || rawStatus === 'unlisted') {
-                finalStatus = rawStatus;
-              }
-
-              // 3. LOGIKA KUNCI: Jika jam/tanggal rilisnya LEBIH BESAR dari jam sekarang = TERJADWAL
+              // Logika Waktu: Kalau waktu rilisnya LEBIH BESAR dari waktu sekarang, paksa jadi Terjadwal
               if (publishDate > now) {
                 finalStatus = 'scheduled';
               }
@@ -160,7 +164,8 @@ function VideoRow({ video, index, onSelect }: { video: any; index: number; onSel
                   display: 'inline-block',
                   border: `1px solid ${badgeColor}`,
                   textAlign: 'center',
-                  minWidth: '80px'
+                  minWidth: '80px',
+                  textTransform: 'capitalize'
                 }}>
                   {badgeText}
                 </div>
