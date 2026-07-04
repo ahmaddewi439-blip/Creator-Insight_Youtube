@@ -1708,89 +1708,120 @@ function renderCompetitors() {
               </div>
             </div>
           )}
-          {/* Tampilan khusus untuk menu INTAI KOMPETITOR */}
-          {activeRisetMenu === 'intai' && (
-            <div style={{ background: '#1e293b', padding: '24px', borderRadius: '16px', border: '1px solid #334155', marginTop: '20px' }}>
-              <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#f8fafc', fontSize: '18px', marginBottom: '8px' }}>
-                🕵️‍♂️ Mata-Mata Channel Kompetitor
-              </h2>
-              <p style={{ color: '#94a3b8', marginBottom: '24px', fontSize: '14px', lineHeight: '1.6' }}>
-                Bongkar video apa saja yang paling banyak mendulang views dari channel saingan Anda. Masukkan nama channel atau handle (contoh: @TukangTani).
-              </p>
+         
+      {/* Tampilan khusus untuk menu INTAI KOMPETITOR */}
+        {activeRisetMenu === 'intai' && (
+          <div style={{ background: '#1e293b', padding: '24px', borderRadius: '16px', border: '1px solid #334155', marginTop: '20px' }}>
+            <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#f8fafc', fontSize: '18px', marginBottom: '8px' }}>
+              🕵️ Mata-Mata Channel Kompetitor
+            </h2>
+            <p style={{ color: '#94a3b8', marginBottom: '24px', fontSize: '14px', lineHeight: '1.6' }}>
+              Bongkar video apa saja yang paling banyak mendulang views dari channel saingan Anda. Masukkan nama channel atau handle (contoh: @TukangTani).
+            </p>
 
-              {/* Kolom Pencarian Intai */}
-              <div style={{ display: 'flex', gap: '10px', marginBottom: '24px' }}>
-                <input 
-                  type="text" 
-                  value={intaiQuery}
-                  onChange={(e) => setIntaiQuery(e.target.value)}
-                  placeholder="Ketik nama channel (contoh: @PondokLele)" 
-                  style={{ flex: 1, padding: '12px 16px', borderRadius: '8px', border: '1px solid #334155', background: '#0f172a', color: 'white' }}
-                />
-               <button 
-                  onClick={async () => {
-                    setIsIntaiLoading(true);
-                    setIntaiResults([]); 
-                    try {
-                      // Menembak ke mesin API Intai Asli
-                      const res = await fetch('/api/intai', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ query: intaiQuery })
-                      });
-                      const data = await res.json();
-                      
-                      if (data.success) {
-                        setIntaiResults(data.result);
-                      } else {
-                        alert("Gagal mengintai: " + data.error);
-                      }
-                    } catch (error) {
-                      alert("Terjadi kesalahan jaringan saat mengintai channel.");
+            {/* Kolom Pencarian Intai */}
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '24px' }}>
+              <input
+                type="text"
+                value={intaiQuery}
+                onChange={(e) => setIntaiQuery(e.target.value)}
+                placeholder="Ketik nama channel (contoh: @PondokLele)"
+                style={{ flex: 1, padding: '12px 16px', borderRadius: '8px', border: '1px solid #334155', background: '#0f172a', color: 'white' }}
+              />
+              <button
+                onClick={async () => {
+                  setIsIntaiLoading(true);
+                  setIntaiResults([]);
+                  try {
+                    const res = await fetch('/api/intai', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ query: intaiQuery })
+                    });
+                    const data = await res.json();
+
+                    if (data.success) {
+                      // Simpan data gabungan (Profil + Video) ke dalam indeks ke-0 dengan status buka/tutup video
+                      setIntaiResults([{ channelInfo: data.channelInfo, videos: data.videos, showVideos: false }]);
+                    } else {
+                      alert("Gagal mengintai: " + data.error);
                     }
-                    setIsIntaiLoading(false);
-                  }}
-                  disabled={isIntaiLoading || intaiQuery === ''}
-                  style={{ 
-                    padding: '12px 24px', borderRadius: '8px', border: 'none', 
-                    background: isIntaiLoading || intaiQuery === '' ? '#64748b' : '#ef4444', 
-                    color: 'white', fontWeight: 'bold', cursor: isIntaiLoading || intaiQuery === '' ? 'not-allowed' : 'pointer' 
-                  }}>
-                  {isIntaiLoading ? 'Mengintai Asli...' : 'Intai Sekarang'}
-                </button>
-              </div>
-
-              {/* Wadah Tabel Intai */}
-              <div style={{ minHeight: '200px', display: 'flex', flexDirection: 'column', border: intaiResults.length > 0 ? 'none' : '2px dashed #334155', borderRadius: '8px', overflow: 'hidden' }}>
-                 {intaiResults.length === 0 ? (
-                   <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                     <p style={{ color: '#64748b' }}>Ketik nama channel kompetitor untuk membedah daftar videonya.</p>
-                   </div>
-                 ) : (
-                   <table style={{ width: '100%', textAlign: 'left', color: 'white', borderCollapse: 'collapse' }}>
-                     <thead>
-                       <tr style={{ background: '#334155', borderBottom: '1px solid #475569' }}>
-                         <th style={{ padding: '12px' }}>Video Top Performer</th>
-                         <th style={{ padding: '12px' }}>Total Views 📈</th>
-                         <th style={{ padding: '12px' }}>Likes 👍</th>
-                         <th style={{ padding: '12px' }}>Umur Video</th>
-                       </tr>
-                     </thead>
-                     <tbody>
-                       {intaiResults.map((video, idx) => (
-                         <tr key={idx} style={{ borderBottom: '1px solid #334155' }}>
-                           <td style={{ padding: '12px' }}>{video.title}</td>
-                           <td style={{ padding: '12px', color: '#4ade80', fontWeight: 'bold' }}>{video.views}</td>
-                           <td style={{ padding: '12px', color: '#60a5fa' }}>{video.likes}</td>
-                           <td style={{ padding: '12px', color: '#94a3b8' }}>{video.published}</td>
-                         </tr>
-                       ))}
-                     </tbody>
-                   </table>
-                 )}
-              </div>
+                  } catch (error) {
+                    alert("Terjadi kesalahan jaringan saat mengintai channel.");
+                  }
+                  setIsIntaiLoading(false);
+                }}
+                disabled={isIntaiLoading || intaiQuery === ''}
+                style={{
+                  padding: '12px 24px', borderRadius: '8px', border: 'none',
+                  background: isIntaiLoading || intaiQuery === '' ? '#64748b' : '#ef4444',
+                  color: 'white', fontWeight: 'bold', cursor: isIntaiLoading || intaiQuery === '' ? 'not-allowed' : 'pointer'
+                }}
+              >
+                {isIntaiLoading ? 'Mengintai...' : 'Intai Sekarang'}
+              </button>
             </div>
-          )}
+
+            {/* Wadah Tabel Intai 2 Tahapan */}
+            <div style={{ minHeight: '200px', display: 'flex', flexDirection: 'column', border: intaiResults.length > 0 ? 'none' : '2px dashed #334155', borderRadius: '12px', justifyContent: 'center' }}>
+              {intaiResults.length === 0 ? (
+                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <p style={{ color: '#64748b' }}>Ketik nama channel kompetitor untuk membedah profil dan daftar videonya.</p>
+                </div>
+              ) : (
+                <>
+                  {/* TAHAP 1: KARTU PROFIL CHANNEL */}
+                  <div 
+                    style={{ background: '#0f172a', padding: '20px', borderRadius: '12px', border: '1px solid #3b82f6', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', transition: '0.3s' }}
+                    onClick={() => {
+                      // Logika untuk membuka/menutup tabel video saat profil diklik
+                      const newData = [...intaiResults];
+                      newData[0].showVideos = !newData[0].showVideos;
+                      setIntaiResults(newData);
+                    }}
+                  >
+                    <img src={intaiResults[0].channelInfo.thumbnail} alt="avatar" style={{ width: '80px', height: '80px', borderRadius: '50%', border: '2px solid #ef4444' }} />
+                    <div style={{ flex: 1 }}>
+                      <h3 style={{ color: 'white', margin: '0 0 5px 0', fontSize: '20px' }}>{intaiResults[0].channelInfo.title}</h3>
+                      <p style={{ color: '#94a3b8', margin: 0, fontSize: '14px' }}>{intaiResults[0].channelInfo.handle}</p>
+                    </div>
+                    <button style={{ background: intaiResults[0].showVideos ? '#334155' : '#3b82f6', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
+                      {intaiResults[0].showVideos ? 'Tutup Data Video ▲' : 'Bongkar Data Video ▼'}
+                    </button>
+                  </div>
+
+                  {/* TAHAP 2: TABEL DATA VIDEO MENDALAM */}
+                  {intaiResults[0].showVideos && (
+                    <div style={{ marginTop: '20px', overflowX: 'auto' }}>
+                      <table style={{ width: '100%', textAlign: 'left', color: 'white', borderCollapse: 'collapse' }}>
+                        <thead>
+                          <tr style={{ background: '#334155', borderBottom: '1px solid #475569' }}>
+                            <th style={{ padding: '12px' }}>Video Top Performer</th>
+                            <th style={{ padding: '12px' }}>Total Views 📈</th>
+                            <th style={{ padding: '12px' }}>Likes 👍</th>
+                            <th style={{ padding: '12px' }}>Tanggal Upload 📅</th>
+                            <th style={{ padding: '12px' }}>Jam Rilis ⏰</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {intaiResults[0].videos.map((video: any, idx: number) => (
+                            <tr key={idx} style={{ borderBottom: '1px solid #334155' }}>
+                              <td style={{ padding: '12px', maxWidth: '300px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{video.title}</td>
+                              <td style={{ padding: '12px', color: '#4ade80', fontWeight: 'bold' }}>{video.views}</td>
+                              <td style={{ padding: '12px', color: '#60a5fa' }}>{video.likes}</td>
+                              <td style={{ padding: '12px', color: '#facc15' }}>{video.published}</td>
+                              <td style={{ padding: '12px', color: '#f87171', fontWeight: 'bold' }}>{video.time}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        )}
 
 {/* Tampilan khusus untuk menu BIKIN CHANNEL */}
         {activeRisetMenu === 'bikin-channel' && (
