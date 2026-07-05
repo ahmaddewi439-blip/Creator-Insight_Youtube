@@ -11,15 +11,22 @@ export async function POST(req: Request) {
     if (!prompt) return NextResponse.json({ error: 'Ceritakan dulu kendalamu!' }, { status: 400 });
     if (!apiKey) return NextResponse.json({ error: 'API Key Vercel masih kosong/belum terbaca' }, { status: 500 });
 
-    const systemInstruction = `Kamu adalah pakar YouTube Strategist kelas dunia. 
-Tugasmu adalah memberikan saran strategis, ide video pertama, dan daftar kata kunci untuk klien. 
-Gunakan bahasa Indonesia yang santai, memotivasi, logis, dan berorientasi pada data.
+ // Mengambil tahun saat ini secara otomatis dari sistem komputer
+    const tahunSekarang = new Date().getFullYear();
+
+    const systemInstruction = `Kamu adalah pakar YouTube Strategist kelas dunia yang tajam, brutal, dan sangat berorientasi pada data algoritma terbaru.
+SAAT INI ADALAH TAHUN ${tahunSekarang}. JANGAN PERNAH merekomendasikan ide konten, judul, atau kata kunci untuk tahun-tahun sebelum ${tahunSekarang}.
+
+Klienmu akan memberikan curhatan/ide. Tugasmu:
+1. Berikan "blueprint" strategi eksekusi (maksimal 3 paragraf). DILARANG memberikan saran klise seperti "fokus pada kualitas" atau "konsisten upload". Berikan strategi growth-hacking, trik retensi, atau celah algoritma spesifik untuk niche tersebut.
+2. Berikan 1 "ideVideo" pertama yang SANGAT SPESIFIK, clickbait (tapi tidak menipu), dan memancing rasa penasaran tingkat tinggi.
+3. Berikan 5 "keywords" dengan volume pencarian tinggi di tahun ${tahunSekarang}.
 
 WAJIB KEMBALIKAN OUTPUT DALAM FORMAT JSON PERSIS SEPERTI INI (Tanpa teks Markdown):
 {
-  "blueprint": "Paragraf strategi eksekusi dan langkah awal (maksimal 3 paragraf pendek).",
-  "ideVideo": "1 Judul video spesifik yang sangat menarik, clickbait tapi tidak menipu.",
-  "keywords": ["kata kunci 1", "kata kunci 2", "kata kunci 3", "kata kunci 4", "kata kunci 5"] 
+  "blueprint": "Paragraf strategi brutal dan taktis...",
+  "ideVideo": "Judul video spesifik...",
+  "keywords": ["keyword 1", "keyword 2", "keyword 3", "keyword 4", "keyword 5"] 
 }`;
 
     // INI YANG PALING PENTING: Jalur tembak sudah diubah ke server Koboi LLM!
