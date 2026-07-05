@@ -3,12 +3,10 @@ import { NextResponse } from 'next/server';
 export async function POST(req: Request) {
   try {
     const { prompt } = await req.json();
-    
-    // Ganti nama env ini sesuai dengan yang Anda pakai di file .env (misal: OPENROUTER_API_KEY)
     const apiKey = process.env.OPENROUTER_API_KEY; 
 
     if (!prompt) return NextResponse.json({ error: 'Ceritakan dulu kendalamu!' }, { status: 400 });
-    if (!apiKey) return NextResponse.json({ error: 'API Key (sk-...) belum dikonfigurasi' }, { status: 500 });
+    if (!apiKey) return NextResponse.json({ error: 'API Key belum dikonfigurasi' }, { status: 500 });
 
     const systemInstruction = `Kamu adalah pakar YouTube Strategist kelas dunia. 
 Tugasmu adalah memberikan saran strategis, ide video pertama, dan daftar kata kunci untuk klien. 
@@ -21,12 +19,11 @@ WAJIB KEMBALIKAN OUTPUT DALAM FORMAT JSON PERSIS SEPERTI INI (Tanpa Markdown, cu
   "keywords": ["kata kunci 1", "kata kunci 2", "kata kunci 3", "kata kunci 4", "kata kunci 5"] 
 }`;
 
-    // Menembak ke endpoint standar OpenAI / OpenRouter
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
+        'Authorization': `Bearer ${apiKey}` 
       },
       body: JSON.stringify({
         model: 'openai/gpt-4o',
@@ -34,7 +31,6 @@ WAJIB KEMBALIKAN OUTPUT DALAM FORMAT JSON PERSIS SEPERTI INI (Tanpa Markdown, cu
           { role: 'system', content: systemInstruction },
           { role: 'user', content: prompt }
         ],
-        // Fitur canggih GPT-4o untuk memaksa output murni berbentuk JSON
         response_format: { type: 'json_object' } 
       })
     });
@@ -45,7 +41,6 @@ WAJIB KEMBALIKAN OUTPUT DALAM FORMAT JSON PERSIS SEPERTI INI (Tanpa Markdown, cu
         throw new Error(data.error?.message || "Gagal menghubungi AI Provider.");
     }
 
-    // Ekstrak hasil dari GPT-4o
     const resultText = data.choices[0].message.content;
     const parsedResult = JSON.parse(resultText);
 
