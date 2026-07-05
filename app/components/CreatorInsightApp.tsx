@@ -1713,21 +1713,33 @@ function renderCompetitors() {
                          <th style={{ padding: '12px', color: '#fbbf24' }}>Skor Ledakan 🚀</th>
                        </tr>
                      </thead>
-                     <tbody>
-                       {gemsResults.map((video, idx) => (
-                         <tr key={idx} style={{ borderBottom: '1px solid #334155' }}>
-                           <td style={{ padding: '12px' }}>{video.title}</td>
-                           <td style={{ padding: '12px', color: '#4ade80' }}>{video.views}</td>
-                           <td style={{ padding: '12px', color: '#94a3b8' }}>{video.subs}</td>
-                           <td style={{ padding: '12px', color: '#fbbf24', fontWeight: 'bold' }}>{video.multiplier}</td>
-                         </tr>
-                       ))}
-                     </tbody>
-                   </table>
-                 )}
-              </div>
-            </div>
-          )}
+                   <tbody>
+            {gemsResults.map((video: any, idx: number) => (
+              <tr key={idx} style={{ borderBottom: '1px solid #334155' }}>
+                <td style={{ padding: '12px', color: '#f8fafc' }}>
+                  <div style={{ marginBottom: '8px', lineHeight: '1.4' }}>{video.title}</div>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    {video.type === 'SHORTS' ? (
+                      <span style={{ background: '#ef4444', color: 'white', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', letterSpacing: '0.5px' }}>⚡ SHORTS</span>
+                    ) : (
+                      <span style={{ background: '#3b82f6', color: 'white', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', letterSpacing: '0.5px' }}>🎬 LONG</span>
+                    )}
+                    <a href={`https://www.youtube.com/watch?v=${video.videoId}`} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#94a3b8', fontSize: '11px', textDecoration: 'none', border: '1px solid #334155', padding: '2px 8px', borderRadius: '4px', transition: 'all 0.2s' }} onMouseOver={(e) => e.currentTarget.style.color = 'white'} onMouseOut={(e) => e.currentTarget.style.color = '#94a3b8'}>
+                      ▶ Tonton Aslinya
+                    </a>
+                  </div>
+                </td>
+                <td style={{ padding: '12px', color: '#4ade80' }}>{video.views}</td>
+                <td style={{ padding: '12px', color: '#94a3b8' }}>{video.subs}</td>
+                <td style={{ padding: '12px', color: '#fbbf24', fontWeight: 'bold' }}>{video.multiplier}</td>
+              </tr>
+            ))}
+         </tbody>
+        </table>
+      )}
+    </div>
+  </div>
+)}
          
       
      {/* Tampilan khusus untuk menu INTAI KOMPETITOR */}
