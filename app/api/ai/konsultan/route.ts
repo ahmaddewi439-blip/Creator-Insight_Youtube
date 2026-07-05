@@ -3,7 +3,9 @@ import { NextResponse } from 'next/server';
 export async function POST(req: Request) {
   try {
     const { prompt } = await req.json();
-    const apiKey = process.env.OPENROUTER_API_KEY; 
+    
+    // JURUS ANTI-SPASI: .trim() akan otomatis memotong spasi atau "enter" gaib di awal/akhir token
+    const apiKey = (process.env.OPENROUTER_API_KEY || "").trim(); 
 
     if (!prompt) return NextResponse.json({ error: 'Ceritakan dulu kendalamu!' }, { status: 400 });
     if (!apiKey) return NextResponse.json({ error: 'API Key belum dikonfigurasi' }, { status: 500 });
@@ -23,7 +25,10 @@ WAJIB KEMBALIKAN OUTPUT DALAM FORMAT JSON PERSIS SEPERTI INI (Tanpa Markdown, cu
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}` 
+        'Authorization': `Bearer ${apiKey}`,
+        // Tambahan khusus OpenRouter agar mereka tidak menolak request kita
+        'HTTP-Referer': 'https://creator-insight-youtube.vercel.app', 
+        'X-Title': 'Creator Insight'
       },
       body: JSON.stringify({
         model: 'openai/gpt-4o',
