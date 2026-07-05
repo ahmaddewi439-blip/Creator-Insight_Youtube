@@ -21,7 +21,8 @@ const tabs: { id: TabId; label: string; icon: string }[] = [
   { id: "portfolio", label: "Portofolio", icon: "💼" }
 ];
 const risetMenus = [
-  { id: 'label', name: 'Mau Riset apa hari ini?', disabled: true, icon: '🙌' },
+    { id: 'konsultan', name: 'Mau Riset apa hari ini?', disabled: false, icon: '🙌' },
+    // ... (biarkan menu vph, hidden-gems, dll di bawahnya tetap sama)
   { id: 'vph', name: 'VPH RISET', disabled: false, icon: '🔥' },
   { id: 'hidden-gems', name: 'Hidden Gems', disabled: false, icon: '💎' },
   { id: 'intai', name: 'Intai Kompetitor', disabled: false, icon: '🕵️‍♂️' },
@@ -213,6 +214,9 @@ function getVideoId(video: any) {
 }
 
 export default function CreatorInsightApp() {
+  const [konsultanQuery, setKonsultanQuery] = useState('');
+  const [konsultanResult, setKonsultanResult] = useState<any>(null);
+  const [isKonsultanLoading, setIsKonsultanLoading] = useState(false);
   const [bikinQuery, setBikinQuery] = useState('');
   const [bikinResult, setBikinResult] = useState<any>(null);
   const [isBikinLoading, setIsBikinLoading] = useState(false);
@@ -224,7 +228,7 @@ export default function CreatorInsightApp() {
   const [keywordQuery, setKeywordQuery] = useState('');
   const [keywordResults, setKeywordResults] = useState<string[]>([]);
   const [isKeywordLoading, setIsKeywordLoading] = useState(false);
- const [selectedKeyword, setSelectedKeyword] = useState('');
+  const [selectedKeyword, setSelectedKeyword] = useState('');
   const [chartTrendData, setChartTrendData] = useState<any[]>([]);
   const [isChartTrendLoading, setIsChartTrendLoading] = useState(false);
   const [chartTrendTimeframe, setChartTrendTimeframe] = useState('30d');
@@ -2016,6 +2020,100 @@ function renderCompetitors() {
               </div>
             </div>
           )}
+
+          {/* === LAYAR KONSULTAN AI MENTOR === */}
+        {activeRisetMenu === 'konsultan' && (
+          <div style={{ background: '#1e293b', padding: '24px', borderRadius: '16px', border: '1px solid #334155', marginTop: '20px' }}>
+            <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#f8fafc', fontSize: '18px', marginBottom: '8px' }}>
+              🧠 YouTube Strategist Pribadi Anda
+            </h2>
+            <p style={{ color: '#94a3b8', marginBottom: '24px', fontSize: '14px', lineHeight: '1.6' }}>
+              Ceritakan ide kasar, kendala, atau modal yang Anda miliki. AI akan menyusunkan strategi eksekusi, ide video, dan kata kunci terbaik.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+              <textarea
+                value={konsultanQuery}
+                onChange={(e) => setKonsultanQuery(e.target.value)}
+                placeholder="Contoh: Sy ingin membuat konten niche technology full ai tanpa wajah. Gak ada modal cuma kuota aja. Tolong beri saran apa yang harus saya lakukan..."
+                rows={4}
+                style={{ width: '100%', padding: '16px', borderRadius: '12px', border: '1px solid #334155', background: '#0f172a', color: 'white', resize: 'vertical', fontSize: '14px', fontFamily: 'inherit' }}
+              />
+              <button
+                onClick={async () => {
+                  setIsKonsultanLoading(true);
+                  setKonsultanResult(null);
+                  try {
+                    const res = await fetch('/api/ai/konsultan', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ prompt: konsultanQuery })
+                    });
+                    const data = await res.json();
+                    if (data.success) setKonsultanResult(data.result);
+                    else alert("AI sedang pusing: " + data.error);
+                  } catch (error) {
+                    alert("Gagal menghubungi server AI.");
+                  }
+                  setIsKonsultanLoading(false);
+                }}
+                disabled={isKonsultanLoading || konsultanQuery.trim() === ''}
+                style={{ padding: '14px 24px', borderRadius: '8px', border: 'none', background: isKonsultanLoading || konsultanQuery.trim() === '' ? '#475569' : '#8b5cf6', color: 'white', fontWeight: 'bold', cursor: isKonsultanLoading || konsultanQuery.trim() === '' ? 'not-allowed' : 'pointer', alignSelf: 'flex-end' }}
+              >
+                {isKonsultanLoading ? 'AI Sedang Meracik Strategi...' : '✨ Analisis Ide Saya'}
+              </button>
+            </div>
+
+            {/* HASIL DARI AI */}
+            {konsultanResult && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', animation: 'fadeIn 0.5s ease' }}>
+                
+                {/* Kartu Blueprint */}
+                <div style={{ background: '#0b1120', borderLeft: '4px solid #8b5cf6', padding: '20px', borderRadius: '8px' }}>
+                  <h3 style={{ color: 'white', fontSize: '15px', marginTop: 0, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>🎯 Blueprint Strategi Eksekusi</h3>
+                  <p style={{ color: '#cbd5e1', fontSize: '14px', lineHeight: '1.7', margin: 0, whiteSpace: 'pre-wrap' }}>
+                    {konsultanResult.blueprint}
+                  </p>
+                </div>
+
+                {/* Kartu Ide Video */}
+                <div style={{ background: '#0b1120', borderLeft: '4px solid #fbbf24', padding: '20px', borderRadius: '8px' }}>
+                  <h3 style={{ color: 'white', fontSize: '15px', marginTop: 0, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>🎬 Rekomendasi Video Pertama Anda</h3>
+                  <p style={{ color: '#fbbf24', fontSize: '16px', fontWeight: 'bold', margin: 0 }}>
+                    "{konsultanResult.ideVideo}"
+                  </p>
+                </div>
+
+                {/* Kartu Kata Kunci Ajaib */}
+                <div style={{ background: '#0b1120', borderLeft: '4px solid #4ade80', padding: '20px', borderRadius: '8px' }}>
+                  <h3 style={{ color: 'white', fontSize: '15px', marginTop: 0, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>🔑 Gudang Kata Kunci (Klik untuk Riset)</h3>
+                  <p style={{ color: '#64748b', fontSize: '12px', margin: '0 0 16px 0' }}>Klik tombol di bawah ini, kami akan langsung melempar Anda ke mesin grafik penonton!</p>
+                  
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                    {konsultanResult.keywords?.map((kw: string, idx: number) => (
+                      <button
+                        key={idx}
+                        onClick={() => {
+                          // Trik Magic: Ubah Tab dan Langsung Isi Kolom Pencarian Kata Kunci
+                          setActiveRisetMenu('keyword');
+                          setKeywordQuery(kw);
+                          // (User tinggal pencet tombol 'Cari' di layar sebelah)
+                        }}
+                        style={{ background: '#1e293b', border: '1px solid #4ade80', color: '#4ade80', padding: '8px 16px', borderRadius: '20px', fontSize: '13px', cursor: 'pointer', transition: 'all 0.2s' }}
+                        onMouseOver={(e) => { e.currentTarget.style.background = '#4ade80'; e.currentTarget.style.color = '#0f172a'; }}
+                        onMouseOut={(e) => { e.currentTarget.style.background = '#1e293b'; e.currentTarget.style.color = '#4ade80'; }}
+                      >
+                        🔍 {kw}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+              </div>
+            )}
+          </div>
+        )}
+        
 {/* Tampilan khusus untuk menu CARI KATA KUNCI */}
         {activeRisetMenu === 'keyword' && (
           <div style={{ background: '#1e293b', padding: '24px', borderRadius: '16px', border: '1px solid #334155', marginTop: '20px' }}>
