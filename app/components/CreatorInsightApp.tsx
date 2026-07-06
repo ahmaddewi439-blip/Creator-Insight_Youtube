@@ -233,6 +233,54 @@ export default function CreatorInsightApp() {
   const [isChartTrendLoading, setIsChartTrendLoading] = useState(false);
   const [chartTrendTimeframe, setChartTrendTimeframe] = useState('30d');
 
+// =================================================================
+  // 💾 FITUR AUTO-SAVE: MENGUNCI DATA AGAR TIDAK HILANG SAAT REFRESH
+  // =================================================================
+
+  // 1. Fungsi Pembaca Memori (Menyusun ulang layar seperti terakhir ditinggalkan)
+  useEffect(() => {
+    const savedData = localStorage.getItem('creatorInsightBrankas');
+    if (savedData) {
+      try {
+        const parsed = JSON.parse(savedData);
+        
+        if (parsed.konsultanQuery) setKonsultanQuery(parsed.konsultanQuery);
+        if (parsed.konsultanResult) setKonsultanResult(parsed.konsultanResult);
+        if (parsed.bikinQuery) setBikinQuery(parsed.bikinQuery);
+        if (parsed.bikinResult) setBikinResult(parsed.bikinResult);
+        if (parsed.seoQuery) setSeoQuery(parsed.seoQuery);
+        if (parsed.seoResult) setSeoResult(parsed.seoResult);
+        if (parsed.trendingResults) setTrendingResults(parsed.trendingResults);
+        if (parsed.keywordQuery) setKeywordQuery(parsed.keywordQuery);
+        if (parsed.keywordResults) setKeywordResults(parsed.keywordResults);
+        if (parsed.selectedKeyword) setSelectedKeyword(parsed.selectedKeyword);
+        if (parsed.chartTrendData) setChartTrendData(parsed.chartTrendData);
+        if (parsed.chartTrendTimeframe) setChartTrendTimeframe(parsed.chartTrendTimeframe);
+        
+      } catch (e) {
+        console.error('Gagal membongkar brankas memori', e);
+      }
+    }
+  }, []);
+
+  // 2. Fungsi Perekam Otomatis (Menyimpan data diam-diam setiap kali Anda mengetik)
+  useEffect(() => {
+    const stateToSave = {
+      konsultanQuery, konsultanResult,
+      bikinQuery, bikinResult,
+      seoQuery, seoResult,
+      trendingResults,
+      keywordQuery, keywordResults, selectedKeyword, chartTrendData, chartTrendTimeframe
+    };
+    localStorage.setItem('creatorInsightBrankas', JSON.stringify(stateToSave));
+    
+  }, [
+    konsultanQuery, konsultanResult, bikinQuery, bikinResult, 
+    seoQuery, seoResult, trendingResults, keywordQuery, keywordResults, 
+    selectedKeyword, chartTrendData, chartTrendTimeframe
+  ]); 
+  // =================================================================
+  
   // Fungsi untuk menyedot data saat kata kunci diklik
   const fetchTrend = async (keyword: string, time: string) => {
     setSelectedKeyword(keyword);
