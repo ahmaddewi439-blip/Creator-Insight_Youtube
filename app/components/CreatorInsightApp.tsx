@@ -3371,7 +3371,7 @@ function OptimizerResultView({ result, onLivePreview, originalVideo }: { result:
              {/* 1. Deskripsi Lama */}
              <div style={{ background: '#1e293b', padding: '16px', borderRadius: '8px', borderLeft: '4px solid #ef4444' }}>
                 <span style={{ fontSize: '13px', color: '#ef4444', fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>📌 Deskripsi di YouTube Saat Ini:</span>
-                <div style={{ fontSize: '13px', color: '#cbd5e1', maxHeight: '100px', overflowY: 'auto', whiteSpace: 'pre-wrap' }}>{originalDesc}</div>
+                <div style={{ fontSize: '13px', color: '#cbd5e1', maxHeight: '100px', overflowY: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{originalDesc}</div>
              </div>
 
              {/* 2. Editor Deskripsi */}
@@ -3392,7 +3392,7 @@ function OptimizerResultView({ result, onLivePreview, originalVideo }: { result:
                                <span>🔄</span> Terapkan
                             </button>
                          </div>
-                         <div style={{ fontSize: '13px', color: '#94a3b8', whiteSpace: 'pre-wrap', maxHeight: '80px', overflowY: 'auto' }}>{desc.text}</div>
+                         <div style={{ fontSize: '13px', color: '#94a3b8', whiteSpace: 'pre-wrap', wordBreak: 'break-word', overflowWrap: 'anywhere', maxHeight: '80px', overflowY: 'auto' }}>{desc.text}</div>
                       </div>
                    ))}
                 </div>
