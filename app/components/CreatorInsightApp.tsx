@@ -212,7 +212,7 @@ function getVideoId(video: any) {
   // 4. Fallback terakhir
   return video.videoId || (typeof video.id === "string" ? video.id : "");
 }
-
+ const { data: session, status } = useSession();
 export default function CreatorInsightApp() {
   const [konsultanQuery, setKonsultanQuery] = useState('');
   const [konsultanResult, setKonsultanResult] = useState<any>(null);
@@ -235,6 +235,33 @@ export default function CreatorInsightApp() {
   // State untuk Realtime Chart Dashboard
   const [rtTimeframe, setRtTimeframe] = useState('48h'); // Pilihan: '60m' atau '48h'
   const [rtType, setRtType] = useState('all'); // Pilihan: 'all', 'long', 'shorts'
+
+  // =================================================================
+  // 📡 MESIN PENYEDOT DATA ASLI YOUTUBE (Letakkan di bawah useState)
+  // =================================================================
+  
+  const [realVideos, setRealVideos] = useState<any[]>([]);
+  const [realViews, setRealViews] = useState<string>("...");
+
+  useEffect(() => {
+    // Jika user sudah login dan punya tiket akses, tarik data aslinya!
+    if (session?.accessToken) {
+      // 1. Sedot Total Penayangan Channel Asli
+      fetch('https://www.googleapis.com/youtube/v3/channels?part=statistics&mine=true', {
+        headers: { Authorization: `Bearer ${session.accessToken}` }
+      }).then(res => res.json()).then(data => {
+        if (data.items) setRealViews(data.items[0].statistics.viewCount);
+      }).catch(err => console.error(err));
+
+      // 2. Sedot 3 Video Terbaru Asli
+      fetch('https://www.googleapis.com/youtube/v3/search?part=snippet&forMine=true&type=video&maxResults=3&order=date', {
+        headers: { Authorization: `Bearer ${session.accessToken}` }
+      }).then(res => res.json()).then(data => {
+        if (data.items) setRealVideos(data.items);
+      }).catch(err => console.error(err));
+    }
+  }, [session]);
+
 // =================================================================
   // 💾 FITUR AUTO-SAVE: MENGUNCI DATA AGAR TIDAK HILANG SAAT REFRESH
   // =================================================================
@@ -523,7 +550,7 @@ const handleAnalyzeAngles = async () => {
     );
   }
 
-  const { data: session, status } = useSession();
+ 
  const ACTIVE_TAB_KEY = "creator_insight_active_tab";
 
   function getInitialActiveTab(): TabId {
@@ -1017,7 +1044,7 @@ const handleAnalyzeAngles = async () => {
             <div className="mini-score"><span className="muted">Viral Potential</span><br /><b>{viralScore || 0}</b><div className="status-pill">{viralScore >= 80 ? "Tinggi" : "Sedang"}</div></div>
           </div>
         </section>
-   {/* ================= MULAI KARTU REALTIME YOUTUBE STUDIO ================= */}
+ {/* ================= MULAI KARTU REALTIME YOUTUBE STUDIO ================= */}
       <div style={{ backgroundColor: '#151b2b', border: '1px solid #2d3748', borderRadius: '12px', padding: '24px', marginTop: '24px', marginBottom: '24px' }}>
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
@@ -1026,10 +1053,11 @@ const handleAnalyzeAngles = async () => {
               <span style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: '#ef4444', boxShadow: '0 0 10px #ef4444' }}></span>
               Realtime Analytics
             </h2>
-            <p style={{ color: '#9ca3af', fontSize: '14px', margin: '4px 0 0 0' }}>Terus perbarui secara langsung</p>
+            <p style={{ color: '#9ca3af', fontSize: '14px', margin: '4px 0 0 0' }}>
+              {session ? `Data terhubung: ${session.user?.name}` : 'Login untuk melihat data asli'}
+            </p>
           </div>
           
-          {/* Tombol Filter */}
           <div style={{ display: 'flex', gap: '12px' }}>
               <div style={{ display: 'flex', backgroundColor: '#0f141f', borderRadius: '8px', padding: '4px', border: '1px solid #2d3748' }}>
                 <button onClick={() => setRtTimeframe('48h')} style={{ padding: '6px 16px', fontSize: '12px', fontWeight: 'bold', borderRadius: '6px', cursor: 'pointer', border: 'none', backgroundColor: rtTimeframe === '48h' ? '#059669' : 'transparent', color: rtTimeframe === '48h' ? 'white' : '#9ca3af' }}>48 Jam</button>
@@ -1043,12 +1071,13 @@ const handleAnalyzeAngles = async () => {
           <div style={{ flex: '1 1 60%', minWidth: '300px' }}>
             <div style={{ marginBottom: '16px' }}>
               <p style={{ fontSize: '36px', fontWeight: 'bold', color: 'white', margin: 0 }}>
-                {rtTimeframe === '48h' ? '1,248' : '36'}
+                {session ? Number(realViews).toLocaleString('id-ID') : (rtTimeframe === '48h' ? '1,248' : '36')}
               </p>
-              <p style={{ color: '#9ca3af', fontSize: '14px', margin: 0 }}>Penayangan • {rtTimeframe === '48h' ? '48 jam terakhir' : '60 menit terakhir'}</p>
+              <p style={{ color: '#10b981', fontSize: '14px', margin: 0, fontWeight: 'bold' }}>
+                 {session ? 'Total Penayangan Channel (Real Data)' : `Penayangan • ${rtTimeframe === '48h' ? '48 jam terakhir' : '60 menit terakhir'}`}
+              </p>
             </div>
             
-            {/* KUNCI UTAMA: Tinggi 300px agar grafik muncul! */}
             <div style={{ height: '300px', width: '100%' }}>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={
@@ -1058,11 +1087,7 @@ const handleAnalyzeAngles = async () => {
                 }>
                   <CartesianGrid strokeDasharray="3 3" stroke="#2d3748" vertical={false} />
                   <XAxis dataKey="time" stroke="#718096" fontSize={12} tickLine={false} axisLine={false} />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: '#1a202c', borderColor: '#2d3748', color: '#fff', borderRadius: '8px' }}
-                    itemStyle={{ color: '#10b981', fontWeight: 'bold' }}
-                  />
-                  {/* Animasi extra smooth */}
+                  <Tooltip contentStyle={{ backgroundColor: '#1a202c', borderColor: '#2d3748', color: '#fff', borderRadius: '8px' }} itemStyle={{ color: '#10b981', fontWeight: 'bold' }} />
                   <Line type="monotone" dataKey="views" stroke="#10b981" strokeWidth={4} dot={false} activeDot={{ r: 6, fill: '#10b981', stroke: '#fff' }} animationDuration={2000} />
                 </LineChart>
               </ResponsiveContainer>
@@ -1071,33 +1096,29 @@ const handleAnalyzeAngles = async () => {
 
           {/* Area Daftar Video Kanan */}
           <div style={{ flex: '1 1 30%', minWidth: '250px', backgroundColor: '#0f141f', borderRadius: '8px', border: '1px solid #2d3748', padding: '16px' }}>
-            <h3 style={{ fontSize: '14px', fontWeight: 'bold', color: '#d1d5db', marginBottom: '16px', borderBottom: '1px solid #2d3748', paddingBottom: '8px', margin: 0 }}>Konten Teratas</h3>
+            <h3 style={{ fontSize: '14px', fontWeight: 'bold', color: '#d1d5db', marginBottom: '16px', borderBottom: '1px solid #2d3748', paddingBottom: '8px', margin: 0 }}>
+              {session ? 'Video Terbaru Anda (Real)' : 'Konten Teratas'}
+            </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               
-              {/* Item Video 1 */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
-                  <div style={{ width: '48px', height: '32px', backgroundColor: '#374151', borderRadius: '4px', backgroundImage: 'linear-gradient(to top right, #6366f1, #a855f7)' }}></div>
-                  <p style={{ fontSize: '14px', color: '#e5e7eb', margin: 0, whiteSpace: 'nowrap' }}>Cara Memaksimalkan SEO...</p>
-                </div>
-                <span style={{ fontSize: '14px', fontWeight: 'bold', color: 'white' }}>{rtTimeframe === '48h' ? '542' : '18'}</span>
-              </div>
-
-              {/* Item Video 2 (Shorts) */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
-                  <div style={{ width: '24px', height: '42px', backgroundColor: '#374151', borderRadius: '4px', backgroundImage: 'linear-gradient(to top right, #10b981, #14b8a6)', position: 'relative' }}>
-                      <span style={{ position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(0,0,0,0.8)', fontSize: '8px', color: 'white', textAlign: 'center', padding: '1px', fontWeight: 'bold' }}>SHORTS</span>
-                  </div>
-                  <p style={{ fontSize: '14px', color: '#e5e7eb', margin: 0, whiteSpace: 'nowrap' }}>Trik Hook 3 Detik...</p>
-                </div>
-                <span style={{ fontSize: '14px', fontWeight: 'bold', color: 'white' }}>{rtTimeframe === '48h' ? '389' : '12'}</span>
-              </div>
+              {!session ? (
+                 <p style={{color: '#9ca3af', fontSize: '12px', textAlign: 'center', marginTop: '20px'}}>Silakan Login untuk melihat video asli Anda.</p>
+              ) : realVideos.length > 0 ? (
+                 realVideos.map((vid, idx) => (
+                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
+                        <img src={vid.snippet.thumbnails.default.url} style={{ width: '58px', height: '40px', borderRadius: '4px', objectFit: 'cover' }} alt="Thumb" />
+                        <p style={{ fontSize: '13px', color: '#e5e7eb', margin: 0, maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                          {vid.snippet.title}
+                        </p>
+                      </div>
+                    </div>
+                 ))
+              ) : (
+                 <p style={{color: '#9ca3af', fontSize: '12px'}}>Memuat video asli...</p>
+              )}
 
             </div>
-            <button style={{ width: '100%', marginTop: '24px', padding: '8px', fontSize: '12px', fontWeight: 'bold', color: '#818cf8', backgroundColor: 'transparent', border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '1px' }}>
-              Lihat Selengkapnya
-            </button>
           </div>
         </div>
       </div>
