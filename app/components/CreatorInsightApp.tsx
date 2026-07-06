@@ -247,6 +247,78 @@ export default function CreatorInsightApp() {
   const [liveChartData, setLiveChartData] = useState<any[]>([]);
   const [liveTotal, setLiveTotal] = useState(0);
 
+  // --- STATE UNTUK MESIN HIDDEN GEMS ---
+  const [hgQuery, setHgQuery] = useState('');
+  const [isHgLoading, setIsHgLoading] = useState(false);
+  const [hgData, setHgData] = useState<any[] | null>(null);
+// --- MESIN PENCARI HIDDEN GEMS (OUTLIER ALGORITHM) ---
+  const jalankanMesinGems = async () => {
+    if (!hgQuery || !session?.accessToken) return;
+    setIsHgLoading(true);
+    setHgData(null);
+
+    try {
+      // 1. Cari video relevan terbaru (Batas 15 video agar API tidak jebol)
+      const searchRes = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(hgQuery)}&type=video&maxResults=15&order=relevance`, {
+        headers: { Authorization: `Bearer ${session.accessToken}` }
+      });
+      const searchData = await searchRes.json();
+
+      if (searchData.items && searchData.items.length > 0) {
+        // Ekstrak ID Video dan ID Channel
+        const videoIds = searchData.items.map((item: any) => item.id.videoId).join(',');
+        const channelIds = searchData.items.map((item: any) => item.snippet.channelId).join(',');
+
+        // 2. Tarik statistik Video (Untuk dapat Views asli)
+        const videoRes = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${videoIds}`, {
+          headers: { Authorization: `Bearer ${session.accessToken}` }
+        });
+        const videoData = await videoRes.json();
+
+        // 3. Tarik statistik Channel (Untuk dapat jumlah Subscriber)
+        const channelRes = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${channelIds}`, {
+          headers: { Authorization: `Bearer ${session.accessToken}` }
+        });
+        const channelData = await channelRes.json();
+
+        // 4. Kalkulasi Anomali (Views vs Subs)
+        let outlierVideos: any[] = [];
+
+        searchData.items.forEach((item: any) => {
+          const vidStats = videoData.items?.find((v: any) => v.id === item.id.videoId)?.statistics;
+          const chanStats = channelData.items?.find((c: any) => c.id === item.snippet.channelId)?.statistics;
+
+          if (vidStats && chanStats) {
+            const views = Number(vidStats.viewCount || 0);
+            const subs = Number(chanStats.subscriberCount || 1); // minimal 1 agar tidak error dibagi 0
+            
+            // RUMUS GEMS: Berapa kali lipat views melampaui jumlah subs?
+            const multiplier = views / subs;
+
+            outlierVideos.push({
+              ...item,
+              views: views,
+              subs: subs,
+              multiplier: multiplier
+            });
+          }
+        });
+
+        // 5. Urutkan & Filter (Hanya tampilkan jika Views lebih besar dari Subs, minimal 1.5x lipat)
+        const realGems = outlierVideos
+          .filter(v => v.views > 1000 && v.multiplier > 1.5) 
+          .sort((a, b) => b.multiplier - a.multiplier);
+
+        setHgData(realGems);
+      } else {
+        setHgData([]);
+      }
+    } catch (err) {
+      console.error("Gagal melacak Hidden Gems:", err);
+    }
+    setIsHgLoading(false);
+  };
+
 
 // --- STATE UNTUK MESIN MENU RISET ---
   const [risetType, setRisetType] = useState('shorts'); // Default ke Shorts
@@ -1981,102 +2053,80 @@ function renderCompetitors() {
           </div>
         )}
         {/* ================= SELESAI TAB VPH & RISET ================= */}
-{/* Tampilan khusus untuk menu HIDDEN GEMS */}
-          {activeRisetMenu === 'hidden-gems' && (
-            <div style={{ background: '#1e293b', padding: '24px', borderRadius: '16px', border: '1px solid #334155', marginTop: '20px' }}>
-              <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#f8fafc', fontSize: '18px', marginBottom: '8px' }}>
-                💎 Pencari Harta Karun (Hidden Gems)
-              </h2>
-              <p style={{ color: '#94a3b8', marginBottom: '24px', fontSize: '14px', lineHeight: '1.6' }}>
-                Temukan video dari channel kecil yang tiba-tiba meledak. Ini menandakan topik atau thumbnail tersebut sangat disukai algoritma tanpa memandang jumlah subscriber!
-              </p>
 
-              {/* Kolom Pencarian Gems */}
-              <div style={{ display: 'flex', gap: '10px', marginBottom: '24px' }}>
-                <input 
-                  type="text" 
-                  value={gemsQuery}
-                  onChange={(e) => setGemsQuery(e.target.value)}
-                  placeholder="Ketik topik (contoh: budidaya lele)" 
-                  style={{ flex: 1, padding: '12px 16px', borderRadius: '8px', border: '1px solid #334155', background: '#0f172a', color: 'white' }}
-                />
-               <button 
-                  onClick={async () => {
-                    setIsGemsLoading(true);
-                    setGemsResults([]); 
-                    try {
-                      // Menembak ke mesin API Hidden Gems Asli
-                      const res = await fetch('/api/hidden-gems', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ query: gemsQuery })
-                      });
-                      const data = await res.json();
-                      
-                      if (data.success) {
-                        setGemsResults(data.result);
-                      } else {
-                        alert("Gagal menarik data: " + data.error);
-                      }
-                    } catch (error) {
-                      alert("Terjadi kesalahan jaringan saat memuat Hidden Gems.");
-                    }
-                    setIsGemsLoading(false);
-                  }}
-                  disabled={isGemsLoading || gemsQuery === ''}
-                  style={{ 
-                    padding: '12px 24px', borderRadius: '8px', border: 'none', 
-                    background: isGemsLoading || gemsQuery === '' ? '#64748b' : '#3b82f6', 
-                    color: 'white', fontWeight: 'bold', cursor: isGemsLoading || gemsQuery === '' ? 'not-allowed' : 'pointer' 
-                  }}>
-                  {isGemsLoading ? 'Mencari Harta Karun Asli...' : 'Cari Hidden Gems'}
-                </button>
-              </div>
+{/* ================= AWAL TAB HIDDEN GEMS ================= */}
+        {activeRisetMenu === 'hidden-gems' && (
+          <div style={{ backgroundColor: '#151b2b', borderRadius: '12px', padding: '24px', border: '1px solid #2d3748', marginTop: '16px', marginBottom: '32px' }}>
+            <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#f8fafc', fontSize: '18px', margin: '0 0 8px 0' }}>
+              💎 Pencari Harta Karun (Hidden Gems)
+            </h2>
+            <p style={{ color: '#94a3b8', marginBottom: '24px', fontSize: '14px', lineHeight: '1.6' }}>
+              Temukan video dari channel kecil yang tiba-tiba meledak (Views jauh lebih besar dari Subscriber). Topik ini sangat disukai algoritma YouTube!
+            </p>
 
-              {/* Wadah Tabel Gems */}
-              <div style={{ minHeight: '200px', display: 'flex', flexDirection: 'column', border: gemsResults.length > 0 ? 'none' : '2px dashed #334155', borderRadius: '8px', overflow: 'hidden' }}>
-                 {gemsResults.length === 0 ? (
-                   <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                     <p style={{ color: '#64748b' }}>Ketik kata kunci untuk mulai mencari video outlier.</p>
-                   </div>
-                 ) : (
-                   <table style={{ width: '100%', textAlign: 'left', color: 'white', borderCollapse: 'collapse' }}>
-                     <thead>
-                       <tr style={{ background: '#334155', borderBottom: '1px solid #475569' }}>
-                         <th style={{ padding: '12px' }}>Video Outlier</th>
-                         <th style={{ padding: '12px' }}>Views</th>
-                         <th style={{ padding: '12px' }}>Subs Channel</th>
-                         <th style={{ padding: '12px', color: '#fbbf24' }}>Skor Ledakan 🚀</th>
-                       </tr>
-                     </thead>
-                   <tbody>
-            {gemsResults.map((video: any, idx: number) => (
-              <tr key={idx} style={{ borderBottom: '1px solid #334155' }}>
-                <td style={{ padding: '12px', color: '#f8fafc' }}>
-                  <div style={{ marginBottom: '8px', lineHeight: '1.4' }}>{video.title}</div>
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    {video.type === 'SHORTS' ? (
-                      <span style={{ background: '#ef4444', color: 'white', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', letterSpacing: '0.5px' }}>⚡ SHORTS</span>
-                    ) : (
-                      <span style={{ background: '#3b82f6', color: 'white', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', letterSpacing: '0.5px' }}>🎬 LONG</span>
-                    )}
-                    <a href={`https://www.youtube.com/watch?v=${video.videoId}`} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#94a3b8', fontSize: '11px', textDecoration: 'none', border: '1px solid #334155', padding: '2px 8px', borderRadius: '4px', transition: 'all 0.2s' }} onMouseOver={(e) => e.currentTarget.style.color = 'white'} onMouseOut={(e) => e.currentTarget.style.color = '#94a3b8'}>
-                      ▶ Tonton Aslinya
-                    </a>
+            {/* KOTAK PENCARIAN GEMS */}
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '24px', flexWrap: 'wrap' }}>
+              <input
+                type="text"
+                value={hgQuery}
+                onChange={(e) => setHgQuery(e.target.value)}
+                placeholder="Ketik topik (contoh: vertical cities)..."
+                style={{ flex: '1 1 200px', padding: '12px 16px', borderRadius: '8px', border: '1px solid #2d3748', backgroundColor: '#0f141f', color: 'white', outline: 'none', fontSize: '14px' }}
+              />
+              <button
+                onClick={jalankanMesinGems}
+                disabled={isHgLoading || !hgQuery}
+                style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', backgroundColor: isHgLoading ? '#4b5563' : '#3b82f6', color: 'white', fontWeight: 'bold', cursor: isHgLoading ? 'not-allowed' : 'pointer' }}
+              >
+                {isHgLoading ? 'Melacak Anomali...' : 'Cari Harta Karun'}
+              </button>
+            </div>
+
+            {/* HASIL GEMS */}
+            {hgData && (
+              <div style={{ marginTop: '24px', borderTop: '1px solid #2d3748', paddingTop: '24px' }}>
+                {hgData.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '32px', border: '2px dashed #2d3748', borderRadius: '8px' }}>
+                     <p style={{ color: '#9ca3af', margin: 0 }}>Tidak ada anomali ekstrem (Hidden Gem) di kata kunci ini. Algoritma sedang normal. Coba topik lain!</p>
                   </div>
-                </td>
-                <td style={{ padding: '12px', color: '#4ade80' }}>{video.views}</td>
-                <td style={{ padding: '12px', color: '#94a3b8' }}>{video.subs}</td>
-                <td style={{ padding: '12px', color: '#fbbf24', fontWeight: 'bold' }}>{video.multiplier}</td>
-              </tr>
-            ))}
-         </tbody>
-        </table>
-      )}
-    </div>
-  </div>
-)}
-         
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    {hgData.map((vid: any, idx: number) => (
+                      <div key={idx} style={{ display: 'flex', gap: '16px', alignItems: 'center', backgroundColor: '#0f141f', padding: '16px', borderRadius: '8px', border: '1px solid #2d3748', position: 'relative', overflow: 'hidden' }}>
+                        
+                        {/* Label Badge Anomali */}
+                        <div style={{ position: 'absolute', top: '0', left: '0', backgroundColor: '#3b82f6', color: 'white', fontSize: '11px', fontWeight: 'bold', padding: '4px 12px', borderBottomRightRadius: '8px' }}>
+                          OUTLIER {vid.multiplier.toFixed(1)}x
+                        </div>
+
+                        <img src={vid.snippet?.thumbnails?.medium?.url || ''} style={{ width: '120px', height: '68px', objectFit: 'cover', borderRadius: '6px', marginTop: '12px' }} alt="Thumb" />
+                        
+                        <div style={{ flex: 1 }}>
+                          <p style={{ color: 'white', fontSize: '14px', margin: '0 0 6px 0', fontWeight: 'bold', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{vid.snippet?.title}</p>
+                          <p style={{ color: '#9ca3af', fontSize: '12px', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            👤 {vid.snippet?.channelTitle}
+                          </p>
+                        </div>
+
+                        {/* Statistik Ekstrem */}
+                        <div style={{ textAlign: 'right', minWidth: '100px' }}>
+                          <p style={{ color: '#10b981', fontSize: '18px', fontWeight: 'bold', margin: '0 0 4px 0' }}>
+                            {vid.views.toLocaleString('id-ID')} <span style={{fontSize: '10px', color: '#9ca3af', fontWeight: 'normal'}}>Views</span>
+                          </p>
+                          <p style={{ color: '#ef4444', fontSize: '12px', margin: 0, fontWeight: 'bold' }}>
+                            {vid.subs.toLocaleString('id-ID')} <span style={{fontSize: '10px', color: '#9ca3af', fontWeight: 'normal'}}>Subs</span>
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+        {/* ================= SELESAI TAB HIDDEN GEMS ================= */}
+
       
      {/* Tampilan khusus untuk menu INTAI KOMPETITOR */}
         {activeRisetMenu === 'intai' && (
