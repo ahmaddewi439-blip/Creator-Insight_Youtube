@@ -1038,13 +1038,13 @@ const handleAnalyzeAngles = async () => {
       const data = await fetchJson("/api/ai/optimize-video", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          video, 
-          videoFormat: "General YouTube Video",
-          duration: "Auto-detect",
-          language: "Indonesia/English Mix",
-          instruction: `CRITICAL: Judul asli video ini adalah "${originalTitle}". Tolong optimasi SEO untuk video ini agar lebih clickbait dan mudah ditemukan di pencarian. Berikan JSON (recommendedTitles, caption, description, keywords).`
-        })
+       body: JSON.stringify({
+            video,
+            videoFormat: "General YouTube Video",
+            duration: "Auto-detect",
+            language: "Indonesia/English Mix",
+            instruction: `CRITICAL: Judul asli video ini adalah "${originalTitle}". Bertindaklah sebagai Master SEO YouTube. Tugas Anda adalah merombak video ini dengan strategi "HIGH SEARCH VOLUME, LOW COMPETITION" (Pencarian Tinggi, Persaingan Rendah). JANGAN hanya asal clickbait! Gunakan Long-Tail Keywords (kata kunci spesifik 3-5 kata). Hasilkan: 1) Judul yang sangat ramah algoritma penelusuran tapi memicu klik tinggi. 2) Deskripsi yang padat kata kunci di 2 kalimat pertama. 3) Deretan Tags spesifik yang jarang ditargetkan kompetitor besar tapi sering diketik penonton.`
+          })
       });
      // Pastikan kita menangkap datanya, entah dibungkus "result", "data", atau tanpa bungkus
     const finalData = data?.result || data?.data || data;
@@ -1809,7 +1809,7 @@ async function fetchCompetitionScore(keyword: string) {
             </div>
           </div>
           
-          <div className="table-wrapper" style={{ width: '100%', overflowX: 'auto', paddingBottom: '10px' }}>
+          <div className="table-wrapper" style={{ width: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch', paddingBottom: '10px' }}>
   <table className="table" style={{ width: '100%', minWidth: '600px', whiteSpace: 'nowrap' }}>
               <thead><tr><th>#</th><th>Video</th><th>Views</th><th>Likes</th><th>Status</th><th>Aksi</th></tr></thead>
               <tbody>
