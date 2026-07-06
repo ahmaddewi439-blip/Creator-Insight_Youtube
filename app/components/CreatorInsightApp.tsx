@@ -1809,69 +1809,114 @@ async function fetchCompetitionScore(keyword: string) {
             </div>
           </div>
           
-          <div className="table-wrapper" style={{ width: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch', paddingBottom: '10px' }}>
-  <table className="table" style={{ width: '100%', minWidth: '600px', whiteSpace: 'nowrap' }}>
-              <thead><tr><th>#</th><th>Video</th><th>Views</th><th>Likes</th><th>Status</th><th>Aksi</th></tr></thead>
-              <tbody>
-                {sortedVideos.map((v, i) => {
-          const currentId = getVideoId(v);
-        const selectedId = getVideoId(selectedVideo);
-        
-        // Ambil judul dengan aman, pastikan tidak mengambil nilai kosong
-        const currentTitle = v?.snippet?.title || v?.title;
-        const selectedTitle = selectedVideo?.snippet?.title || selectedVideo?.title;
+         {/* ================================================= */}
+          {/* LAYOUT KARTU ALA VIDIQ (1/1 KE BAWAH) */}
+          {/* ================================================= */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '24px' }}>
+            
+            {sortedVideos.map((v: any, i: number) => {
+              const currentId = getVideoId(v);
+              const selectedId = getVideoId(selectedVideo);
+              const currentTitle = v?.snippet?.title || v?.title;
+              const selectedTitle = selectedVideo?.snippet?.title || selectedVideo?.title;
+              
+              // Logika Seleksi (Satpam Anti-Rabun)
+              const isSelected = selectedVideo ? (
+                (currentId && selectedId && currentId === selectedId) ||
+                (currentTitle && selectedTitle && currentTitle === selectedTitle)
+              ) : false;
 
-        // Satpam Super Ketat: Harus ada isinya (tidak kosong) DAN harus sama persis!
-        const isSelected = selectedVideo ? (
-            (currentId && selectedId && currentId === selectedId) || 
-            (currentTitle && selectedTitle && currentTitle === selectedTitle)
-        ) : false;
+              return (
+                <React.Fragment key={currentId || i}>
                   
-                  return (
-                    <React.Fragment key={getVideoId(v) || i}>
-                      <VideoRow video={v} index={i} onSelect={optimizeVideo} />
-                      {isSelected && (
-                        <tr>
-                          <td colSpan={6} style={{ padding: 0, backgroundColor: '#0f172a' }}>
-                            <div style={{ width: '100%', boxSizing: 'border-box', borderTop: '2px solid #3b82f6', borderBottom: '2px solid #3b82f6', padding: '16px', margin: '16px 0', borderRadius: '8px' }}>
-                              <h2 style={{ marginTop: 0, color: '#60a5fa', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <span>⚙️ Panel Optimasi AI SEO</span>
-                                <button className="btn ghost" onClick={() => setSelectedVideo(null)} style={{ padding: '6px 12px', fontSize: '12px', backgroundColor: '#1e293b', color: '#cbd5e1', border: 'none', borderRadius: '4px' }}>Tutup</button>
-                              </h2>
-                              {optimizer.loading && (
-                                <div style={{ padding: '40px 0', textAlign: 'center', color: '#3b82f6' }}>
-                                  ⏳ AI sedang mendeteksi bahasa & meracik formula SEO terbaik...
-                                </div>
-                              )}
-                              {optimizer.error && <div className="alert error">{optimizer.error}</div>}
-                              {optimizer.data && !optimizer.loading && selectedVideo?.id === v.id && (
-                                <>
-                                  <OptimizerResultView
-                                    result={optimizer.data}
-                                    onLivePreview={handleLivePreview}
-                                    originalVideo={v}
-                                />
-                                  {/* TOMBOL SIMPAN DITAMBAHKAN DI SINI */}
-                                  <div style={{ marginTop: '24px', borderTop: '1px solid #334155', paddingTop: '20px', display: 'flex', justifyContent: 'flex-end' }}>
-                                    <button
-    onClick={(e) => handleSaveToYouTube(e, v)}
-    style={{ /* ... style bawaan Anda jangan diubah ... */ }}
->
-    💾 Simpan Perubahan Video
-</button>
-                                  </div>
-                                </>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
+                  {/* 1. KARTU VIDEO (Menggantikan Baris Tabel) */}
+                  <div style={{ 
+                    display: 'flex', flexDirection: 'column', gap: '14px', 
+                    padding: '16px', borderRadius: '16px', 
+                    background: isSelected ? 'rgba(59, 130, 246, 0.08)' : 'rgba(255,255,255,0.03)', 
+                    border: isSelected ? '1px solid #3b82f6' : '1px solid var(--line)',
+                    transition: '0.2s ease'
+                  }}>
+                    
+                    {/* Bagian Atas: Thumbnail & Detail */}
+                    <div style={{ display: 'flex', gap: '14px' }}>
+                      <img 
+                        src={v?.snippet?.thumbnails?.medium?.url || v?.snippet?.thumbnails?.default?.url || ''} 
+                        style={{ width: '120px', height: '68px', borderRadius: '8px', objectFit: 'cover' }} 
+                        alt="thumbnail" 
+                      />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <h3 style={{ margin: '0 0 6px 0', fontSize: '14px', lineHeight: '1.4', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                          {currentTitle}
+                        </h3>
+                        <div style={{ display: 'flex', gap: '10px', fontSize: '12px', color: 'var(--muted)', flexWrap: 'wrap', alignItems: 'center' }}>
+                          <span>👁️ {Number(v?.statistics?.viewCount || 0).toLocaleString('id-ID')}</span>
+                          <span>👍 {Number(v?.statistics?.likeCount || 0).toLocaleString('id-ID')}</span>
+                          <span className={`status-pill ${v?.status?.privacyStatus === 'public' ? '' : 'red'}`} style={{ padding: '2px 8px', fontSize: '10px' }}>
+                            {v?.status?.privacyStatus === 'public' ? 'Published' : 'Private'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Bagian Bawah: Tombol Aksi */}
+                    <button 
+                      className="btn primary" 
+                      onClick={() => optimizeVideo(v)} 
+                      style={{ width: '100%', justifyContent: 'center' }}
+                    >
+                      {isSelected ? 'Tutup Panel ❌' : '⚡ Optimize AI'}
+                    </button>
+                  </div>
+
+                  {/* 2. PANEL HASIL OPTIMASI (Muncul Tepat di Bawah Kartu) */}
+                  {isSelected && (
+                    <div style={{ 
+                      padding: '20px', 
+                      backgroundColor: '#0f172a', 
+                      borderRadius: '16px', 
+                      border: '2px solid #3b82f6', 
+                      marginTop: '-8px', // Efek visual tersambung ke kartu atasnya
+                      marginBottom: '16px',
+                      boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)'
+                    }}>
+                      
+                      <h2 style={{ marginTop: 0, color: '#60a5fa', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span>⚙️ Panel Optimasi AI SEO</span>
+                      </h2>
+                      
+                      {optimizer.loading && (
+                        <div style={{ padding: '40px 0', textAlign: 'center', color: '#3b82f6' }}>
+                          ⏳ AI sedang meracik formula SEO...
+                        </div>
                       )}
-                    </React.Fragment>
-                  );
-                })}
-              </tbody>
-            </table>
+                      
+                      {optimizer.error && <div className="alert error">{optimizer.error}</div>}
+                      
+                      {optimizer.data && !optimizer.loading && (
+                        <>
+                          <OptimizerResultView 
+                            result={optimizer.data} 
+                            onLivePreview={handleLivePreview} 
+                            originalVideo={v} 
+                          />
+                          
+                          <div style={{ marginTop: '24px', borderTop: '1px solid #334155', paddingTop: '20px', display: 'flex', justifyContent: 'flex-end' }}>
+                            <button className="btn primary" onClick={(e) => handleSaveToYouTube(e, v)}>
+                              💾 Simpan ke YouTube
+                            </button>
+                          </div>
+                        </>
+                      )}
+                      
+                    </div>
+                  )}
+                  
+                </React.Fragment>
+              );
+            })}
           </div>
+          {/* ================================================= */}
         </div>
       </div>
     );
