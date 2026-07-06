@@ -212,8 +212,9 @@ function getVideoId(video: any) {
   // 4. Fallback terakhir
   return video.videoId || (typeof video.id === "string" ? video.id : "");
 }
- const { data: session, status } = useSession();
+ 
 export default function CreatorInsightApp() {
+  const { data: session, status } = useSession();
   const [konsultanQuery, setKonsultanQuery] = useState('');
   const [konsultanResult, setKonsultanResult] = useState<any>(null);
   const [isKonsultanLoading, setIsKonsultanLoading] = useState(false);
