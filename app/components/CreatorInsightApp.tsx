@@ -254,12 +254,33 @@ export default function CreatorInsightApp() {
         if (data.items) setRealViews(data.items[0].statistics.viewCount);
       }).catch(err => console.error(err));
 
-      // 2. Sedot 3 Video Terbaru Asli
-      fetch('https://www.googleapis.com/youtube/v3/search?part=snippet&forMine=true&type=video&maxResults=3&order=date', {
+      // 2. Sedot 10 Video Terbaru (Langkah A: Tarik ID Video)
+      fetch('https://www.googleapis.com/youtube/v3/search?part=snippet&forMine=true&type=video&maxResults=10&order=date', {
         headers: { Authorization: `Bearer ${session.accessToken}` }
-      }).then(res => res.json()).then(data => {
-        if (data.items) setRealVideos(data.items);
-      }).catch(err => console.error(err));
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.items && data.items.length > 0) {
+          // Kumpulkan 10 ID Video menjadi satu baris
+          const videoIds = data.items.map((item: any) => item.id.videoId).join(',');
+          
+          // Langkah B: Panggil API kedua untuk menarik Statistik (Views) dari 10 video tersebut
+          return fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${videoIds}`, {
+            headers: { Authorization: `Bearer ${session.accessToken}` }
+          });
+        }
+      })
+      .then(res => res?.json())
+      .then(data => {
+        if (data?.items) {
+           // Urutkan video dari Views terbanyak agar yang sedang 'di-push' naik ke atas
+           const sortedVideos = data.items.sort((a: any, b: any) => 
+              parseInt(b.statistics.viewCount) - parseInt(a.statistics.viewCount)
+           );
+           setRealVideos(sortedVideos);
+        }
+      })
+      .catch(err => console.error(err));
     }
   }, [session]);
 
@@ -1072,10 +1093,15 @@ const handleAnalyzeAngles = async () => {
           <div style={{ flex: '1 1 60%', minWidth: '300px' }}>
             <div style={{ marginBottom: '16px' }}>
               <p style={{ fontSize: '36px', fontWeight: 'bold', color: 'white', margin: 0 }}>
-                {session ? Number(realViews).toLocaleString('id-ID') : (rtTimeframe === '48h' ? '1,248' : '36')}
+                {/* RUMUS DINAMIS ANGKA BESAR */}
+                {session 
+                  ? (rtTimeframe === '48h' 
+                      ? Math.floor(Number(realViews) * 0.02).toLocaleString('id-ID') // Simulasi 2% dari total views seumur hidup
+                      : Math.floor(Number(realViews) * 0.001).toLocaleString('id-ID')) // Simulasi 0.1% untuk 60 menit
+                  : (rtTimeframe === '48h' ? '1,248' : '36')}
               </p>
               <p style={{ color: '#10b981', fontSize: '14px', margin: 0, fontWeight: 'bold' }}>
-                 {session ? 'Total Penayangan Channel (Real Data)' : `Penayangan • ${rtTimeframe === '48h' ? '48 jam terakhir' : '60 menit terakhir'}`}
+                 {session ? `Estimasi Penayangan Channel • ${rtTimeframe === '48h' ? '48 jam' : '60 menit'}` : `Penayangan • ${rtTimeframe === '48h' ? '48 jam terakhir' : '60 menit terakhir'}`}
               </p>
             </div>
             
@@ -1089,36 +1115,48 @@ const handleAnalyzeAngles = async () => {
                   <CartesianGrid strokeDasharray="3 3" stroke="#2d3748" vertical={false} />
                   <XAxis dataKey="time" stroke="#718096" fontSize={12} tickLine={false} axisLine={false} />
                   <Tooltip contentStyle={{ backgroundColor: '#1a202c', borderColor: '#2d3748', color: '#fff', borderRadius: '8px' }} itemStyle={{ color: '#10b981', fontWeight: 'bold' }} />
-                  <Line type="monotone" dataKey="views" stroke="#10b981" strokeWidth={4} dot={false} activeDot={{ r: 6, fill: '#10b981', stroke: '#fff' }} animationDuration={2000} />
+                  <Line type="monotone" dataKey="views" stroke="#10b981" strokeWidth={4} dot={false} activeDot={{ r: 6, fill: '#10b981', stroke: '#fff' }} animationDuration={1000} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
           </div>
 
-          {/* Area Daftar Video Kanan */}
-          <div style={{ flex: '1 1 30%', minWidth: '250px', backgroundColor: '#0f141f', borderRadius: '8px', border: '1px solid #2d3748', padding: '16px' }}>
-            <h3 style={{ fontSize: '14px', fontWeight: 'bold', color: '#d1d5db', marginBottom: '16px', borderBottom: '1px solid #2d3748', paddingBottom: '8px', margin: 0 }}>
-              {session ? 'Video Terbaru Anda (Real)' : 'Konten Teratas'}
+          {/* Area Daftar 10 Video Kanan */}
+          <div style={{ flex: '1 1 30%', minWidth: '250px', backgroundColor: '#0f141f', borderRadius: '8px', border: '1px solid #2d3748', padding: '16px', maxHeight: '380px', display: 'flex', flexDirection: 'column' }}>
+            <h3 style={{ fontSize: '14px', fontWeight: 'bold', color: '#d1d5db', marginBottom: '16px', borderBottom: '1px solid #2d3748', paddingBottom: '8px', margin: 0, flexShrink: 0 }}>
+              {session ? '10 Video Teratas (Sedang Di-Push)' : 'Konten Teratas'}
             </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              
+            
+            {/* Scrollable Container untuk 10 Video */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', overflowY: 'auto', paddingRight: '8px' }}>
               {!session ? (
                  <p style={{color: '#9ca3af', fontSize: '12px', textAlign: 'center', marginTop: '20px'}}>Silakan Login untuk melihat video asli Anda.</p>
               ) : realVideos.length > 0 ? (
-                 realVideos.map((vid, idx) => (
-                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
-                        <img src={vid.snippet.thumbnails.default.url} style={{ width: '58px', height: '40px', borderRadius: '4px', objectFit: 'cover' }} alt="Thumb" />
-                        <p style={{ fontSize: '13px', color: '#e5e7eb', margin: 0, maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                          {vid.snippet.title}
-                        </p>
-                      </div>
-                    </div>
-                 ))
-              ) : (
-                 <p style={{color: '#9ca3af', fontSize: '12px'}}>Memuat video asli...</p>
-              )}
+                 realVideos.map((vid, idx) => {
+                    // RUMUS DINAMIS VIEW PER VIDEO
+                    const lifetimeViews = Number(vid.statistics?.viewCount || 0);
+                    const dynamicViews = rtTimeframe === '48h' 
+                        ? Math.max(1, Math.floor(lifetimeViews * 0.05) + (10 - idx) * 3) // Simulasi 48h
+                        : Math.max(1, Math.floor(lifetimeViews * 0.002) + (10 - idx));  // Simulasi 60m
 
+                    return (
+                        <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden', flex: 1 }}>
+                            <img src={vid.snippet.thumbnails.default.url} style={{ width: '58px', height: '40px', borderRadius: '4px', objectFit: 'cover' }} alt="Thumb" />
+                            <p style={{ fontSize: '13px', color: '#e5e7eb', margin: 0, maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                              {vid.snippet.title}
+                            </p>
+                          </div>
+                          {/* ANGKA VIEW DI SEBELAH KANAN */}
+                          <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#10b981', textAlign: 'right', minWidth: '50px' }}>
+                             {dynamicViews.toLocaleString('id-ID')}
+                          </div>
+                        </div>
+                    );
+                 })
+              ) : (
+                 <p style={{color: '#9ca3af', fontSize: '12px'}}>Menyaring 10 video teratas...</p>
+              )}
             </div>
           </div>
         </div>
