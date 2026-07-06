@@ -1017,108 +1017,91 @@ const handleAnalyzeAngles = async () => {
             <div className="mini-score"><span className="muted">Viral Potential</span><br /><b>{viralScore || 0}</b><div className="status-pill">{viralScore >= 80 ? "Tinggi" : "Sedang"}</div></div>
           </div>
         </section>
-        {/* ================= MULAI KARTU REALTIME YOUTUBE STUDIO ================= */}
-        <div className="bg-[#151b2b] border border-gray-800 rounded-xl p-6 mb-6">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-            <div>
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-red-500 animate-pulse"></span>
-                Realtime
-              </h2>
-              <p className="text-gray-400 text-sm">Terus perbarui secara langsung</p>
-            </div>
-            
-            {/* Tombol Filter */}
-            <div className="flex flex-col sm:flex-row gap-3 mt-4 md:mt-0">
-              <div className="flex bg-[#0f141f] rounded-lg p-1 border border-gray-800">
-                <button onClick={() => setRtType('all')} className={`px-4 py-1.5 text-xs font-medium rounded-md transition-all ${rtType === 'all' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'}`}>Semua</button>
-                <button onClick={() => setRtType('long')} className={`px-4 py-1.5 text-xs font-medium rounded-md transition-all ${rtType === 'long' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'}`}>Video Long</button>
-                <button onClick={() => setRtType('shorts')} className={`px-4 py-1.5 text-xs font-medium rounded-md transition-all ${rtType === 'shorts' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'}`}>Shorts</button>
-              </div>
-              <div className="flex bg-[#0f141f] rounded-lg p-1 border border-gray-800">
-                <button onClick={() => setRtTimeframe('48h')} className={`px-4 py-1.5 text-xs font-medium rounded-md transition-all ${rtTimeframe === '48h' ? 'bg-emerald-600 text-white' : 'text-gray-400 hover:text-white'}`}>48 Jam</button>
-                <button onClick={() => setRtTimeframe('60m')} className={`px-4 py-1.5 text-xs font-medium rounded-md transition-all ${rtTimeframe === '60m' ? 'bg-emerald-600 text-white' : 'text-gray-400 hover:text-white'}`}>60 Menit</button>
-              </div>
-            </div>
+   {/* ================= MULAI KARTU REALTIME YOUTUBE STUDIO ================= */}
+      <div style={{ backgroundColor: '#151b2b', border: '1px solid #2d3748', borderRadius: '12px', padding: '24px', marginTop: '24px', marginBottom: '24px' }}>
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
+          <div>
+            <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: 'white', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+              <span style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: '#ef4444', boxShadow: '0 0 10px #ef4444' }}></span>
+              Realtime Analytics
+            </h2>
+            <p style={{ color: '#9ca3af', fontSize: '14px', margin: '4px 0 0 0' }}>Terus perbarui secara langsung</p>
           </div>
-
-          <div className="flex flex-col lg:flex-row gap-8">
-            {/* Area Grafik Kiri */}
-            <div className="flex-1">
-              <div className="mb-4">
-                <p className="text-4xl font-bold text-white">
-                  {rtTimeframe === '48h' ? '1,248' : '36'}
-                </p>
-                <p className="text-gray-400 text-sm">Penayangan • {rtTimeframe === '48h' ? '48 jam terakhir' : '60 menit terakhir'}</p>
+          
+          {/* Tombol Filter */}
+          <div style={{ display: 'flex', gap: '12px' }}>
+              <div style={{ display: 'flex', backgroundColor: '#0f141f', borderRadius: '8px', padding: '4px', border: '1px solid #2d3748' }}>
+                <button onClick={() => setRtTimeframe('48h')} style={{ padding: '6px 16px', fontSize: '12px', fontWeight: 'bold', borderRadius: '6px', cursor: 'pointer', border: 'none', backgroundColor: rtTimeframe === '48h' ? '#059669' : 'transparent', color: rtTimeframe === '48h' ? 'white' : '#9ca3af' }}>48 Jam</button>
+                <button onClick={() => setRtTimeframe('60m')} style={{ padding: '6px 16px', fontSize: '12px', fontWeight: 'bold', borderRadius: '6px', cursor: 'pointer', border: 'none', backgroundColor: rtTimeframe === '60m' ? '#059669' : 'transparent', color: rtTimeframe === '60m' ? 'white' : '#9ca3af' }}>60 Menit</button>
               </div>
-              
-              <div className="h-64 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={
-                    // Data simulasi agar grafik terlihat hidup
-                    rtTimeframe === '48h' 
-                    ? [...Array(24)].map((_, i) => ({ time: `${24-i}j`, views: Math.floor(Math.random() * 80) + 20 }))
-                    : [...Array(15)].map((_, i) => ({ time: `${60-(i*4)}m`, views: Math.floor(Math.random() * 10) + 1 }))
-                  }>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#2d3748" vertical={false} />
-                    <XAxis dataKey="time" stroke="#718096" fontSize={12} tickLine={false} axisLine={false} />
-                    <Tooltip 
-                      contentStyle={{ backgroundColor: '#1a202c', borderColor: '#2d3748', color: '#fff', borderRadius: '8px' }}
-                      itemStyle={{ color: '#10b981' }}
-                    />
-                    <Line type="monotone" dataKey="views" stroke="#10b981" strokeWidth={3} dot={false} activeDot={{ r: 6, fill: '#10b981', stroke: '#fff' }} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            {/* Area Daftar Video Kanan */}
-            <div className="w-full lg:w-1/3 bg-[#0f141f] rounded-lg border border-gray-800 p-4">
-              <h3 className="text-sm font-semibold text-gray-300 mb-4 border-b border-gray-800 pb-2">Konten Teratas</h3>
-              <div className="space-y-4">
-                
-                {/* Item Video 1 */}
-                <div className="flex justify-between items-center group cursor-pointer">
-                  <div className="flex items-center gap-3 overflow-hidden">
-                    <div className="w-12 h-8 bg-gray-700 rounded overflow-hidden flex-shrink-0 relative">
-                       <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500 to-purple-500 opacity-80"></div>
-                    </div>
-                    <p className="text-sm text-gray-200 truncate group-hover:text-indigo-400 transition-colors">Cara Memaksimalkan SEO YouTube 2026</p>
-                  </div>
-                  <span className="text-sm font-bold text-white flex-shrink-0 ml-2">{rtTimeframe === '48h' ? '542' : '18'}</span>
-                </div>
-
-                {/* Item Video 2 */}
-                <div className="flex justify-between items-center group cursor-pointer">
-                  <div className="flex items-center gap-3 overflow-hidden">
-                    <div className="w-8 h-12 bg-gray-700 rounded overflow-hidden flex-shrink-0 relative">
-                       <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500 to-teal-500 opacity-80"></div>
-                       <span className="absolute bottom-0 right-0 bg-black/80 text-[8px] font-bold px-1 text-white">SHORTS</span>
-                    </div>
-                    <p className="text-sm text-gray-200 truncate group-hover:text-indigo-400 transition-colors">Trik Hook 3 Detik Bikin Viral!</p>
-                  </div>
-                  <span className="text-sm font-bold text-white flex-shrink-0 ml-2">{rtTimeframe === '48h' ? '389' : '12'}</span>
-                </div>
-
-                {/* Item Video 3 */}
-                <div className="flex justify-between items-center group cursor-pointer">
-                  <div className="flex items-center gap-3 overflow-hidden">
-                    <div className="w-12 h-8 bg-gray-700 rounded overflow-hidden flex-shrink-0 relative">
-                       <div className="absolute inset-0 bg-gradient-to-tr from-blue-500 to-cyan-500 opacity-80"></div>
-                    </div>
-                    <p className="text-sm text-gray-200 truncate group-hover:text-indigo-400 transition-colors">Bongkar Algoritma Rekomendasi</p>
-                  </div>
-                  <span className="text-sm font-bold text-white flex-shrink-0 ml-2">{rtTimeframe === '48h' ? '215' : '4'}</span>
-                </div>
-
-              </div>
-              <button className="w-full mt-6 py-2 text-xs font-semibold text-indigo-400 hover:text-indigo-300 hover:bg-indigo-900/30 rounded transition-colors uppercase tracking-wider">
-                Lihat Selengkapnya
-              </button>
-            </div>
           </div>
         </div>
-        {/* ================= SELESAI KARTU REALTIME YOUTUBE STUDIO ================= */}
+
+        <div style={{ display: 'flex', gap: '32px', flexWrap: 'wrap' }}>
+          {/* Area Grafik Kiri */}
+          <div style={{ flex: '1 1 60%', minWidth: '300px' }}>
+            <div style={{ marginBottom: '16px' }}>
+              <p style={{ fontSize: '36px', fontWeight: 'bold', color: 'white', margin: 0 }}>
+                {rtTimeframe === '48h' ? '1,248' : '36'}
+              </p>
+              <p style={{ color: '#9ca3af', fontSize: '14px', margin: 0 }}>Penayangan • {rtTimeframe === '48h' ? '48 jam terakhir' : '60 menit terakhir'}</p>
+            </div>
+            
+            {/* KUNCI UTAMA: Tinggi 300px agar grafik muncul! */}
+            <div style={{ height: '300px', width: '100%' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={
+                  rtTimeframe === '48h' 
+                  ? [...Array(24)].map((_, i) => ({ time: `${24-i}j`, views: Math.floor(Math.random() * 80) + 20 }))
+                  : [...Array(15)].map((_, i) => ({ time: `${60-(i*4)}m`, views: Math.floor(Math.random() * 10) + 1 }))
+                }>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#2d3748" vertical={false} />
+                  <XAxis dataKey="time" stroke="#718096" fontSize={12} tickLine={false} axisLine={false} />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: '#1a202c', borderColor: '#2d3748', color: '#fff', borderRadius: '8px' }}
+                    itemStyle={{ color: '#10b981', fontWeight: 'bold' }}
+                  />
+                  {/* Animasi extra smooth */}
+                  <Line type="monotone" dataKey="views" stroke="#10b981" strokeWidth={4} dot={false} activeDot={{ r: 6, fill: '#10b981', stroke: '#fff' }} animationDuration={2000} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Area Daftar Video Kanan */}
+          <div style={{ flex: '1 1 30%', minWidth: '250px', backgroundColor: '#0f141f', borderRadius: '8px', border: '1px solid #2d3748', padding: '16px' }}>
+            <h3 style={{ fontSize: '14px', fontWeight: 'bold', color: '#d1d5db', marginBottom: '16px', borderBottom: '1px solid #2d3748', paddingBottom: '8px', margin: 0 }}>Konten Teratas</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              
+              {/* Item Video 1 */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
+                  <div style={{ width: '48px', height: '32px', backgroundColor: '#374151', borderRadius: '4px', backgroundImage: 'linear-gradient(to top right, #6366f1, #a855f7)' }}></div>
+                  <p style={{ fontSize: '14px', color: '#e5e7eb', margin: 0, whiteSpace: 'nowrap' }}>Cara Memaksimalkan SEO...</p>
+                </div>
+                <span style={{ fontSize: '14px', fontWeight: 'bold', color: 'white' }}>{rtTimeframe === '48h' ? '542' : '18'}</span>
+              </div>
+
+              {/* Item Video 2 (Shorts) */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
+                  <div style={{ width: '24px', height: '42px', backgroundColor: '#374151', borderRadius: '4px', backgroundImage: 'linear-gradient(to top right, #10b981, #14b8a6)', position: 'relative' }}>
+                      <span style={{ position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(0,0,0,0.8)', fontSize: '8px', color: 'white', textAlign: 'center', padding: '1px', fontWeight: 'bold' }}>SHORTS</span>
+                  </div>
+                  <p style={{ fontSize: '14px', color: '#e5e7eb', margin: 0, whiteSpace: 'nowrap' }}>Trik Hook 3 Detik...</p>
+                </div>
+                <span style={{ fontSize: '14px', fontWeight: 'bold', color: 'white' }}>{rtTimeframe === '48h' ? '389' : '12'}</span>
+              </div>
+
+            </div>
+            <button style={{ width: '100%', marginTop: '24px', padding: '8px', fontSize: '12px', fontWeight: 'bold', color: '#818cf8', backgroundColor: 'transparent', border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              Lihat Selengkapnya
+            </button>
+          </div>
+        </div>
+      </div>
+      {/* ================= SELESAI KARTU REALTIME YOUTUBE STUDIO ================= */}
         </div>
     );
   }
