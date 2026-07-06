@@ -243,7 +243,67 @@ export default function CreatorInsightApp() {
   
   const [realVideos, setRealVideos] = useState<any[]>([]);
   const [realViews, setRealViews] = useState<string>("...");
+// --- MESIN ANIMASI REALTIME ---
+  const [liveChartData, setLiveChartData] = useState<any[]>([]);
+  const [liveTotal, setLiveTotal] = useState(0);
 
+  useEffect(() => {
+    // Mesin ini akan menyala dan membuat grafik bergerak saat user membuka dasbor
+    const baseChannelViews = Number(realViews) > 0 ? Number(realViews) : 200; 
+    
+    const generateData = () => {
+      let newData: any[] = [];
+      let sum = 0;
+      const points = rtTimeframe === '48h' ? 24 : 15;
+      
+      // Rumus logis berdasar data asli: 48j = 5% dari total, 60m = 0.5% dari total
+      const maxPerPoint = rtTimeframe === '48h' 
+        ? Math.max(2, Math.ceil((baseChannelViews * 0.05) / 24)) 
+        : Math.max(1, Math.ceil((baseChannelViews * 0.005) / 15));
+
+      for(let i = points; i >= 1; i--) {
+        const val = Math.floor(Math.random() * maxPerPoint);
+        newData.push({ time: rtTimeframe === '48h' ? `${i}j` : `${i*4}m`, views: val });
+        sum += val;
+      }
+      setLiveChartData(newData);
+      setLiveTotal(sum);
+    };
+
+    generateData();
+
+    // TRIGGER ANIMASI BERGERAK TIAP 4 DETIK
+    const interval = setInterval(() => {
+      setLiveChartData(prev => {
+        if(!prev || prev.length === 0) return prev;
+        const newData = [...prev];
+        const maxPerPoint = rtTimeframe === '48h' 
+          ? Math.max(2, Math.ceil((baseChannelViews * 0.05) / 24)) 
+          : Math.max(1, Math.ceil((baseChannelViews * 0.005) / 15));
+        
+        const newVal = Math.floor(Math.random() * maxPerPoint);
+        
+        newData.shift(); // Buang titik grafik paling lama (kiri)
+        newData.push({ time: 'Now', views: newVal }); // Suntik titik baru (kanan)
+        
+        // Update label waktu & hitung ulang total tayangan
+        let newSum = 0;
+        const updatedData = newData.map((item, i) => {
+          newSum += item.views;
+          return {
+            ...item,
+            time: rtTimeframe === '48h' ? `${prev.length - i}j` : `${(prev.length - i)*4}m`
+          };
+        });
+        
+        setLiveTotal(newSum);
+        return updatedData;
+      });
+    }, 4000); 
+
+    return () => clearInterval(interval);
+  }, [rtTimeframe, realViews]);
+  // ------------------------------
   useEffect(() => {
     // Jika user sudah login dan punya tiket akses, tarik data aslinya!
     if (session?.accessToken) {
@@ -1066,13 +1126,13 @@ const handleAnalyzeAngles = async () => {
             <div className="mini-score"><span className="muted">Viral Potential</span><br /><b>{viralScore || 0}</b><div className="status-pill">{viralScore >= 80 ? "Tinggi" : "Sedang"}</div></div>
           </div>
         </section>
- {/* ================= MULAI KARTU REALTIME YOUTUBE STUDIO ================= */}
+        {/* ================= MULAI KARTU REALTIME YOUTUBE STUDIO ================= */}
       <div style={{ backgroundColor: '#151b2b', border: '1px solid #2d3748', borderRadius: '12px', padding: '24px', marginTop: '24px', marginBottom: '24px' }}>
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
           <div>
             <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: 'white', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
-              <span style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: '#ef4444', boxShadow: '0 0 10px #ef4444' }}></span>
+              <span style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: '#ef4444', boxShadow: '0 0 10px #ef4444', animation: 'pulse 2s infinite' }}></span>
               Realtime Analytics
             </h2>
             <p style={{ color: '#9ca3af', fontSize: '14px', margin: '4px 0 0 0' }}>
@@ -1092,13 +1152,8 @@ const handleAnalyzeAngles = async () => {
           {/* Area Grafik Kiri */}
           <div style={{ flex: '1 1 60%', minWidth: '300px' }}>
             <div style={{ marginBottom: '16px' }}>
-              <p style={{ fontSize: '36px', fontWeight: 'bold', color: 'white', margin: 0 }}>
-                {/* RUMUS DINAMIS ANGKA BESAR */}
-                {session 
-                  ? (rtTimeframe === '48h' 
-                      ? Math.floor(Number(realViews) * 0.02).toLocaleString('id-ID') // Simulasi 2% dari total views seumur hidup
-                      : Math.floor(Number(realViews) * 0.001).toLocaleString('id-ID')) // Simulasi 0.1% untuk 60 menit
-                  : (rtTimeframe === '48h' ? '1,248' : '36')}
+              <p style={{ fontSize: '42px', fontWeight: 'bold', color: 'white', margin: 0 }}>
+                {session ? liveTotal.toLocaleString('id-ID') : (rtTimeframe === '48h' ? '1,248' : '36')}
               </p>
               <p style={{ color: '#10b981', fontSize: '14px', margin: 0, fontWeight: 'bold' }}>
                  {session ? `Estimasi Penayangan Channel • ${rtTimeframe === '48h' ? '48 jam' : '60 menit'}` : `Penayangan • ${rtTimeframe === '48h' ? '48 jam terakhir' : '60 menit terakhir'}`}
@@ -1107,37 +1162,36 @@ const handleAnalyzeAngles = async () => {
             
             <div style={{ height: '300px', width: '100%' }}>
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={
-                  rtTimeframe === '48h' 
-                  ? [...Array(24)].map((_, i) => ({ time: `${24-i}j`, views: Math.floor(Math.random() * 80) + 20 }))
-                  : [...Array(15)].map((_, i) => ({ time: `${60-(i*4)}m`, views: Math.floor(Math.random() * 10) + 1 }))
-                }>
+                <LineChart data={liveChartData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#2d3748" vertical={false} />
                   <XAxis dataKey="time" stroke="#718096" fontSize={12} tickLine={false} axisLine={false} />
                   <Tooltip contentStyle={{ backgroundColor: '#1a202c', borderColor: '#2d3748', color: '#fff', borderRadius: '8px' }} itemStyle={{ color: '#10b981', fontWeight: 'bold' }} />
-                  <Line type="monotone" dataKey="views" stroke="#10b981" strokeWidth={4} dot={false} activeDot={{ r: 6, fill: '#10b981', stroke: '#fff' }} animationDuration={1000} />
+                  {/* Animasi pergeseran line chart ada di isAnimationActive */}
+                  <Line type="monotone" dataKey="views" stroke="#10b981" strokeWidth={4} dot={false} activeDot={{ r: 6, fill: '#10b981', stroke: '#fff' }} isAnimationActive={false} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
           </div>
 
           {/* Area Daftar 10 Video Kanan */}
-          <div style={{ flex: '1 1 30%', minWidth: '250px', backgroundColor: '#0f141f', borderRadius: '8px', border: '1px solid #2d3748', padding: '16px', maxHeight: '380px', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ flex: '1 1 30%', minWidth: '250px', backgroundColor: '#0f141f', borderRadius: '8px', border: '1px solid #2d3748', padding: '16px', maxHeight: '420px', display: 'flex', flexDirection: 'column' }}>
             <h3 style={{ fontSize: '14px', fontWeight: 'bold', color: '#d1d5db', marginBottom: '16px', borderBottom: '1px solid #2d3748', paddingBottom: '8px', margin: 0, flexShrink: 0 }}>
               {session ? '10 Video Teratas (Sedang Di-Push)' : 'Konten Teratas'}
             </h3>
             
-            {/* Scrollable Container untuk 10 Video */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', overflowY: 'auto', paddingRight: '8px' }}>
               {!session ? (
                  <p style={{color: '#9ca3af', fontSize: '12px', textAlign: 'center', marginTop: '20px'}}>Silakan Login untuk melihat video asli Anda.</p>
               ) : realVideos.length > 0 ? (
                  realVideos.map((vid, idx) => {
-                    // RUMUS DINAMIS VIEW PER VIDEO
                     const lifetimeViews = Number(vid.statistics?.viewCount || 0);
-                    const dynamicViews = rtTimeframe === '48h' 
-                        ? Math.max(1, Math.floor(lifetimeViews * 0.05) + (10 - idx) * 3) // Simulasi 48h
-                        : Math.max(1, Math.floor(lifetimeViews * 0.002) + (10 - idx));  // Simulasi 60m
+                    // Hitungan logis agar view tidak 0 dan merefleksikan pertumbuhan aslinya
+                    let dynamicViews = rtTimeframe === '48h' 
+                        ? Math.max(1, Math.ceil(lifetimeViews * 0.05)) 
+                        : Math.max(0, Math.ceil(lifetimeViews * 0.005));
+                    
+                    // Efek Live: Video yang ada di ranking atas sesekali mendapat +1 view saat layar terbuka
+                    if (idx < 3 && Math.random() > 0.7) dynamicViews += 1;
 
                     return (
                         <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1147,15 +1201,14 @@ const handleAnalyzeAngles = async () => {
                               {vid.snippet.title}
                             </p>
                           </div>
-                          {/* ANGKA VIEW DI SEBELAH KANAN */}
-                          <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#10b981', textAlign: 'right', minWidth: '50px' }}>
+                          <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#fff', textAlign: 'right', minWidth: '40px' }}>
                              {dynamicViews.toLocaleString('id-ID')}
                           </div>
                         </div>
                     );
                  })
               ) : (
-                 <p style={{color: '#9ca3af', fontSize: '12px'}}>Menyaring 10 video teratas...</p>
+                 <p style={{color: '#9ca3af', fontSize: '12px'}}>Memuat video...</p>
               )}
             </div>
           </div>
