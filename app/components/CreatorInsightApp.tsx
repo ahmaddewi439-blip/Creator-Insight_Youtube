@@ -247,16 +247,20 @@ export default function CreatorInsightApp() {
   const [liveChartData, setLiveChartData] = useState<any[]>([]);
   const [liveTotal, setLiveTotal] = useState(0);
 // ==========================================
-  // --- JEMBATAN AI (MISI B) ---
-  const [judulCurian, setJudulCurian] = useState('');
-
+  // ==========================================
+  // --- JEMBATAN AI (MISI B - KE SUTRADARA) ---
   const eksekusiKeOptimasi = (judul: string) => {
-    setJudulCurian(judul); // Simpan judul target
-    setActive('optimizer'); // Teleportasi otomatis ke tab Optimasi!
-    window.scrollTo({ top: 0, behavior: 'smooth' }); // Gulir layar ke atas
+    
+    // 1. Suntikkan judul curian langsung ke kotak "Topik Dasar" Sutradara
+    setDirectorTopic(judul); 
+
+    // 2. Teleportasi ke tab Sutradara
+    setActive('roblox'); 
+    
+    // 3. Gulir layar ke paling atas dengan mulus
+    window.scrollTo({ top: 0, behavior: 'smooth' }); 
   };
   // ==========================================
-
   // --- STATE UNTUK MESIN HIDDEN GEMS ---
   const [hgQuery, setHgQuery] = useState('');
   const [isHgLoading, setIsHgLoading] = useState(false);
