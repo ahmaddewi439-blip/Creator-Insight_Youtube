@@ -10,10 +10,16 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="id">
-      <body>
-        <Providers>
-          {children}
-        </Providers>
+      {/* Kunci Lapis 1: Body */}
+      <body style={{ margin: 0, padding: 0, overflowX: "hidden", width: "100%", maxWidth: "100vw" }}>
+        
+        {/* Kunci Lapis 2: WADAH BAJA ANTI-BOCOR (MENGUNCI LAYAR HP 100%) */}
+        <div style={{ width: "100%", maxWidth: "100vw", overflowX: "hidden", position: "relative" }}>
+          <Providers>
+            {children}
+          </Providers>
+        </div>
+
       </body>
     </html>
   );
