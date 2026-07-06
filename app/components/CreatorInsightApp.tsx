@@ -186,14 +186,14 @@ function LoginScreen() {
         <div>
           <div className="logo" style={{ marginBottom: 18 }}>
             <div className="logo-badge">▶</div>
-            <div>Creator Insight<small>YouTube Analyzer</small></div>
+            <div>Creator Insight For Your Chanel<small>YouTube Analyzer</small></div>
           </div>
-          <h1>Tool Pribadi Untuk Analisis YouTube dan Membuat Video Shorts Dan Video Long.</h1>
+          <h1>All-in-One YouTube Analyzer & AI Creator</h1>
           <p className="muted" style={{ fontSize: 17, lineHeight: 1.6 }}>
-            Login Channel YouTube Anda, Optimasi Video, Cek kompetitor, lalu generate paket Video Shorts lengkap Serta Video Panjang: hook 3 detik, VO natural, 5 scene, prompt gambar, arahan gameplay, caption, deskripsi, hashtag, dan CTA kuat.
+            Solusi cerdas untuk meriset kompetitor, optimasi SEO, hingga menghasilkan skrip video dan Shorts berkinerja tinggi. Dapatkan struktur konten komplit berbasis data dalam hitungan detik.
           </p>
           <div className="form-row" style={{ marginTop: 22 }}>
-            <button className="btn primary" onClick={() => signIn("google")}>Login Channel YouTube</button>
+            <button className="btn primary" onClick={() => signIn("google")}>🔥 Masuk & Riset Sekarang</button>
           </div>
         </div>
       </section>
@@ -280,7 +280,7 @@ export default function CreatorInsightApp() {
     selectedKeyword, chartTrendData, chartTrendTimeframe
   ]); 
   // =================================================================
-  
+
   // Fungsi untuk menyedot data saat kata kunci diklik
   const fetchTrend = async (keyword: string, time: string) => {
     setSelectedKeyword(keyword);
