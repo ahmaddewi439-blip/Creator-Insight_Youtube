@@ -246,6 +246,16 @@ export default function CreatorInsightApp() {
 // --- MESIN ANIMASI REALTIME ---
   const [liveChartData, setLiveChartData] = useState<any[]>([]);
   const [liveTotal, setLiveTotal] = useState(0);
+// ==========================================
+  // --- JEMBATAN AI (MISI B) ---
+  const [judulCurian, setJudulCurian] = useState('');
+
+  const eksekusiKeOptimasi = (judul: string) => {
+    setJudulCurian(judul); // Simpan judul target
+    setActive('optimizer'); // Teleportasi otomatis ke tab Optimasi!
+    window.scrollTo({ top: 0, behavior: 'smooth' }); // Gulir layar ke atas
+  };
+  // ==========================================
 
   // --- STATE UNTUK MESIN HIDDEN GEMS ---
   const [hgQuery, setHgQuery] = useState('');
@@ -2106,6 +2116,15 @@ function renderCompetitors() {
                           <p style={{ color: '#9ca3af', fontSize: '12px', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
                             👤 {vid.snippet?.channelTitle}
                           </p>
+                          {/* TOMBOL TELEPORTASI AI */}
+                        <div style={{ marginTop: '8px' }}>
+                          <button
+                            onClick={() => eksekusiKeOptimasi(vid.snippet?.title)}
+                            style={{ padding: '6px 12px', backgroundColor: '#10b981', border: 'none', color: 'white', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                          >
+                            ⚡ Curi & Eksekusi AI
+                          </button>
+                        </div>
                         </div>
 
                         {/* Statistik Ekstrem */}
