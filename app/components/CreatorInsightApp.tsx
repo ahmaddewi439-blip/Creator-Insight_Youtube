@@ -247,6 +247,79 @@ export default function CreatorInsightApp() {
   const [liveChartData, setLiveChartData] = useState<any[]>([]);
   const [liveTotal, setLiveTotal] = useState(0);
 
+
+// --- STATE UNTUK MESIN MENU RISET ---
+  const [risetType, setRisetType] = useState('shorts'); // Default ke Shorts
+  const [risetQuery, setRisetQuery] = useState('');
+  const [isRisetLoading, setIsRisetLoading] = useState(false);
+  const [risetData, setRisetData] = useState<any>(null);
+  // ------------------------------------
+
+  // --- MESIN PENCARI DATA PASAR YOUTUBE (RADAR VPH & KATA KUNCI) ---
+  const jalankanRisetMesin = async () => {
+    if (!risetQuery || !session?.accessToken) return;
+    setIsRisetLoading(true);
+    setRisetData(null);
+
+    try {
+      // 1. Tentukan filter durasi (Shorts < 4 menit, Long > 4 menit)
+      const durasiParam = risetType === 'shorts' ? 'short' : 'medium'; 
+      
+      // 2. Tarik video kompetitor teratas yang membidik kata kunci ini
+      const searchRes = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(risetQuery)}&type=video&videoDuration=${durasiParam}&maxResults=10&order=relevance`, {
+        headers: { Authorization: `Bearer ${session.accessToken}` }
+      });
+      const searchData = await searchRes.json();
+
+      if (searchData.items && searchData.items.length > 0) {
+        // Ambil ID video untuk ditarik statistiknya
+        const videoIds = searchData.items.map((item: any) => item.id.videoId).join(',');
+        
+        const statsRes = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=statistics,snippet&id=${videoIds}`, {
+          headers: { Authorization: `Bearer ${session.accessToken}` }
+        });
+        const statsData = await statsRes.json();
+
+        // 3. Kalkulasi VPH (Views Per Hour) dan Momentum
+        let totalVph = 0;
+        const processedVideos = statsData.items.map((vid: any) => {
+          const publishedAt = new Date(vid.snippet.publishedAt);
+          const now = new Date();
+          // Hitung umur video dalam jam
+          const hoursDiff = Math.max(1, Math.abs(now.getTime() - publishedAt.getTime()) / 36e5);
+          const views = Number(vid.statistics.viewCount || 0);
+          const vph = Math.floor(views / hoursDiff);
+          totalVph += vph;
+          
+          return { ...vid, vph };
+        }).sort((a: any, b: any) => b.vph - a.vph); // Urutkan dari VPH tertinggi
+
+        const avgVph = Math.floor(totalVph / processedVideos.length);
+        const totalCompetitors = searchData.pageInfo?.totalResults || 0;
+
+        // 4. RUMUS SKOR SEO (Blue Ocean vs Red Ocean)
+        let skor = 50; 
+        if (avgVph > 500 && totalCompetitors < 500000) skor = 95; // Permintaan tinggi, saingan dikit!
+        else if (avgVph > 1000) skor = 85; 
+        else if (totalCompetitors > 1000000 && avgVph < 100) skor = 35; // Terlalu banyak saingan, views seret
+        else if (avgVph > 100) skor = 70;
+
+        setRisetData({
+          skor: skor,
+          avgVph: avgVph,
+          totalCompetitors: totalCompetitors,
+          videos: processedVideos
+        });
+      } else {
+        setRisetData({ skor: 0, avgVph: 0, totalCompetitors: 0, videos: [] });
+      }
+    } catch (err) {
+      console.error("Gagal menarik data riset:", err);
+    }
+    setIsRisetLoading(false);
+  };
+  // ------------------------------------------------------------------
+
   useEffect(() => {
     // Mesin ini akan menyala dan membuat grafik bergerak saat user membuka dasbor
     const baseChannelViews = Number(realViews) > 0 ? Number(realViews) : 200; 
@@ -1819,84 +1892,95 @@ function renderCompetitors() {
           {/* --- AKHIR MENU KAPSUL --- */}
           {/* --- AREA KONTEN DINAMIS BERDASARKAN MENU YANG DIKLIK --- */}
           
-          {/* Tampilan khusus untuk menu VPH RISET */}
-          {activeRisetMenu === 'vph' && (
-            <div style={{ background: '#1e293b', padding: '24px', borderRadius: '16px', border: '1px solid #334155', marginTop: '20px' }}>
-              <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>
-                🔥 Top Performers - VPH Riset
-              </h2>
-                  
-              {/* Kolom Pencarian VPH */}
-              <div style={{ display: 'flex', gap: '10px', marginBottom: '24px' }}>
-                <input 
-                  type="text" 
-                  value={vphQuery}
-                  onChange={(e) => setVphQuery(e.target.value)}
-                  placeholder="Ketik kata kunci (contoh: cara membuat pakan unggas)" 
-                  style={{ flex: 1, padding: '12px 16px', borderRadius: '8px', border: '1px solid #334155', background: '#0f172a', color: 'white' }}
-                />
-         <button 
-                  onClick={async () => {
-                    setIsVphLoading(true);
-                    setVphResults([]); // Mengosongkan tabel sebelum mencari
-                    try {
-                      // Menembak ke mesin API yang baru Anda buat
-                      const res = await fetch('/api/vph', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ query: vphQuery })
-                      });
-                      const data = await res.json();
-                      
-                      if (data.success) {
-                        setVphResults(data.result);
-                      } else {
-                        alert("Gagal menarik data: " + data.error);
-                      }
-                    } catch (error) {
-                      alert("Terjadi kesalahan. Pastikan API Key benar.");
-                    }
-                    setIsVphLoading(false);
-                  }}
-                  disabled={isVphLoading || vphQuery === ''}
-                  style={{ 
-                    padding: '12px 24px', borderRadius: '8px', border: 'none', 
-                    background: isVphLoading || vphQuery === '' ? '#64748b' : '#dc2626', 
-                    color: 'white', fontWeight: 'bold', cursor: isVphLoading || vphQuery === '' ? 'not-allowed' : 'pointer' 
-                  }}>
-                  {isVphLoading ? 'Mencari Data Asli...' : 'Riset Sekarang'}
-                </button>
-              </div>
+     {/* ================= AWAL TAB VPH & RISET KATA KUNCI ================= */}
+        {activeRisetMenu === 'vph' && (
+          <div style={{ backgroundColor: '#151b2b', borderRadius: '12px', padding: '24px', border: '1px solid #2d3748', marginTop: '16px', marginBottom: '32px' }}>
+            <h3 style={{ color: 'white', fontSize: '18px', margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              🔥 Radar VPH & Analisa Kata Kunci
+            </h3>
 
-              {/* Wadah Tabel VPH */}
-              <div style={{ minHeight: '200px', display: 'flex', flexDirection: 'column', border: vphResults.length > 0 ? 'none' : '2px dashed #334155', borderRadius: '8px', overflow: 'hidden' }}>
-                 {vphResults.length === 0 ? (
-                   <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                     <p style={{ color: '#64748b' }}>Ketik kata kunci dan klik Riset untuk melihat data kompetitor.</p>
-                   </div>
-                 ) : (
-                   <table style={{ width: '100%', textAlign: 'left', color: 'white', borderCollapse: 'collapse' }}>
-                     <thead>
-                       <tr style={{ background: '#334155', borderBottom: '1px solid #475569' }}>
-                         <th style={{ padding: '12px' }}>Video</th>
-                         <th style={{ padding: '12px' }}>VPH 📈</th>
-                         <th style={{ padding: '12px' }}>Total Views</th>
-                       </tr>
-                     </thead>
-                     <tbody>
-                       {vphResults.map((video, idx) => (
-                         <tr key={idx} style={{ borderBottom: '1px solid #334155' }}>
-                           <td style={{ padding: '12px' }}>{video.title}</td>
-                           <td style={{ padding: '12px', color: '#4ade80', fontWeight: 'bold' }}>{video.vph}/h</td>
-                           <td style={{ padding: '12px' }}>{video.views}</td>
-                         </tr>
-                       ))}
-                     </tbody>
-                  </table>
-           )}
-        </div>
-      </div>
-    )}
+            {/* 1. SAKLAR SHORTS VS LONG VIDEO */}
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+              <button 
+                onClick={() => setRisetType('shorts')}
+                style={{ flex: 1, padding: '10px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', border: risetType === 'shorts' ? '1px solid #ef4444' : '1px solid #2d3748', backgroundColor: risetType === 'shorts' ? 'rgba(239, 68, 68, 0.2)' : '#0f141f', color: risetType === 'shorts' ? '#ef4444' : '#9ca3af' }}>
+                📱 YouTube Shorts
+              </button>
+              <button 
+                onClick={() => setRisetType('long')}
+                style={{ flex: 1, padding: '10px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', border: risetType === 'long' ? '1px solid #3b82f6' : '1px solid #2d3748', backgroundColor: risetType === 'long' ? 'rgba(59, 130, 246, 0.2)' : '#0f141f', color: risetType === 'long' ? '#3b82f6' : '#9ca3af' }}>
+                🖥️ Long Video
+              </button>
+            </div>
+
+            {/* 2. KOTAK PENCARIAN */}
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+              <input 
+                type="text" 
+                placeholder="Ketik ide konten... (cth: Robot AI 2050)" 
+                value={risetQuery}
+                onChange={(e) => setRisetQuery(e.target.value)}
+                style={{ flex: '1 1 200px', padding: '12px 16px', borderRadius: '8px', backgroundColor: '#0f141f', border: '1px solid #2d3748', color: 'white', fontSize: '14px', outline: 'none' }}
+              />
+              <button 
+                onClick={jalankanRisetMesin}
+                disabled={isRisetLoading || !risetQuery}
+                style={{ padding: '12px 24px', borderRadius: '8px', backgroundColor: isRisetLoading ? '#4b5563' : '#10b981', color: 'white', fontWeight: 'bold', border: 'none', cursor: isRisetLoading ? 'not-allowed' : 'pointer' }}>
+                {isRisetLoading ? 'Menyortir Data...' : 'Riset Sekarang'}
+              </button>
+            </div>
+
+            {/* 3. HASIL SKOR & DATA KOMPETITOR */}
+            {risetData && (
+              <div style={{ marginTop: '24px', borderTop: '1px solid #2d3748', paddingTop: '24px' }}>
+                {/* Skor Head-to-Head */}
+                <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', marginBottom: '24px' }}>
+                  <div style={{ backgroundColor: '#0f141f', padding: '16px', borderRadius: '8px', border: '1px solid #2d3748', textAlign: 'center', minWidth: '120px' }}>
+                    <p style={{ color: '#9ca3af', fontSize: '12px', margin: '0 0 8px 0' }}>Skor Keseluruhan</p>
+                    <h1 style={{ margin: 0, fontSize: '36px', color: risetData.skor >= 70 ? '#10b981' : (risetData.skor >= 40 ? '#f59e0b' : '#ef4444') }}>
+                      {risetData.skor}/100
+                    </h1>
+                    <p style={{ color: risetData.skor >= 70 ? '#10b981' : '#f59e0b', fontSize: '12px', margin: '4px 0 0 0', fontWeight: 'bold' }}>
+                      {risetData.skor >= 70 ? '🔥 Harta Karun!' : 'Cukup Sulit'}
+                    </p>
+                  </div>
+                  
+                  <div style={{ backgroundColor: '#0f141f', padding: '16px', borderRadius: '8px', border: '1px solid #2d3748', flex: 1, display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
+                    <div style={{ textAlign: 'center' }}>
+                      <p style={{ color: '#9ca3af', fontSize: '12px', margin: '0 0 4px 0' }}>Rata-rata VPH Saingan</p>
+                      <p style={{ color: 'white', fontSize: '20px', fontWeight: 'bold', margin: 0 }}>{risetData.avgVph.toLocaleString('id-ID')} <span style={{fontSize:'12px', color:'#9ca3af'}}>/ jam</span></p>
+                    </div>
+                    <div style={{ width: '1px', height: '40px', backgroundColor: '#2d3748' }}></div>
+                    <div style={{ textAlign: 'center' }}>
+                      <p style={{ color: '#9ca3af', fontSize: '12px', margin: '0 0 4px 0' }}>Volume Pencarian</p>
+                      <p style={{ color: 'white', fontSize: '20px', fontWeight: 'bold', margin: 0 }}>{risetData.totalCompetitors > 1000000 ? 'Tinggi' : 'Sedang'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Daftar Kompetitor Teratas */}
+                <h4 style={{ color: '#d1d5db', fontSize: '14px', marginBottom: '12px' }}>Intai Top 10 Kompetitor Teratas Saat Ini:</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {risetData.videos.map((vid: any, idx: number) => (
+                    <div key={idx} style={{ display: 'flex', gap: '12px', alignItems: 'center', backgroundColor: '#0f141f', padding: '12px', borderRadius: '8px', border: '1px solid #2d3748' }}>
+                      <span style={{ color: '#6b7280', fontWeight: 'bold', width: '20px' }}>{idx + 1}</span>
+                      <img src={vid.snippet?.thumbnails?.default?.url || ''} style={{ width: risetType === 'shorts' ? '40px' : '80px', height: risetType === 'shorts' ? '60px' : '45px', objectFit: 'cover', borderRadius: '4px' }} alt="Thumb" />
+                      <div style={{ flex: 1, overflow: 'hidden' }}>
+                        <p style={{ color: 'white', fontSize: '13px', margin: '0 0 4px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{vid.snippet?.title}</p>
+                        <p style={{ color: '#9ca3af', fontSize: '11px', margin: 0 }}>{vid.snippet?.channelTitle}</p>
+                      </div>
+                      <div style={{ textAlign: 'right', minWidth: '70px' }}>
+                        <p style={{ color: '#10b981', fontSize: '14px', fontWeight: 'bold', margin: 0 }}>{vid.vph} <span style={{fontSize:'10px'}}>VPH</span></p>
+                        <p style={{ color: '#9ca3af', fontSize: '10px', margin: 0 }}>{Number(vid.statistics?.viewCount || 0).toLocaleString('id-ID')} views</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+        {/* ================= SELESAI TAB VPH & RISET ================= */}
 {/* Tampilan khusus untuk menu HIDDEN GEMS */}
           {activeRisetMenu === 'hidden-gems' && (
             <div style={{ background: '#1e293b', padding: '24px', borderRadius: '16px', border: '1px solid #334155', marginTop: '20px' }}>
