@@ -39,7 +39,8 @@ ATURAN WAKTU DAN JUMLAH KATA SANGAT KETAT (SYARAT MUTLAK):
     - Jika Niche SELAIN Gaming/Review (seperti Edukasi, Sejarah, Misteri): Sediakan "imagePrompt" dan "videoPrompt" berbahasa INGGRIS yang sangat detail, realistis, dan dramatis untuk SEMUA SCENE agar bisa di-generate oleh AI (Grok/Midjourney).
 12. KESESUAIAN NASKAH (SYARAT MUTLAK): Keempat (4) naskah video yang kamu buat HARUS 100% terikat dan fokus membahas 'Topik Spesifik' yang diminta di atas. DILARANG KERAS membuat naskah generik, melakukan auto-koreksi, atau melenceng ke topik lain (seperti robot/AI mengambil alih pekerjaan). Gunakan subjek/kata benda secara mentah-mentah sesuai input!
 Berikan hasil DALAM FORMAT JSON ARRAY murni yang berisi tepat 4 objek video. Struktur persis seperti ini:
-
+13. KUNCI KONTEKS NICHE (SANGAT FATAL): Niche channel ini adalah "${niche}". Kamu WAJIB menafsirkan Judul dan Topik murni dari kacamata niche ini! Jika niche yang dipilih adalah "Science & Tech", maka subjek apa pun di dalam topik (meskipun namanya mirip game, film, atau hewan) HARUS dibahas sebagai Teknologi, Software, AI, atau Sains. DILARANG KERAS membahasnya sebagai Video Game Fantasi/RPG kecuali niche-nya memang "Gaming"!
+14. VARIASI MULTIPLIKASI (DILARANG REPETITIF): Ke-4 naskah video (Shorts 1, 2, 3, dan 4) HARUS memiliki alur cerita, hook (kalimat pembuka), visual action, dan image/video prompt yang BERBEDA TOTAL SATU SAMA LAIN. Jangan malas! Jangan mengulang adegan, deskripsi, atau struktur kalimat yang sama di naskah yang berbeda. Berikan 4 sudut pandang (angle) kreatif yang unik untuk topik yang sama!
 [
   {
     "title": "Judul Konsep Video",

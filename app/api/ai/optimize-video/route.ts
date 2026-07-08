@@ -43,7 +43,9 @@ ATURAN KETAT ANALISA & PENULISAN (WAJIB DIIKUTI):
    - [Paragraf 4: Hashtag] Berikan TEPAT 3 sampai 5 hashtag relevan di paling bawah menggunakan tanda #.
    Berikan skor SEO (angka 1-100) untuk setiap variasi deskripsi.
 3. 'keywords': Buat array daftar minimal 15 hashtag/tag berurutan dari skor SEO tertinggi untuk diisi ke dalam kotak TAGS YouTube. Cantumkan skornya (contoh: "#roblox (99)").
-
+4. KUNCI KONTEKS (SANGAT FATAL): Kamu WAJIB menafsirkan dan mengoptimasi semua data HANYA berdasarkan konteks pada Judul dan Deskripsi Video Asli yang diberikan klien.
+5. DILARANG KERAS melakukan auto-koreksi atau mengubah kata benda dari input user (misal: "Fable" jangan diubah jadi "Fallout").
+6. Jika topik terdengar seperti nama game atau film, TAPI niche-nya adalah "Science & Tech", maka bahaslah dari sisi TEKNOLOGI (seperti software, AI, hardware, update, dll), BUKAN dari sisi gameplay/fantasi.
 Berikan hasil DALAM FORMAT JSON MURNI (Object) dengan struktur persis seperti ini:
 {
   "recommendedTitles": [

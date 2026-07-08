@@ -32,6 +32,9 @@ ATURAN WAKTU DAN JUMLAH KATA SANGAT KETAT (SYARAT MUTLAK):
 3. SYARAT MUTLAK VOICE OVER (VO): Kecepatan bicara manusia normal adalah 2.5 kata per detik. Oleh karena itu, teks VO UNTUK SETIAP SCENE 30 DETIK WAJIB BERJUMLAH TEPAT 65 HINGGA 75 KATA.
 4. JANGAN KURANG DARI 65 KATA, JANGAN LEBIH DARI 75 KATA PER SCENE! Hitung manual jumlah kata Anda sebelum menuliskannya. Jika kurang, akan ada *dead air* (hening) di video. Jika lebih, naskah tidak akan muat di durasi 30 detik tersebut.
 5. Visual B-Roll harus mendeskripsikan secara sangat detail apa yang muncul di layar selama 30 detik tersebut.
+6. KUNCI KONTEKS NICHE (SANGAT FATAL): Niche channel ini adalah "${niche}". Kamu WAJIB menafsirkan semua input user dari kacamata niche ini.
+7. DILARANG KERAS melakukan auto-koreksi atau mengubah kata benda dari input user (misal: "Fable" jangan diubah jadi "Fallout").
+8. Jika topik terdengar seperti nama game atau film, TAPI niche-nya adalah "Science & Tech", maka bahaslah dari sisi TEKNOLOGI (seperti software, AI, hardware, update, dll), BUKAN dari sisi gameplay/fantasi.
 
 Berikan hasil DALAM FORMAT JSON MURNI (Object) dengan struktur persis seperti ini:
 {

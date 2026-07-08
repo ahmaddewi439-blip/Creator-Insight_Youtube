@@ -28,6 +28,9 @@ ATURAN MUTLAK NASKAH & DURASI (WAJIB DIIKUTI 100%):
 4. RELEVANSI NICHE & KEYWORD: Ide cerita, angle, tag, dan semua "keywords" WAJIB 100% akurat, spesifik, dan relevan HANYA dengan kategori [${category}]. Dilarang keras menyimpang ke topik lain!
 5. BAHASA LOKAL (${language}): Seluruh "title", "vo", "description", "kenapa", dan "angle" WAJIB menggunakan bahasa ${language}. Gunakan gaya penyampaian ala kreator UGC lokal di negara tersebut yang asik, mengundang penasaran, dan memancing interaksi.
 6. KUNCI VISUAL & ESTETIKA 9:16: Seluruh "imagePrompt" dan "videoPrompt" (dalam bahasa Inggris) WAJIB menyertakan: "Vertical 9:16 aspect ratio, mobile-first composition". Pastikan gaya visual OTOMATIS MENYESUAIKAN dengan karakter kategori [${category}].
+7. KUNCI KONTEKS NICHE (SANGAT FATAL): Niche channel ini adalah "${category}". Kamu WAJIB menafsirkan semua input user dari kacamata niche ini.
+8. DILARANG KERAS melakukan auto-koreksi atau mengubah kata benda dari input user (misal: "Fable" jangan diubah jadi "Fallout").
+9. Jika topik terdengar seperti nama game atau film, TAPI niche-nya adalah "Science & Tech", maka bahaslah dari sisi TEKNOLOGI (seperti software, AI, hardware, update, dll), BUKAN dari sisi gameplay/fantasi.
 
 Category/Niche: ${category}
 Target Audience: ${audience || "Worldwide"}

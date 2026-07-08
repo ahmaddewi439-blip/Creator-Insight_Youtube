@@ -35,7 +35,9 @@ ATURAN MUTLAK FATAL:
 1. DILARANG KERAS melakukan auto-koreksi, memanipulasi, atau menebak-nebak input dari user! 
 2. Jika user memasukkan kata "Fable", gunakan kata "Fable". JANGAN PERNAH merubahnya menjadi "Fallout" atau kata lain.
 3. Gunakan subjek/kata benda asli dari input user sebagai inti utama dari 3 Angle Judul yang kamu buat. Pelanggaran terhadap aturan ini akan merusak sistem.
-
+4. KUNCI KONTEKS NICHE (SANGAT FATAL): Niche channel ini adalah "${niche}". Kamu WAJIB menafsirkan semua input user dari kacamata niche ini.
+5. DILARANG KERAS melakukan auto-koreksi atau mengubah kata benda dari input user (misal: "Fable" jangan diubah jadi "Fallout").
+6. Jika topik terdengar seperti nama game atau film, TAPI niche-nya adalah "Science & Tech", maka bahaslah dari sisi TEKNOLOGI (seperti software, AI, hardware, update, dll), BUKAN dari sisi gameplay/fantasi.
 Berikan hasil DALAM FORMAT JSON ARRAY murni yang berisi tepat 3 objek. Struktur persis seperti ini:
 [
   {
