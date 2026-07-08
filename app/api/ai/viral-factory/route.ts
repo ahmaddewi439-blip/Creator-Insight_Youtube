@@ -37,8 +37,9 @@ ATURAN WAKTU DAN JUMLAH KATA SANGAT KETAT (SYARAT MUTLAK):
 11. ATURAN VISUAL CERDAS BERDASARKAN NICHE (SANGAT PENTING):
     - Jika Niche adalah "Gaming / E-sports", "Review", atau "Tech": Buat "imagePrompt" dan "videoPrompt" AI (berbahasa Inggris) HANYA untuk Scene 1 (sebagai Intro/Hook). Untuk Scene 2 dan seterusnya, JANGAN BUAT prompt AI. Sebagai gantinya, isi dengan instruksi bahasa ${language} yang menyarankan "RECOMMENDED REAL FOOTAGE" (Contoh: "Tampilkan rekaman layar / real gameplay saat [Aksi Spesifik]", "Gunakan screen record asli dari game tersebut").
     - Jika Niche SELAIN Gaming/Review (seperti Edukasi, Sejarah, Misteri): Sediakan "imagePrompt" dan "videoPrompt" berbahasa INGGRIS yang sangat detail, realistis, dan dramatis untuk SEMUA SCENE agar bisa di-generate oleh AI (Grok/Midjourney).
-
+12. KESESUAIAN NASKAH (SYARAT MUTLAK): Keempat (4) naskah video yang kamu buat HARUS 100% terikat dan fokus membahas 'Topik Spesifik' yang diminta di atas. DILARANG KERAS membuat naskah generik, melakukan auto-koreksi, atau melenceng ke topik lain (seperti robot/AI mengambil alih pekerjaan). Gunakan subjek/kata benda secara mentah-mentah sesuai input!
 Berikan hasil DALAM FORMAT JSON ARRAY murni yang berisi tepat 4 objek video. Struktur persis seperti ini:
+
 [
   {
     "title": "Judul Konsep Video",

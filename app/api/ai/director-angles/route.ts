@@ -31,6 +31,11 @@ Target Bahasa: "${body.language || 'Indonesia'}".
 Tugas Anda: Carikan 3 ANGLE (Sudut Pandang) turunan dari topik dasar tersebut yang memiliki peluang viral tertinggi. 
 PENTING: Judul, angle, dan alasan HARUS menggunakan bahasa "${body.language || 'Indonesia'}".
 
+ATURAN MUTLAK FATAL: 
+1. DILARANG KERAS melakukan auto-koreksi, memanipulasi, atau menebak-nebak input dari user! 
+2. Jika user memasukkan kata "Fable", gunakan kata "Fable". JANGAN PERNAH merubahnya menjadi "Fallout" atau kata lain.
+3. Gunakan subjek/kata benda asli dari input user sebagai inti utama dari 3 Angle Judul yang kamu buat. Pelanggaran terhadap aturan ini akan merusak sistem.
+
 Berikan hasil DALAM FORMAT JSON ARRAY murni yang berisi tepat 3 objek. Struktur persis seperti ini:
 [
   {

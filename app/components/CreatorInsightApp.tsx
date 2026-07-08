@@ -662,7 +662,7 @@ const handleAnalyzeAngles = async () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           niche: directorNiche, 
-          topic: selectedAngle?.title || directorTopic, 
+          topic: selectedAngle ? `FOKUS UTAMA NASKAH HARUS MEMBAHAS JUDUL INI: "${selectedAngle.title}"` : directorTopic,
           language: directorLanguage,
           duration: targetDuration // 2. Kirim durasinya ke Backend!
         })
