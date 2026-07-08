@@ -1629,26 +1629,26 @@ async function fetchCompetitionScore(keyword: string) {
           <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
             <button
               onClick={() => {
-                localStorage.setItem('shortsDuration', '45'); // Simpan durasi 45
+                localStorage.setItem('shortsDuration', '30');
                 setTrendQuery(selectedAngle.title);
                 window.scrollTo({ top: 100, behavior: 'smooth' });
                 handleGenerate();
               }}
               style={{ flex: 1, background: '#10b981', color: 'white', fontWeight: 'bold', padding: '14px', borderRadius: '10px', border: 'none', cursor: 'pointer', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}
             >
-              ⏱️ Buat 45 Detik
+              ⏱️ Buat 30 Detik
             </button>
 
             <button
               onClick={() => {
-                localStorage.setItem('shortsDuration', '55'); // Simpan durasi 55
+                localStorage.setItem('shortsDuration', '45');
                 setTrendQuery(selectedAngle.title);
                 window.scrollTo({ top: 100, behavior: 'smooth' });
                 handleGenerate();
               }}
               style={{ flex: 1, background: '#f59e0b', color: 'white', fontWeight: 'bold', padding: '14px', borderRadius: '10px', border: 'none', cursor: 'pointer', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}
             >
-              ⏱️ Buat 55 Detik
+              ⏱️ Buat 45 Detik
             </button>
           </div>
             </div>
