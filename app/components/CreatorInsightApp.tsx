@@ -2065,8 +2065,8 @@ function renderCompetitors() {
             {risetData && (
               <div style={{ marginTop: '24px', borderTop: '1px solid #2d3748', paddingTop: '24px' }}>
                 {/* Skor Head-to-Head */}
-                <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', marginBottom: '24px' }}>
-                  <div style={{ backgroundColor: '#0f141f', padding: '16px', borderRadius: '8px', border: '1px solid #2d3748', textAlign: 'center', minWidth: '120px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px', marginBottom: '24px' }}>
+                  <div style={{ backgroundColor: '#0f141f', padding: '16px', borderRadius: '8px', border: '1px solid #2d3748', textAlign: 'center', }}>
                     <p style={{ color: '#9ca3af', fontSize: '12px', margin: '0 0 8px 0' }}>Skor Keseluruhan</p>
                     <h1 style={{ margin: 0, fontSize: '36px', color: risetData.skor >= 70 ? '#10b981' : (risetData.skor >= 40 ? '#f59e0b' : '#ef4444') }}>
                       {risetData.skor}/100
@@ -2076,7 +2076,7 @@ function renderCompetitors() {
                     </p>
                   </div>
                   
-                  <div style={{ backgroundColor: '#0f141f', padding: '16px', borderRadius: '8px', border: '1px solid #2d3748', flex: 1, display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
+                  <div style={{ backgroundColor: '#0f141f', padding: '16px', borderRadius: '8px', border: '1px solid #2d3748', display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
                     <div style={{ textAlign: 'center' }}>
                       <p style={{ color: '#9ca3af', fontSize: '12px', margin: '0 0 4px 0' }}>Rata-rata VPH Saingan</p>
                       <p style={{ color: 'white', fontSize: '20px', fontWeight: 'bold', margin: 0 }}>{risetData.avgVph.toLocaleString('id-ID')} <span style={{fontSize:'12px', color:'#9ca3af'}}>/ jam</span></p>
@@ -2096,7 +2096,7 @@ function renderCompetitors() {
                     <div key={idx} style={{ display: 'flex', gap: '12px', alignItems: 'center', backgroundColor: '#0f141f', padding: '12px', borderRadius: '8px', border: '1px solid #2d3748' }}>
                       <span style={{ color: '#6b7280', fontWeight: 'bold', width: '20px' }}>{idx + 1}</span>
                       <img src={vid.snippet?.thumbnails?.default?.url || ''} style={{ width: risetType === 'shorts' ? '40px' : '80px', height: risetType === 'shorts' ? '60px' : '45px', objectFit: 'cover', borderRadius: '4px' }} alt="Thumb" />
-                      <div style={{ flex: 1, overflow: 'hidden' }}>
+                      <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
                         <p style={{ color: 'white', fontSize: '13px', margin: '0 0 4px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{vid.snippet?.title}</p>
                         <p style={{ color: '#9ca3af', fontSize: '11px', margin: 0 }}>{vid.snippet?.channelTitle}</p>
                       </div>
@@ -2160,7 +2160,7 @@ function renderCompetitors() {
 
                         <img src={vid.snippet?.thumbnails?.medium?.url || ''} style={{ width: '120px', height: '68px', objectFit: 'cover', borderRadius: '6px', marginTop: '12px' }} alt="Thumb" />
                         
-                        <div style={{ flex: 1 }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
                           <p style={{ color: 'white', fontSize: '14px', margin: '0 0 6px 0', fontWeight: 'bold', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{vid.snippet?.title}</p>
                           <p style={{ color: '#9ca3af', fontSize: '12px', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
                             👤 {vid.snippet?.channelTitle}
