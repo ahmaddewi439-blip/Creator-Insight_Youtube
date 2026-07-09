@@ -2061,12 +2061,13 @@ function renderCompetitors() {
               </button>
             </div>
 
-            {/* 3. HASIL SKOR & DATA KOMPETITOR */}
+        {/* 3. HASIL SKOR & DATA KOMPETITOR */}
             {risetData && (
-              <div style={{ marginTop: '24px', borderTop: '1px solid #2d3748', paddingTop: '24px' }}>
+              <div style={{ marginTop: '24px', borderTop: '1px solid #2d3748', paddingTop: '24px', width: '100%', boxSizing: 'border-box' }}>
+                
                 {/* Skor Head-to-Head */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px', marginBottom: '24px' }}>
-                  <div style={{ backgroundColor: '#0f141f', padding: '16px', borderRadius: '8px', border: '1px solid #2d3748', textAlign: 'center', }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px', marginBottom: '24px', width: '100%', boxSizing: 'border-box' }}>
+                  <div style={{ backgroundColor: '#0f141f', padding: '16px', borderRadius: '8px', border: '1px solid #2d3748', textAlign: 'center' }}>
                     <p style={{ color: '#9ca3af', fontSize: '12px', margin: '0 0 8px 0' }}>Skor Keseluruhan</p>
                     <h1 style={{ margin: 0, fontSize: '36px', color: risetData.skor >= 70 ? '#10b981' : (risetData.skor >= 40 ? '#f59e0b' : '#ef4444') }}>
                       {risetData.skor}/100
@@ -2091,19 +2092,28 @@ function renderCompetitors() {
 
                 {/* Daftar Kompetitor Teratas */}
                 <h4 style={{ color: '#d1d5db', fontSize: '14px', marginBottom: '12px' }}>Intai Top 10 Kompetitor Teratas Saat Ini:</h4>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', boxSizing: 'border-box' }}>
                   {risetData.videos.map((vid: any, idx: number) => (
-                    <div key={idx} style={{ display: 'flex', gap: '12px', alignItems: 'center', backgroundColor: '#0f141f', padding: '12px', borderRadius: '8px', border: '1px solid #2d3748' }}>
-                      <span style={{ color: '#6b7280', fontWeight: 'bold', width: '20px' }}>{idx + 1}</span>
-                      <img src={vid.snippet?.thumbnails?.default?.url || ''} style={{ width: risetType === 'shorts' ? '40px' : '80px', height: risetType === 'shorts' ? '60px' : '45px', objectFit: 'cover', borderRadius: '4px' }} alt="Thumb" />
+                    <div key={idx} style={{ display: 'flex', gap: '12px', alignItems: 'center', backgroundColor: '#0f141f', padding: '12px', borderRadius: '8px', border: '1px solid #2d3748', width: '100%', boxSizing: 'border-box' }}>
+                      
+                      {/* Angka Urutan (Digembok anti-gencet) */}
+                      <span style={{ color: '#6b7280', fontWeight: 'bold', width: '20px', flexShrink: 0 }}>{idx + 1}</span>
+                      
+                      {/* Thumbnail (Digembok anti-gencet) */}
+                      <img src={vid.snippet?.thumbnails?.default?.url || ''} style={{ width: risetType === 'shorts' ? '40px' : '80px', height: risetType === 'shorts' ? '60px' : '45px', objectFit: 'cover', borderRadius: '4px', flexShrink: 0 }} alt="Thumb" />
+                      
+                      {/* Teks Judul & Channel (Dibiarkan mengecil jika kepanjangan) */}
                       <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
                         <p style={{ color: 'white', fontSize: '13px', margin: '0 0 4px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{vid.snippet?.title}</p>
-                        <p style={{ color: '#9ca3af', fontSize: '11px', margin: 0 }}>{vid.snippet?.channelTitle}</p>
+                        <p style={{ color: '#9ca3af', fontSize: '11px', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{vid.snippet?.channelTitle}</p>
                       </div>
-                      <div style={{ textAlign: 'right', minWidth: '70px' }}>
+
+                      {/* Stats VPH Kanan (Digembok anti-gencet) */}
+                      <div style={{ textAlign: 'right', minWidth: '70px', flexShrink: 0 }}>
                         <p style={{ color: '#10b981', fontSize: '14px', fontWeight: 'bold', margin: 0 }}>{vid.vph} <span style={{fontSize:'10px'}}>VPH</span></p>
                         <p style={{ color: '#9ca3af', fontSize: '10px', margin: 0 }}>{Number(vid.statistics?.viewCount || 0).toLocaleString('id-ID')} views</p>
                       </div>
+
                     </div>
                   ))}
                 </div>
