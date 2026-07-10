@@ -180,23 +180,97 @@ function VideoRow({ video, index, onSelect }: { video: any; index: number; onSel
 }
 
 function LoginScreen() {
+  const [ytKey, setYtKey] = React.useState("");
+  const [aiKey, setAiKey] = React.useState("");
+  const [isSaved, setIsSaved] = React.useState(false);
+
+  // Mengambil kunci dari memori browser saat web dibuka
+  React.useEffect(() => {
+    setYtKey(localStorage.getItem("user_yt_key") || "");
+    setAiKey(localStorage.getItem("user_ai_key") || "");
+  }, []);
+
+  // Menyimpan kunci ke brankas browser (Local Storage)
+  const handleSaveKeys = () => {
+    localStorage.setItem("user_yt_key", ytKey);
+    localStorage.setItem("user_ai_key", aiKey);
+    setIsSaved(true);
+    setTimeout(() => setIsSaved(false), 3000); // Notifikasi hilang dalam 3 detik
+  };
+
   return (
-    <main className="login-wrap">
-      <section className="login-card">
+    <main className="login-wrap" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      
+      {/* KARTU 1: LOGIN UTAMA */}
+      <section className="login-card" style={{ padding: '40px' }}>
         <div>
           <div className="logo" style={{ marginBottom: 18 }}>
             <div className="logo-badge">▶</div>
-            <div>Creator Insight For Your Chanel<small>YouTube Analyzer</small></div>
+            <div>Creator Insight<small>AI YouTube Optimizer</small></div>
           </div>
-          <h1>All-in-One YouTube Analyzer & AI Creator</h1>
-          <p className="muted" style={{ fontSize: 17, lineHeight: 1.6 }}>
-            Solusi cerdas untuk meriset kompetitor, optimasi SEO, hingga menghasilkan skrip video dan Shorts berkinerja tinggi. Dapatkan struktur konten komplit berbasis data dalam hitungan detik.
+          <h1 style={{ fontSize: '32px' }}>Dominasi Algoritma YouTube dengan AI</h1>
+          <p className="muted" style={{ fontSize: 16, lineHeight: 1.6 }}>
+            Alat riset rahasia untuk menemukan "Hidden Gems" dan meracik naskah viral. Masukkan API Key Anda di bawah, lalu login untuk memulai.
           </p>
-          <div className="form-row" style={{ marginTop: 22 }}>
-            <button className="btn primary" onClick={() => signIn("google")}>🔥 Masuk & Riset Sekarang</button>
+          <div className="form-row" style={{ marginTop: 24 }}>
+            <button className="btn primary" onClick={() => signIn("google")} style={{ padding: '16px 24px', fontSize: '16px' }}>
+              🔥 Masuk dengan Google
+            </button>
           </div>
         </div>
       </section>
+
+      {/* KARTU 2: PENGATURAN API KEY (BYOK) */}
+      <section style={{ width: 'min(980px, 100%)', background: '#0f172a', border: '1px solid #334155', borderRadius: '24px', padding: '30px', boxShadow: '0 18px 60px rgba(0,0,0,0.35)' }}>
+        <h2 style={{ color: '#f8fafc', fontSize: '20px', margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          🔑 Pengaturan API Key (Wajib Diisi)
+        </h2>
+        <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '24px' }}>
+          Aplikasi ini beroperasi menggunakan sistem BYOK (Bring Your Own Key). Kunci rahasia Anda aman dan hanya disimpan di dalam browser HP/PC Anda sendiri.
+        </p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          
+          {/* Input Gemini AI Key */}
+          <div>
+            <label style={{ display: 'block', color: '#60a5fa', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>
+              🤖 Gemini AI API Key (Untuk Naskah & SEO):
+            </label>
+            <input 
+              type="password" 
+              placeholder="Paste API Key Gemini di sini (AIzaSy...)" 
+              value={aiKey}
+              onChange={(e) => setAiKey(e.target.value)}
+              style={{ width: '100%', padding: '14px 16px', borderRadius: '10px', background: '#020617', color: 'white', border: '1px solid #3b82f6', outline: 'none' }}
+            />
+            <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" style={{ fontSize: '12px', color: '#94a3b8', textDecoration: 'underline', marginTop: '6px', display: 'inline-block' }}>Dapatkan Gemini API Key Gratis di sini ↗</a>
+          </div>
+
+          {/* Input YouTube API Key */}
+          <div>
+            <label style={{ display: 'block', color: '#ef4444', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>
+              📺 YouTube Data API v3 Key (Untuk Radar VPH):
+            </label>
+            <input 
+              type="password" 
+              placeholder="Paste API Key YouTube di sini (AIzaSy...)" 
+              value={ytKey}
+              onChange={(e) => setYtKey(e.target.value)}
+              style={{ width: '100%', padding: '14px 16px', borderRadius: '10px', background: '#020617', color: 'white', border: '1px solid #ef4444', outline: 'none' }}
+            />
+            <a href="https://console.cloud.google.com/" target="_blank" rel="noreferrer" style={{ fontSize: '12px', color: '#94a3b8', textDecoration: 'underline', marginTop: '6px', display: 'inline-block' }}>Dapatkan YouTube API Key Gratis di sini ↗</a>
+          </div>
+
+          {/* Tombol Simpan */}
+          <button 
+            onClick={handleSaveKeys}
+            style={{ marginTop: '12px', padding: '16px', borderRadius: '10px', background: isSaved ? '#10b981' : '#334155', color: 'white', fontWeight: 'bold', border: 'none', cursor: 'pointer', transition: '0.3s' }}
+          >
+            {isSaved ? '✅ Kunci Berhasil Disimpan di Browser!' : '💾 Simpan Kunci API Saya'}
+          </button>
+        </div>
+      </section>
+
     </main>
   );
 }
