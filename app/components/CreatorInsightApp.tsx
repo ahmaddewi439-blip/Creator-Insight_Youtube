@@ -2025,95 +2025,94 @@ function renderCompetitors() {
           
      {/* ================= AWAL TAB VPH & RISET KATA KUNCI ================= */}
         {activeRisetMenu === 'vph' && (
-          <div style={{ backgroundColor: '#151b2b', borderRadius: '12px', padding: '24px', border: '1px solid #2d3748', marginTop: '16px', marginBottom: '32px' }}>
+          <div style={{ backgroundColor: '#151b2b', borderRadius: '12px', padding: '16px 10px', border: '1px solid #2d3748', marginTop: '16px', marginBottom: '32px', width: '100%', boxSizing: 'border-box', overflow: 'hidden' }}>
             <h3 style={{ color: 'white', fontSize: '18px', margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              🔥 Radar VPH & Analisa Kata Kunci
+              🔥 Radar VPH & Analisa
             </h3>
 
             {/* 1. SAKLAR SHORTS VS LONG VIDEO */}
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', width: '100%', boxSizing: 'border-box' }}>
               <button 
                 onClick={() => setRisetType('shorts')}
-                style={{ flex: 1, padding: '10px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', border: risetType === 'shorts' ? '1px solid #ef4444' : '1px solid #2d3748', backgroundColor: risetType === 'shorts' ? 'rgba(239, 68, 68, 0.2)' : '#0f141f', color: risetType === 'shorts' ? '#ef4444' : '#9ca3af' }}>
-                📱 YouTube Shorts
+                style={{ flex: 1, padding: '10px 4px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', border: risetType === 'shorts' ? '1px solid #ef4444' : '1px solid #2d3748', backgroundColor: risetType === 'shorts' ? 'rgba(239, 68, 68, 0.2)' : '#0f141f', color: risetType === 'shorts' ? '#ef4444' : '#9ca3af', fontSize: '13px' }}>
+                📱 Shorts
               </button>
               <button 
                 onClick={() => setRisetType('long')}
-                style={{ flex: 1, padding: '10px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', border: risetType === 'long' ? '1px solid #3b82f6' : '1px solid #2d3748', backgroundColor: risetType === 'long' ? 'rgba(59, 130, 246, 0.2)' : '#0f141f', color: risetType === 'long' ? '#3b82f6' : '#9ca3af' }}>
+                style={{ flex: 1, padding: '10px 4px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', border: risetType === 'long' ? '1px solid #3b82f6' : '1px solid #2d3748', backgroundColor: risetType === 'long' ? 'rgba(59, 130, 246, 0.2)' : '#0f141f', color: risetType === 'long' ? '#3b82f6' : '#9ca3af', fontSize: '13px' }}>
                 🖥️ Long Video
               </button>
             </div>
 
             {/* 2. KOTAK PENCARIAN */}
-            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', width: '100%', boxSizing: 'border-box' }}>
               <input 
                 type="text" 
-                placeholder="Ketik ide konten... (cth: Robot AI 2050)" 
+                placeholder="Ketik ide konten..." 
                 value={risetQuery}
                 onChange={(e) => setRisetQuery(e.target.value)}
-                style={{ flex: '1 1 200px', padding: '12px 16px', borderRadius: '8px', backgroundColor: '#0f141f', border: '1px solid #2d3748', color: 'white', fontSize: '14px', outline: 'none' }}
+                style={{ flex: '1 1 150px', padding: '12px', borderRadius: '8px', backgroundColor: '#0f141f', border: '1px solid #2d3748', color: 'white', fontSize: '14px', outline: 'none', minWidth: 0, boxSizing: 'border-box' }}
               />
               <button 
                 onClick={jalankanRisetMesin}
                 disabled={isRisetLoading || !risetQuery}
-                style={{ padding: '12px 24px', borderRadius: '8px', backgroundColor: isRisetLoading ? '#4b5563' : '#10b981', color: 'white', fontWeight: 'bold', border: 'none', cursor: isRisetLoading ? 'not-allowed' : 'pointer' }}>
-                {isRisetLoading ? 'Menyortir Data...' : 'Riset Sekarang'}
+                style={{ padding: '12px 16px', borderRadius: '8px', backgroundColor: isRisetLoading ? '#4b5563' : '#10b981', color: 'white', fontWeight: 'bold', border: 'none', cursor: isRisetLoading ? 'not-allowed' : 'pointer', fontSize: '14px', flexShrink: 0 }}>
+                {isRisetLoading ? 'Loading...' : 'Riset'}
               </button>
             </div>
 
-       {/* ================= AWAL HASIL SKOR & DATA ================= */}
+            {/* ================= AWAL HASIL SKOR & DATA ================= */}
             {risetData && (
-              <div style={{ marginTop: '24px', borderTop: '1px solid #2d3748', paddingTop: '24px', width: '100%', boxSizing: 'border-box', overflow: 'hidden' }}>
+              <div style={{ marginTop: '20px', borderTop: '1px solid #2d3748', paddingTop: '20px', width: '100%', boxSizing: 'border-box', overflow: 'hidden' }}>
                 
-                {/* 1. KOTAK SKOR (DIPAKSA BERDAMPINGAN 50/50) */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '24px', width: '100%' }}>
+                {/* 1. KOTAK SKOR (DENGAN FLEX MIN-WIDTH 0 AGAR BISA MENGECIL DI HP) */}
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', width: '100%', boxSizing: 'border-box' }}>
                   
                   {/* Kotak Kiri */}
-                  <div style={{ backgroundColor: '#0f141f', padding: '12px', borderRadius: '8px', border: '1px solid #2d3748', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                    <p style={{ color: '#9ca3af', fontSize: '11px', margin: '0 0 4px 0' }}>Skor Keseluruhan</p>
-                    <h1 style={{ margin: 0, fontSize: '28px', color: risetData.skor >= 70 ? '#10b981' : (risetData.skor >= 40 ? '#f59e0b' : '#ef4444') }}>
+                  <div style={{ flex: 1, backgroundColor: '#0f141f', padding: '10px 4px', borderRadius: '8px', border: '1px solid #2d3748', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', minWidth: 0 }}>
+                    <p style={{ color: '#9ca3af', fontSize: '10px', margin: '0 0 4px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Skor Keseluruhan</p>
+                    <h1 style={{ margin: 0, fontSize: '24px', color: risetData.skor >= 70 ? '#10b981' : (risetData.skor >= 40 ? '#f59e0b' : '#ef4444') }}>
                       {risetData.skor || 0}/100
                     </h1>
-                    <p style={{ color: risetData.skor >= 70 ? '#10b981' : '#f59e0b', fontSize: '11px', margin: '4px 0 0 0', fontWeight: 'bold' }}>
-                      {risetData.skor >= 70 ? '🔥 Harta Karun!' : 'Cukup Sulit'}
+                    <p style={{ color: risetData.skor >= 70 ? '#10b981' : '#f59e0b', fontSize: '10px', margin: '4px 0 0 0', fontWeight: 'bold', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {risetData.skor >= 70 ? '🔥 Mantap!' : 'Sulit'}
                     </p>
                   </div>
                   
                   {/* Kotak Kanan */}
-                  <div style={{ backgroundColor: '#0f141f', padding: '12px', borderRadius: '8px', border: '1px solid #2d3748', display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
-                    <div style={{ textAlign: 'center' }}>
-                      <p style={{ color: '#9ca3af', fontSize: '11px', margin: '0 0 4px 0' }}>Rata-rata VPH</p>
-                      <p style={{ color: 'white', fontSize: '16px', fontWeight: 'bold', margin: 0 }}>{(risetData.avgVph || 0).toLocaleString('id-ID')} <span style={{fontSize:'10px', color:'#9ca3af'}}>/ jam</span></p>
+                  <div style={{ flex: 1, backgroundColor: '#0f141f', padding: '10px 4px', borderRadius: '8px', border: '1px solid #2d3748', display: 'flex', justifyContent: 'space-evenly', alignItems: 'center', minWidth: 0 }}>
+                    <div style={{ textAlign: 'center', minWidth: 0 }}>
+                      <p style={{ color: '#9ca3af', fontSize: '10px', margin: '0 0 4px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Rata VPH</p>
+                      <p style={{ color: 'white', fontSize: '13px', fontWeight: 'bold', margin: 0 }}>{(risetData.avgVph || 0).toLocaleString('id-ID')}</p>
                     </div>
-                    <div style={{ width: '1px', height: '30px', backgroundColor: '#2d3748', margin: '0 6px' }}></div>
-                    <div style={{ textAlign: 'center' }}>
-                      <p style={{ color: '#9ca3af', fontSize: '11px', margin: '0 0 4px 0' }}>Vol. Pencarian</p>
-                      <p style={{ color: 'white', fontSize: '16px', fontWeight: 'bold', margin: 0 }}>{risetData.totalCompetitors > 1000000 ? 'Tinggi' : 'Sedang'}</p>
+                    <div style={{ width: '1px', height: '24px', backgroundColor: '#2d3748', margin: '0 4px', flexShrink: 0 }}></div>
+                    <div style={{ textAlign: 'center', minWidth: 0 }}>
+                      <p style={{ color: '#9ca3af', fontSize: '10px', margin: '0 0 4px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Vol. Cari</p>
+                      <p style={{ color: 'white', fontSize: '13px', fontWeight: 'bold', margin: 0 }}>{risetData.totalCompetitors > 1000000 ? 'Tinggi' : 'Sedang'}</p>
                     </div>
                   </div>
 
                 </div>
 
-                {/* 2. DAFTAR KOMPETITOR (ANTI-CRASH & ANTI-LUBER) */}
-                <h4 style={{ color: '#d1d5db', fontSize: '14px', marginBottom: '12px' }}>Intai Top 10 Kompetitor Teratas Saat Ini:</h4>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', boxSizing: 'border-box' }}>
+                {/* 2. DAFTAR KOMPETITOR (DIKUNCI TOTAL) */}
+                <h4 style={{ color: '#d1d5db', fontSize: '13px', marginBottom: '12px', marginTop: 0 }}>Top 10 Kompetitor:</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', boxSizing: 'border-box' }}>
                   
-                  {/* TANDA TANYA (?.) INI MENCEGAH WEB HILANG SAAT DATA API KOSONG/NOL */}
                   {risetData.videos?.map((vid: any, idx: number) => (
-                    <div key={idx} style={{ display: 'flex', gap: '10px', alignItems: 'center', backgroundColor: '#0f141f', padding: '12px', borderRadius: '8px', border: '1px solid #2d3748', width: '100%', boxSizing: 'border-box', overflow: 'hidden' }}>
+                    <div key={idx} style={{ display: 'flex', gap: '8px', alignItems: 'center', backgroundColor: '#0f141f', padding: '10px 8px', borderRadius: '8px', border: '1px solid #2d3748', width: '100%', boxSizing: 'border-box', overflow: 'hidden' }}>
                       
-                      <span style={{ color: '#6b7280', fontWeight: 'bold', width: '20px', flexShrink: 0 }}>{idx + 1}</span>
+                      <span style={{ color: '#6b7280', fontWeight: 'bold', width: '16px', fontSize: '12px', flexShrink: 0, textAlign: 'center' }}>{idx + 1}</span>
                       
-                      <img src={vid.snippet?.thumbnails?.default?.url || ''} style={{ width: risetType === 'shorts' ? '40px' : '60px', height: risetType === 'shorts' ? '60px' : '40px', objectFit: 'cover', borderRadius: '4px', flexShrink: 0 }} alt="Thumb" />
+                      <img src={vid.snippet?.thumbnails?.default?.url || ''} style={{ width: risetType === 'shorts' ? '36px' : '50px', height: risetType === 'shorts' ? '54px' : '34px', objectFit: 'cover', borderRadius: '4px', flexShrink: 0 }} alt="Thumb" />
                       
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ color: 'white', fontSize: '13px', margin: '0 0 4px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{vid.snippet?.title || 'Tidak ada judul'}</p>
-                        <p style={{ color: '#9ca3af', fontSize: '11px', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{vid.snippet?.channelTitle || 'Unknown'}</p>
+                        <p style={{ color: 'white', fontSize: '12px', margin: '0 0 4px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{vid.snippet?.title || 'Tidak ada judul'}</p>
+                        <p style={{ color: '#9ca3af', fontSize: '10px', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{vid.snippet?.channelTitle || 'Unknown'}</p>
                       </div>
 
-                      <div style={{ textAlign: 'right', minWidth: '70px', flexShrink: 0 }}>
-                        <p style={{ color: '#10b981', fontSize: '14px', fontWeight: 'bold', margin: 0 }}>{vid.vph || 0} <span style={{fontSize:'10px'}}>VPH</span></p>
-                        <p style={{ color: '#9ca3af', fontSize: '10px', margin: 0 }}>{Number(vid.statistics?.viewCount || 0).toLocaleString('id-ID')} views</p>
+                      <div style={{ textAlign: 'right', minWidth: '60px', flexShrink: 0 }}>
+                        <p style={{ color: '#10b981', fontSize: '12px', fontWeight: 'bold', margin: '0 0 2px 0' }}>{vid.vph || 0} <span style={{fontSize:'9px', fontWeight: 'normal'}}>VPH</span></p>
+                        <p style={{ color: '#9ca3af', fontSize: '9px', margin: 0 }}>{Number(vid.statistics?.viewCount || 0).toLocaleString('id-ID')} views</p>
                       </div>
 
                     </div>
@@ -2125,7 +2124,7 @@ function renderCompetitors() {
           </div>
         )}
         {/* ================= SELESAI TAB VPH & RISET ================= */}
-
+        
 {/* ================= AWAL TAB HIDDEN GEMS ================= */}
         {activeRisetMenu === 'hidden-gems' && (
           <div style={{ backgroundColor: '#151b2b', borderRadius: '12px', padding: '24px', border: '1px solid #2d3748', marginTop: '16px', marginBottom: '32px' }}>
