@@ -1143,19 +1143,23 @@ const handleAnalyzeAngles = async () => {
   if (!isMounted) return null; // JURUS PRO: Cegah Error Client Component SSR
   if (status === "loading") return <div className="login-wrap"><div className="skeleton" style={{ width: 380 }} /></div>;
   if (!session) return <LoginScreen />;
-// --- SATPAM PENJAGA (PEMBEDA ADMIN & USER BIASA) ---
+ // --- SATPAM PENJAGA (DAFTAR SEMUA EMAIL ADMIN ANDA) ---
 const adminEmails = [
-  "ahmadsyahroni6190@gmail.com",
-  "dewipermat67@gmail.com"
-];
-const isUserAdmin = adminEmails.includes(session?.user?.email ?? "");
+  "ahmadsyahroni6190@gmail.com", 
+  "dewipermat67@gmail.com",
+  "channel_ketiga_anda@gmail.com",
+  "gaming_channelku@gmail.com",
+  "email_kelima_bebas@gmail.com",
+  "dan_seterusnya_sampai_ratusan@gmail.com"
+]; 
+const isUserAdmin = adminEmails.includes(session?.user?.email || "");
+  
+  // Cek apakah user biasa sudah bawa kunci dari halaman depan
+  const hasYtKey = typeof window !== 'undefined' ? localStorage.getItem("user_yt_key") : null;
+  const hasAiKey = typeof window !== 'undefined' ? localStorage.getItem("user_ai_key") : null;
 
-// Cek apakah user biasa sudah bawa kunci dari halaman depan
-const hasYtKey = typeof window !== 'undefined' ? localStorage.getItem("user_yt_key") : null;
-const hasAiKey = typeof window !== 'undefined' ? localStorage.getItem("user_ai_key") : null;
-
-// Jika yang masuk bukan admin, DAN kuncinya kosong = KUNCI LAYARNYA!
-if (!isUserAdmin && (!hasYtKey || !hasAiKey)) {
+  // Jika yang masuk bukan admin, DAN kuncinya kosong = KUNCI LAYARNYA!
+  if (!isUserAdmin && (!hasYtKey || !hasAiKey)) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100%', justifyContent: 'center', alignItems: 'center', background: '#0f172a', padding: '20px' }}>
         <div style={{ background: '#1e293b', padding: '40px', borderRadius: '16px', border: '1px solid #ef4444', textAlign: 'center', maxWidth: '500px', boxShadow: '0 18px 60px rgba(0,0,0,0.35)' }}>

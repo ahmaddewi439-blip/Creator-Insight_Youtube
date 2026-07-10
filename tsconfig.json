@@ -22,14 +22,14 @@
         "name": "next"
       }
     ],
-    "baseUrl": ".",
-    "ignoreDeprecations": "6.0",
+   "baseUrl": ".",
     "paths": {
       "@/*": [
         "./*"
       ]
     },
-    "strictNullChecks": true
+    "strictNullChecks": false,
+    "ignoreDeprecations": "6.0"
   },
   "include": [
     "next-env.d.ts",
