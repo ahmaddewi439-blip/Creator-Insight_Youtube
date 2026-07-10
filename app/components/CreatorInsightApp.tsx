@@ -341,53 +341,63 @@ export default function CreatorInsightApp() {
   const [risetData, setRisetData] = useState<any>(null);
   // ------------------------------------
 
-  // --- MESIN PENCARI DATA PASAR YOUTUBE (RADAR VPH & KATA KUNCI) ---
+ // --- MESIN PENCARI DATA PASAR YOUTUBE (RADAR VPH & KATA KUNCI) ---
   const jalankanRisetMesin = async () => {
     if (!risetQuery || !session?.accessToken) return;
     setIsRisetLoading(true);
     setRisetData(null);
 
     try {
-      // 1. Tentukan filter durasi (Shorts < 4 menit, Long > 4 menit)
       const durasiParam = risetType === 'shorts' ? 'short' : 'medium'; 
       
-      // 2. Tarik video kompetitor teratas yang membidik kata kunci ini
+      // 1. Tarik video kompetitor
       const searchRes = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(risetQuery)}&type=video&videoDuration=${durasiParam}&maxResults=10&order=relevance`, {
         headers: { Authorization: `Bearer ${session.accessToken}` }
       });
       const searchData = await searchRes.json();
 
       if (searchData.items && searchData.items.length > 0) {
-        // Ambil ID video untuk ditarik statistiknya
         const videoIds = searchData.items.map((item: any) => item.id.videoId).join(',');
+        // TRIK BARU: Kumpulkan ID Channel milik para kompetitor
+        const channelIds = [...new Set(searchData.items.map((item: any) => item.snippet.channelId))].join(',');
         
-        const statsRes = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=statistics,snippet&id=${videoIds}`, {
-          headers: { Authorization: `Bearer ${session.accessToken}` }
-        });
-        const statsData = await statsRes.json();
+        // 2. Tembak 2 API Sekaligus (Tarik Views DAN Tarik Subscribers)
+        const [statsRes, chanRes] = await Promise.all([
+          fetch(`https://www.googleapis.com/youtube/v3/videos?part=statistics,snippet&id=${videoIds}`, {
+            headers: { Authorization: `Bearer ${session.accessToken}` }
+          }),
+          fetch(`https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${channelIds}`, {
+            headers: { Authorization: `Bearer ${session.accessToken}` }
+          })
+        ]);
 
-        // 3. Kalkulasi VPH (Views Per Hour) dan Momentum
+        const statsData = await statsRes.json();
+        const chanData = await chanRes.json();
+
+        // 3. Kalkulasi VPH dan Gabungkan dengan Data Subscriber
         let totalVph = 0;
         const processedVideos = statsData.items.map((vid: any) => {
           const publishedAt = new Date(vid.snippet.publishedAt);
           const now = new Date();
-          // Hitung umur video dalam jam
           const hoursDiff = Math.max(1, Math.abs(now.getTime() - publishedAt.getTime()) / 36e5);
           const views = Number(vid.statistics.viewCount || 0);
           const vph = Math.floor(views / hoursDiff);
           totalVph += vph;
           
-          return { ...vid, vph };
-        }).sort((a: any, b: any) => b.vph - a.vph); // Urutkan dari VPH tertinggi
+          // Cocokkan Video dengan jumlah Subscriber channelnya
+          const channelInfo = chanData.items?.find((c: any) => c.id === vid.snippet.channelId);
+          const subs = Number(channelInfo?.statistics?.subscriberCount || 0);
+          
+          return { ...vid, vph, subs };
+        }).sort((a: any, b: any) => b.vph - a.vph); 
 
         const avgVph = Math.floor(totalVph / processedVideos.length);
         const totalCompetitors = searchData.pageInfo?.totalResults || 0;
 
-        // 4. RUMUS SKOR SEO (Blue Ocean vs Red Ocean)
         let skor = 50; 
-        if (avgVph > 500 && totalCompetitors < 500000) skor = 95; // Permintaan tinggi, saingan dikit!
+        if (avgVph > 500 && totalCompetitors < 500000) skor = 95; 
         else if (avgVph > 1000) skor = 85; 
-        else if (totalCompetitors > 1000000 && avgVph < 100) skor = 35; // Terlalu banyak saingan, views seret
+        else if (totalCompetitors > 1000000 && avgVph < 100) skor = 35; 
         else if (avgVph > 100) skor = 70;
 
         setRisetData({
@@ -2110,10 +2120,12 @@ function renderCompetitors() {
                         <p style={{ color: '#9ca3af', fontSize: '10px', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{vid.snippet?.channelTitle || 'Unknown'}</p>
                       </div>
 
-                      <div style={{ textAlign: 'right', minWidth: '60px', flexShrink: 0 }}>
-                        <p style={{ color: '#10b981', fontSize: '12px', fontWeight: 'bold', margin: '0 0 2px 0' }}>{vid.vph || 0} <span style={{fontSize:'9px', fontWeight: 'normal'}}>VPH</span></p>
-                        <p style={{ color: '#9ca3af', fontSize: '9px', margin: 0 }}>{Number(vid.statistics?.viewCount || 0).toLocaleString('id-ID')} views</p>
-                      </div>
+                     <div style={{ textAlign: 'right', minWidth: '75px', flexShrink: 0 }}>
+   <p style={{ color: '#10b981', fontSize: '12px', fontWeight: 'bold', margin: '0 0 2px 0' }}>{vid.vph || 0} <span style={{fontSize:'9px', fontWeight: 'normal'}}>VPH</span></p>
+   {/* INI KODE BARU UNTUK MENAMPILKAN SUBSCRIBER KECIL CABE RAWIT */}
+   <p style={{ color: '#ef4444', fontSize: '10px', fontWeight: 'bold', margin: '0 0 2px 0' }}>{vid.subs ? Number(vid.subs).toLocaleString('id-ID') : '?'} <span style={{fontSize:'8px', fontWeight: 'normal', color: '#9ca3af'}}>Subs</span></p>
+   <p style={{ color: '#9ca3af', fontSize: '9px', margin: 0 }}>{Number(vid.statistics?.viewCount || 0).toLocaleString('id-ID')} views</p>
+</div>
 
                     </div>
                   ))}
@@ -2124,7 +2136,7 @@ function renderCompetitors() {
           </div>
         )}
         {/* ================= SELESAI TAB VPH & RISET ================= */}
-        
+
 {/* ================= AWAL TAB HIDDEN GEMS ================= */}
         {activeRisetMenu === 'hidden-gems' && (
           <div style={{ backgroundColor: '#151b2b', borderRadius: '12px', padding: '24px', border: '1px solid #2d3748', marginTop: '16px', marginBottom: '32px' }}>
