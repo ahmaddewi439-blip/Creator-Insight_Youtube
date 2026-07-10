@@ -1061,7 +1061,7 @@ const handleAnalyzeAngles = async () => {
   if (!session) return <LoginScreen />;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100%', overflowX: 'hidden', overflowY: 'auto', background: '#0f172a', color: '#ffffff', position: 'relative' }}>
+       <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100%', maxWidth: '100vw', overflowX: 'hidden', overflowY: 'auto', background: '#0f172a', color: '#ffffff', position: 'relative', boxSizing: 'border-box' }}>
       
       {/* HEADER ATAS (NAMA APP & LOGOUT) */}
       <div style={{ padding: '16px 20px', borderBottom: '1px solid #1e293b', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
