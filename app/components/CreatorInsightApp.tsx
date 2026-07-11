@@ -1155,7 +1155,7 @@ const adminEmails = [
 ]; 
 // 2. DAFTAR PEMBELI RESMI (Wajib bawa API Key sendiri)
   const paidUsers = [
-    "pembeli_pertama@gmail.com",
+    "bambangharinusa@gmail.com",
     "customer_kedua@gmail.com",
     // Nanti jika ada yang beli lagi, tambahkan emailnya di sini
   ];
