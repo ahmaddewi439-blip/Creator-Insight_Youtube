@@ -4,35 +4,39 @@ export const maxDuration = 60;
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
-  // 1. TANGKAP KABEL FRONTEND
+  // =====================================================================
+  // 1. TANGKAP KUNCI DARI WEB (FRONTEND)
+  // =====================================================================
   const userAiKey = req.headers.get('x-user-ai-key');
   
-  // 2. GEMBOK ANTI-JEBOL (Satpam Penentu Kunci)
-  // Pastikan process.env di bawah ini sesuai dengan nama rahasia Admin di file tersebut
-const apiKey = userAiKey ? userAiKey : process.env.AI_API_KEYS;
+  // =====================================================================
+  // 2. SETTINGAN ASLI ADMIN (TIDAK DIOTAK-ATIK, AMAN!)
+  // =====================================================================
+  let apiKey = process.env.AI_API_KEYS; // Tetap ambil dari .env
+  let endpoint = 'https://lite.koboillm.com/v1/chat/completions'; // Server Koboi Anda
+  let aiModel = 'gemini-2.5-flash'; // Model Premium Anda
+
+  // =====================================================================
+  // 3. LOGIKA TAMBAHAN KHUSUS USER (Hanya aktif jika bawa kunci "AIza")
+  // =====================================================================
+  if (userAiKey && userAiKey.startsWith("AIza")) {
+      apiKey = userAiKey; // Pakai kuota User
+      endpoint = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions'; // Server publik Google
+      aiModel = 'gemini-1.5-flash'; // Model gratisan User
+  }
 
   try {
     const body = await req.json();
     // Menangkap parameter bahasa dari web Anda
     const { category, audience, style, keyword, language } = body; 
     
- if (!apiKey) {
-      return NextResponse.json({ error: "API Key belum diatur." }, { status: 400 });
+    // Pengecekan standar
+    if (!apiKey) {
+      return NextResponse.json({ error: "API Key server belum diatur." }, { status: 500 });
     }
 
-    // === SAKLAR MULTI-MESIN OTOMATIS ===
-    const isGeminiKey = apiKey.startsWith("AIza");
-
-    const endpoint = isGeminiKey 
-      ? 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions'
-      : 'https://lite.koboillm.com/v1/chat/completions'; // Jalur server Admin
-
-    const aiModel = isGeminiKey 
-      ? 'gemini-1.5-flash'               // Model untuk User (Gemini gratisan)
-      : 'gemini/gemini-2.5-flash-lite';  // Model premium untuk Admin
-
     // PROMPT BARU: MULTI-BAHASA & PERHITUNGAN DURASI KATA YANG SANGAT KETAT
-const prompt = `KAMU ADALAH "🎯 VIRAL FACTORY", SEORANG SUTRADARA DAN COPYWRITER YOUTUBE SHORTS TINGKAT DEWA. 
+    const prompt = `KAMU ADALAH "🎯 VIRAL FACTORY", SEORANG SUTRADARA DAN COPYWRITER YOUTUBE SHORTS TINGKAT DEWA. 
 Tugasmu adalah meracik 3 ide konten low-competition yang 100% siap produksi berdasarkan kategori yang dipilih.
 
 ATURAN MUTLAK NASKAH & DURASI (WAJIB DIIKUTI 100%):
@@ -54,7 +58,6 @@ CRITICAL LANGUAGE RULES:
 1. The "title", "vo", "description", and "tags" MUST be written completely in ${language}.
 2. "kenapa", "angle", and "audioMood" MUST be in strict ${language}.
 3. All "imagePrompt", "videoPrompt", and "thumbnailPrompt" MUST be in English.
-
 
 CRITICAL PACING & TIMING RULES (MUST OBEY):
 Assuming a normal speaking rate of 2.5 words per second. You MUST match the word count of the "vo" to the timestamp duration perfectly! 
