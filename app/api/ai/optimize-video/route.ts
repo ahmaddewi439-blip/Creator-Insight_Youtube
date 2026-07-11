@@ -4,21 +4,33 @@ export const maxDuration = 60;
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
-  try {
-    const body = await req.json();
-    const { video, targetLanguage} = body;
+  // 1. TANGKAP KABEL FRONTEND
+  const userAiKey = req.headers.get('x-user-ai-key');
+  
+  // 2. GEMBOK ANTI-JEBOL
+  const apiKey = userAiKey ? userAiKey : process.env.AI_API_KEYS;
 
-    const apiKey = process.env.AI_API_KEYS;
-    let baseUrl = process.env.AI_BASE_URL || "https://lite.koboillm.com/v1";
-    const aiModel = process.env.AI_MODEL || "gemini/gemini-2.5-flash-lite";
+  try {
+    // 3. TANGKAP DATA DARI USER (Ini yang tadi tidak sengaja terhapus)
+    const body = await req.json();
+    const { video, targetLanguage } = body;
 
     if (!apiKey) {
       return NextResponse.json({ error: "API Key belum diatur." }, { status: 400 });
     }
 
-    baseUrl = baseUrl.replace(/\/+$/, "");
-    const endpoint = baseUrl.endsWith("/chat/completions") ? baseUrl : `${baseUrl}/chat/completions`;
+    // === SAKLAR MULTI-MESIN OTOMATIS ===
+    const isGeminiKey = apiKey.startsWith("AIza");
 
+    const endpoint = isGeminiKey 
+      ? 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions'
+      : 'https://lite.koboillm.com/v1/chat/completions'; // Jalur server Admin
+
+    const aiModel = isGeminiKey 
+      ? 'gemini-1.5-flash'               // Model untuk User (Gemini gratisan)
+      : 'gemini/gemini-2.5-flash-lite';  // Model premium untuk Admin
+
+    // 4. DATA VIDEO ASLI
     const originalTitle = video?.snippet?.title || video?.title || "Video Tanpa Judul";
     const originalDesc = video?.snippet?.description || "";
 
