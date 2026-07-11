@@ -38,7 +38,7 @@ export async function POST(req: Request) {
 
     const aiModel = isGeminiKey 
       ? 'gemini-1.5-flash'               // Model untuk User (Gemini gratisan)
-      : 'gemini/gemini-2.5-flash-lite';  // Model premium untuk Admin
+      : 'gemini-2.5-flash';  // Model premium untuk Admin
 
     // Prompt Khusus Sniper Angle
     const prompt = `Anda adalah Pakar Algoritma YouTube dan Produser Konten spesialis channel Automation/Faceless global.
