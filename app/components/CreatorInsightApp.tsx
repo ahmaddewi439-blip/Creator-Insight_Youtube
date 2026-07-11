@@ -1143,6 +1143,7 @@ const handleAnalyzeAngles = async () => {
   if (!isMounted) return null; // JURUS PRO: Cegah Error Client Component SSR
   if (status === "loading") return <div className="login-wrap"><div className="skeleton" style={{ width: 380 }} /></div>;
   if (!session) return <LoginScreen />;
+
  // --- SATPAM PENJAGA (DAFTAR SEMUA EMAIL ADMIN ANDA) ---
 const adminEmails = [
   "ahmadsyahroni6190@gmail.com", 
@@ -1152,35 +1153,58 @@ const adminEmails = [
   "email_kelima_bebas@gmail.com",
   "dan_seterusnya_sampai_ratusan@gmail.com"
 ]; 
-const isUserAdmin = adminEmails.includes(session?.user?.email || "");
-  
-  // Cek apakah user biasa sudah bawa kunci dari halaman depan
-  const hasYtKey = typeof window !== 'undefined' ? localStorage.getItem("user_yt_key") : null;
-  const hasAiKey = typeof window !== 'undefined' ? localStorage.getItem("user_ai_key") : null;
+// 2. DAFTAR PEMBELI RESMI (Wajib bawa API Key sendiri)
+  const paidUsers = [
+    "pembeli_pertama@gmail.com",
+    "customer_kedua@gmail.com",
+    // Nanti jika ada yang beli lagi, tambahkan emailnya di sini
+  ];
 
-  // Jika yang masuk bukan admin, DAN kuncinya kosong = KUNCI LAYARNYA!
-  if (!isUserAdmin && (!hasYtKey || !hasAiKey)) {
+  const userEmail = session?.user?.email || "";
+  const isAdmin = adminEmails.includes(userEmail);
+  const isPaidUser = paidUsers.includes(userEmail);
+
+  // LAPIS 1: CEK LISENSI PEMBELIAN (TENDANG PENYUSUP!)
+  if (!isAdmin && !isPaidUser) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100%', justifyContent: 'center', alignItems: 'center', background: '#0f172a', padding: '20px' }}>
         <div style={{ background: '#1e293b', padding: '40px', borderRadius: '16px', border: '1px solid #ef4444', textAlign: 'center', maxWidth: '500px', boxShadow: '0 18px 60px rgba(0,0,0,0.35)' }}>
-          <div style={{ fontSize: '50px', marginBottom: '16px' }}>🛑</div>
-          <h2 style={{ color: '#f8fafc', marginBottom: '16px' }}>Akses Terkunci!</h2>
+          <div style={{ fontSize: '50px', marginBottom: '16px' }}>🚫</div>
+          <h2 style={{ color: '#f8fafc', marginBottom: '16px' }}>Lisensi Tidak Ditemukan!</h2>
           <p style={{ color: '#94a3b8', marginBottom: '24px', lineHeight: '1.6' }}>
-            Halo <b>{session.user?.name}</b>, Anda terdeteksi sebagai pengguna reguler (Bukan Admin).<br/><br/>
-            Sistem mendeteksi Anda belum mengisi <b>API Key</b>. Anda wajib memasukkan kunci Gemini dan YouTube di halaman depan sebelum login.
+            Maaf <b>{session.user?.name}</b>, email Anda (<b>{userEmail}</b>) belum terdaftar sebagai pembeli resmi aplikasi Creator Insight. <br/><br/>
+            Pembajakan tidak diizinkan. Silakan hubungi Admin untuk membeli akses lisensi.
           </p>
-          <button 
-            onClick={() => signOut()} 
-            style={{ background: '#ef4444', color: 'white', border: 'none', padding: '12px 24px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s' }}
-          >
-            Keluar & Isi API Key Sekarang
+          <button onClick={() => signOut()} style={{ background: '#ef4444', color: 'white', border: 'none', padding: '12px 24px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>
+            Keluar & Beli Lisensi
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // LAPIS 2: JIKA PEMBELI RESMI, CEK APAKAH BAWA KUNCI API?
+  const hasYtKey = typeof window !== 'undefined' ? localStorage.getItem("user_yt_key") : null;
+  const hasAiKey = typeof window !== 'undefined' ? localStorage.getItem("user_ai_key") : null;
+
+  if (isPaidUser && (!hasYtKey || !hasAiKey)) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100%', justifyContent: 'center', alignItems: 'center', background: '#0f172a', padding: '20px' }}>
+        <div style={{ background: '#1e293b', padding: '40px', borderRadius: '16px', border: '1px solid #eab308', textAlign: 'center', maxWidth: '500px', boxShadow: '0 18px 60px rgba(0,0,0,0.35)' }}>
+          <div style={{ fontSize: '50px', marginBottom: '16px' }}>🔑</div>
+          <h2 style={{ color: '#f8fafc', marginBottom: '16px' }}>API Key Belum Diisi!</h2>
+          <p style={{ color: '#94a3b8', marginBottom: '24px', lineHeight: '1.6' }}>
+            Halo <b>{session.user?.name}</b> (Pembeli Resmi).<br/><br/>
+            Sistem mendeteksi Anda belum mengisi <b>API Key</b> di brankas browser Anda. Anda wajib memasukkan kunci Gemini dan YouTube di halaman depan sebelum masuk ke Dashboard.
+          </p>
+          <button onClick={() => signOut()} style={{ background: '#eab308', color: '#1e293b', border: 'none', padding: '12px 24px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>
+            Kembali ke Halaman Depan
           </button>
         </div>
       </div>
     );
   }
   // --- SELESAI SATPAM PENJAGA ---
-
   return (
        <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100%', maxWidth: '100vw', overflowX: 'hidden', overflowY: 'auto', background: '#0f172a', color: '#ffffff', position: 'relative', boxSizing: 'border-box' }}>
       
