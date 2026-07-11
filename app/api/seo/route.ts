@@ -1,18 +1,15 @@
 import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
+  // --- 1. TANGKAP KABEL DARI FRONTEND ---
+  const userAiKey = req.headers.get('x-user-ai-key');
+  
+  // --- 2. LOGIKA SATPAM DAPUR ---
+  const apiKey = userAiKey ? userAiKey : process.env.GEMINI_API_KEY;
+
   try {
     const { query } = await req.json();
     
-    // --- 1. TANGKAP KABEL DARI FRONTEND ---
-    // Mengambil kunci yang dibawa oleh User dari localStorage tadi
-    const userAiKey = req.headers.get('x-user-ai-key');
-    
-    // --- 2. LOGIKA SATPAM DAPUR (GEMBOK ANTI-JEBOL 1 Miliar Persen!) ---
-    // Jika user bawa kunci (userAiKey ada isinya), maka PAKAI KUNCI USER!
-    // Jika kosong (berarti yang sedang login adalah Admin), baru PAKAI KUNCI VERCEL!
-    const apiKey = userAiKey ? userAiKey : process.env.GEMINI_API_KEY;
-
     if (!query) return NextResponse.json({ error: 'Topik tidak boleh kosong' }, { status: 400 });
     if (!apiKey) return NextResponse.json({ error: 'API Key belum dipasang di sistem' }, { status: 500 });
 
@@ -24,15 +21,26 @@ export async function POST(req: Request) {
       "tags": "tuliskan, deretan, tag, relevan, dipisah, dengan, koma, minimal, 15, tag"
     }`;
 
-    // 3. Menembak ke Server Koboi LLM menggunakan apiKey hasil filter Satpam Dapur
-    const response = await fetch(`https://lite.koboillm.com/v1/chat/completions`, {
+    // === 3. SAKLAR MULTI-MESIN OTOMATIS ===
+    const isGeminiKey = apiKey.startsWith("AIza");
+
+    const urlTujuan = isGeminiKey 
+      ? 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions'
+      : 'https://lite.koboillm.com/v1/chat/completions'; // Server Admin (Koboi)
+
+    const aiModel = isGeminiKey 
+      ? 'gemini-1.5-flash' // Model untuk User (Google Gemini)
+      : 'gemini-2.5-flash'; // Model untuk Admin (Koboi)
+
+    // 4. MENEMBAK KE SERVER YANG TEPAT
+    const response = await fetch(urlTujuan, {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}` // <--- SEKARANG AMAN! Akan berubah dinamis!
+        'Authorization': `Bearer ${apiKey}` 
       },
       body: JSON.stringify({
-        model: "gemini-2.5-flash",
+        model: aiModel,
         messages: [{ role: "user", content: prompt }]
       })
     });
@@ -40,7 +48,7 @@ export async function POST(req: Request) {
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.error?.message || 'Gagal menghubungi Server Koboi LLM');
+      throw new Error(data.error?.message || 'Gagal menghubungi Server AI');
     }
 
     const aiText = data.choices[0].message.content;

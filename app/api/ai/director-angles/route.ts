@@ -4,12 +4,17 @@ export const maxDuration = 60;
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
-// 1. TANGKAP KABEL FRONTEND
+  // 1. TANGKAP KABEL FRONTEND
   const userAiKey = req.headers.get('x-user-ai-key');
   
-  // 2. GEMBOK ANTI-JEBOL (Satpam Penentu Kunci)
-  // Pastikan process.env di bawah ini sesuai dengan nama rahasia Admin di file tersebut
-  const apiKey = userAiKey ? userAiKey : process.env.KODE_RAHASIA_ADMIN_ANDA;
+  // 2. GEMBOK ANTI-JEBOL (Satpam Cerdas Anti-Trik String Null)
+  // Default pertama: Ambil kunci milik Admin dari Vercel Environment
+  let apiKey = process.env.GEMINI_API_KEY || process.env.AI_API_KEYS;
+
+  // Cek Cerdas: Jika user bawa kunci valid, dan isinya bukan kosong / string "null"
+  if (userAiKey && userAiKey.trim() !== "" && userAiKey !== "null" && userAiKey !== "undefined") {
+    apiKey = userAiKey; // Maka paksa gunakan kunci milik user!
+  }
 
   try {
     const body = await req.json();
@@ -19,6 +24,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Niche dan Topik harus diisi." }, { status: 400 });
     }
 
+    // Jika setelah disaring ternyata kedua kunci kosong, baru tolak di sini
     if (!apiKey) {
       return NextResponse.json({ error: "API Key belum diatur." }, { status: 400 });
     }
@@ -32,9 +38,9 @@ export async function POST(req: Request) {
 
     const aiModel = isGeminiKey 
       ? 'gemini-1.5-flash'               // Model untuk User (Gemini gratisan)
-      : 'gemini/gemini-2.5-flash-lite';  // Model premium untuk Admin (sesuai setting lama Anda)
+      : 'gemini/gemini-2.5-flash-lite';  // Model premium untuk Admin
 
- // Prompt Khusus Sniper Angle
+    // Prompt Khusus Sniper Angle
     const prompt = `Anda adalah Pakar Algoritma YouTube dan Produser Konten spesialis channel Automation/Faceless global.
 Klien Anda memilih Niche: "${niche}" dengan Topik dasar: "${topic}".
 Target Bahasa: "${body.language || 'Indonesia'}".

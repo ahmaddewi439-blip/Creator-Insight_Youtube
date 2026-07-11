@@ -26,12 +26,18 @@ export default function LongVideoPage() {
     setTimeout(() => setLoadingStep(3), 5000); 
     setTimeout(() => setLoadingStep(4), 9000); 
 
-    try {
-      const res = await fetch('/api/ai/long-video', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ niche: targetNiche, topic: targetTopic, duration, language })
-      });
+ try {
+    // 1. AMBIL KUNCI DARI BROWSER USER
+    const savedKey = localStorage.getItem('userAiKey') || '';
+
+    const res = await fetch('/api/ai/long-video', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'x-user-ai-key': savedKey // <--- INI KURIR PEMBAWA KUNCINYA
+      },
+      body: JSON.stringify({ niche: targetNiche, topic: targetTopic, duration, language })
+    });
       const data = await res.json();
       if (data.success) {
         setLoadingStep(5);

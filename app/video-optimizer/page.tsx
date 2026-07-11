@@ -14,11 +14,11 @@ export default function VideoOptimizerPage() {
   const [videos, setVideos] = useState<VideoItem[]>([]);
   const [loading, setLoading] = useState(false);
 
-  async function loadVideos() {
+async function loadVideos() {
     setLoading(true);
     try {
-      const res = await fetch("/api/youtube/channel-videos").then(r => r.json());
-      const data: VideoItem[] = await res.json();
+      const res = await fetch("/api/youtube/channel-videos"); // Hapus .then()
+      const data: VideoItem[] = await res.json(); // Baru di-JSON-kan di sini
       setVideos(data);
     } catch (err) {
       console.error("Error loading videos:", err);

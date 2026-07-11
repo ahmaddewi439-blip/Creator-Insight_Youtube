@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
+  // 1. TANGKAP KABEL FRONTEND
+  const userAiKey = req.headers.get('x-user-ai-key');
+  
+  // 2. GEMBOK ANTI-JEBOL
+  const apiKey = userAiKey ? userAiKey : process.env.GEMINI_API_KEY;
+
   try {
     const { niche } = await req.json();
     
-    const apiKey = process.env.GEMINI_API_KEY;
-
     if (!niche) return NextResponse.json({ error: 'Topik/Niche tidak boleh kosong' }, { status: 400 });
     if (!apiKey) return NextResponse.json({ error: 'API Key belum dipasang' }, { status: 500 });
 
@@ -19,14 +23,25 @@ export async function POST(req: Request) {
       "first5Videos": ["Judul Video 1", "Judul Video 2", "Judul Video 3", "Judul Video 4", "Judul Video 5"]
     }`;
 
-    const response = await fetch(`https://lite.koboillm.com/v1/chat/completions`, {
+    // === 3. SAKLAR MULTI-MESIN OTOMATIS ===
+    const isGeminiKey = apiKey.startsWith("AIza");
+
+    const urlTujuan = isGeminiKey 
+      ? 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions'
+      : 'https://lite.koboillm.com/v1/chat/completions'; // Server Admin
+
+    const aiModel = isGeminiKey 
+      ? 'gemini-1.5-flash' // Model User (Google)
+      : 'gemini-2.5-flash'; // Model Admin (Koboi)
+
+    const response = await fetch(urlTujuan, {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}` 
       },
       body: JSON.stringify({
-        model: "gemini-2.5-flash",
+        model: aiModel,
         messages: [{ role: "user", content: prompt }]
       })
     });
@@ -34,7 +49,7 @@ export async function POST(req: Request) {
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.error?.message || 'Gagal menghubungi Server Koboi LLM');
+      throw new Error(data.error?.message || 'Gagal menghubungi AI Server');
     }
 
     const aiText = data.choices[0].message.content;
