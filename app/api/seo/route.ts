@@ -4,8 +4,14 @@ export async function POST(req: Request) {
   try {
     const { query } = await req.json();
     
-    // Memanggil kunci sk-... dari brankas Vercel
-    const apiKey = process.env.GEMINI_API_KEY;
+    // --- 1. TANGKAP KABEL DARI FRONTEND ---
+    // Mengambil kunci yang dibawa oleh User dari localStorage tadi
+    const userAiKey = req.headers.get('x-user-ai-key');
+    
+    // --- 2. LOGIKA SATPAM DAPUR (GEMBOK ANTI-JEBOL 1 Miliar Persen!) ---
+    // Jika user bawa kunci (userAiKey ada isinya), maka PAKAI KUNCI USER!
+    // Jika kosong (berarti yang sedang login adalah Admin), baru PAKAI KUNCI VERCEL!
+    const apiKey = userAiKey ? userAiKey : process.env.GEMINI_API_KEY;
 
     if (!query) return NextResponse.json({ error: 'Topik tidak boleh kosong' }, { status: 400 });
     if (!apiKey) return NextResponse.json({ error: 'API Key belum dipasang di sistem' }, { status: 500 });
@@ -18,16 +24,14 @@ export async function POST(req: Request) {
       "tags": "tuliskan, deretan, tag, relevan, dipisah, dengan, koma, minimal, 15, tag"
     }`;
 
-    // 1. Menembak ke Server Koboi LLM (bukan Google lagi)
+    // 3. Menembak ke Server Koboi LLM menggunakan apiKey hasil filter Satpam Dapur
     const response = await fetch(`https://lite.koboillm.com/v1/chat/completions`, {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
-        // 2. Format otorisasi standar Bearer Token untuk Koboi
-        'Authorization': `Bearer ${apiKey}` 
+        'Authorization': `Bearer ${apiKey}` // <--- SEKARANG AMAN! Akan berubah dinamis!
       },
       body: JSON.stringify({
-        // 3. Menggunakan model yang sudah Anda seting di dashboard Koboi
         model: "gemini-2.5-flash",
         messages: [{ role: "user", content: prompt }]
       })
@@ -39,7 +43,6 @@ export async function POST(req: Request) {
       throw new Error(data.error?.message || 'Gagal menghubungi Server Koboi LLM');
     }
 
-    // 4. Cara mengambil balasan dari Koboi berbeda dengan Google asli
     const aiText = data.choices[0].message.content;
     const cleanJson = aiText.replace(/```json/g, '').replace(/```/g, '').trim();
     const result = JSON.parse(cleanJson);

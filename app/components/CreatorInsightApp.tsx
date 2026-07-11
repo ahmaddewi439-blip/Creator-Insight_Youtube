@@ -2953,11 +2953,20 @@ function renderCompetitors() {
                     setSeoResult(null);
                     try {
                       // Menembak ke mesin API AI Asli
-                      const res = await fetch('/api/seo', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ query: seoQuery })
-                      });
+                    // 1. Ambil kunci dari brankas browser user
+            const userAiKey = localStorage.getItem("user_ai_key") || "";
+            const userYtKey = localStorage.getItem("user_yt_key") || "";
+
+            // 2. Tembak ke mesin API dengan membawa kunci tersebut
+            const res = await fetch('/api/seo', {
+              method: 'POST',
+              headers: { 
+                'Content-Type': 'application/json',
+                'x-user-ai-key': userAiKey, // <--- KABEL GEMINI
+                'x-user-yt-key': userYtKey  // <--- KABEL YOUTUBE
+              },
+              body: JSON.stringify({ query: seoQuery })
+            });
                       const data = await res.json();
                       
                       if (data.success) {

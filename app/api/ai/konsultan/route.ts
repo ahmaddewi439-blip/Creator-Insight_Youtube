@@ -4,9 +4,14 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
+    // 1. Tangkap kunci dari Frontend
+  const userAiKey = req.headers.get('x-user-ai-key');
+  
+// Gembok Anti-Jebol (Jika admin, pakai OPENROUTER_API_KEY)
+const apiKey = userAiKey ? userAiKey : process.env.OPENROUTER_API_KEY;
   try {
     const { prompt } = await req.json();
-    const apiKey = (process.env.OPENROUTER_API_KEY || "").trim(); 
+    
 
     if (!prompt) return NextResponse.json({ error: 'Ceritakan dulu kendalamu!' }, { status: 400 });
     if (!apiKey) return NextResponse.json({ error: 'API Key Vercel masih kosong/belum terbaca' }, { status: 500 });
@@ -32,7 +37,19 @@ WAJIB KEMBALIKAN OUTPUT DALAM FORMAT JSON PERSIS SEPERTI INI (Tanpa teks Markdow
 }`;
 
     // INI YANG PALING PENTING: Jalur tembak sudah diubah ke server Koboi LLM!
-    const urlTujuan = 'https://lite.koboillm.com/v1/chat/completions'; 
+    // === 3. SAKLAR MULTI-MESIN OTOMATIS ===
+    // Mendeteksi apakah ini Kunci Google Gemini (diawali AIza) atau Kunci Koboi/OpenAI (diawali sk-)
+    const isGeminiKey = apiKey.startsWith("AIza");
+
+    // Jika Gemini, tembak ke server Google. Jika Koboi, tembak ke server Koboi.
+    const urlTujuan = isGeminiKey 
+      ? 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions'
+      : 'https://lite.koboillm.com/v1/chat/completions';
+
+    // Jika Gemini, pakai model gemini. Jika Koboi, pakai gpt-4o.
+    const aiModel = isGeminiKey 
+      ? 'gemini-1.5-flash' 
+      : 'openai/gpt-4o';
 
     const response = await fetch(urlTujuan, {
       method: 'POST',
@@ -41,14 +58,13 @@ WAJIB KEMBALIKAN OUTPUT DALAM FORMAT JSON PERSIS SEPERTI INI (Tanpa teks Markdow
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: 'openai/gpt-4o', // Model sesuai standar Koboi LLM
+        model: aiModel,
         messages: [
           { role: 'system', content: systemInstruction },
           { role: 'user', content: prompt }
         ]
       })
     });
-
     const data = await response.json();
     
     // Pelacak Error Akurat

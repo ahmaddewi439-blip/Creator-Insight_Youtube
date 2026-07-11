@@ -4,9 +4,17 @@ export const maxDuration = 60;
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
+  // 1. Tangkap kunci dari Frontend
+  const userAiKey = req.headers.get('x-user-ai-key');
+  
+  // 2. Gembok Anti-Jebol (Jika admin, pakai AI_API_KEYS)
+  const apiKey = userAiKey ? userAiKey : process.env.AI_API_KEYS;
+
   try {
     const { topic, duration, language } = await req.json();
-    const apiKey = process.env.AI_API_KEYS;
+    
+    // BARIS 14 YANG LAMA SUDAH DIHAPUS DARI SINI!
+    
     let baseUrl = process.env.AI_BASE_URL || "https://lite.koboillm.com/v1";
     const aiModel = process.env.AI_MODEL || "gemini/gemini-2.5-flash-lite";
 

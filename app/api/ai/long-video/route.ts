@@ -4,20 +4,32 @@ export const maxDuration = 60; // Durasinya kita maksimalkan karena naskahnya pa
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
+   // 1. Tangkap kunci dari Frontend
+  const userAiKey = req.headers.get('x-user-ai-key');
+  
+  // 2. Gembok Anti-Jebol (Jika admin, pakai AI_API_KEYS)
+  const apiKey = userAiKey ? userAiKey : process.env.AI_API_KEYS;
+
   try {
     const body = await req.json();
     const { niche, topic, duration, language } = body;
 
     if (!topic) return NextResponse.json({ error: "Topik tidak boleh kosong" }, { status: 400 });
 
-    const apiKey = process.env.AI_API_KEYS;
-    let baseUrl = process.env.AI_BASE_URL || "https://lite.koboillm.com/v1";
-    const aiModel = process.env.AI_MODEL || "gemini/gemini-2.5-flash-lite";
+ if (!apiKey) {
+      return NextResponse.json({ error: "API Key belum diatur." }, { status: 400 });
+    }
 
-    if (!apiKey) return NextResponse.json({ error: "API Key belum diatur." }, { status: 400 });
+    // === SAKLAR MULTI-MESIN OTOMATIS ===
+    const isGeminiKey = apiKey.startsWith("AIza");
 
-    baseUrl = baseUrl.replace(/\/+$/, "");
-    const endpoint = baseUrl.endsWith("/chat/completions") ? baseUrl : `${baseUrl}/chat/completions`;
+    const endpoint = isGeminiKey 
+      ? 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions'
+      : 'https://lite.koboillm.com/v1/chat/completions'; // Jalur server Admin
+
+    const aiModel = isGeminiKey 
+      ? 'gemini-1.5-pro'                 // Model khusus video panjang (User)
+      : 'gemini/gemini-2.5-flash-lite';  // Model premium untuk Admin
 
     const prompt = `Anda adalah Sutradara & Penulis Naskah YouTube kelas dunia spesialis Faceless Channel.
 Klien meminta naskah video panjang (Long Form).
