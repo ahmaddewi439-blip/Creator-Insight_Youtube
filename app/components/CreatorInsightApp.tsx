@@ -706,13 +706,18 @@ const handleAnalyzeAngles = async () => {
     setDirectorAngles([]);
     setSelectedAngle(null);
     try {
-      // Pastikan alamat ini sama persis dengan susunan folder Anda di VS Code
-    const res = await fetch('/api/ai/director-angles', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        // KITA TAMBAHKAN directorLanguage DI SINI 👇
-        body: JSON.stringify({ niche: directorNiche, topic: directorTopic, language: directorLanguage }) 
-      });
+   // AMBIL KUNCI DARI BRANKAS BROWSER
+const userAiKey = localStorage.getItem("user_ai_key") || "";
+
+// Pastikan alamat ini sama persis dengan susunan folder Anda di VS Code
+const res = await fetch('/api/ai/director-angles', {
+  method: 'POST',
+  headers: { 
+    'Content-Type': 'application/json',
+    'x-user-ai-key': userAiKey // <--- KUNCI DISEMATKAN DISINI
+  },
+  body: JSON.stringify({ niche: directorNiche, topic: directorTopic, language: directorLanguage }) 
+});
       
       const data = await res.json();
       
@@ -739,18 +744,23 @@ const handleAnalyzeAngles = async () => {
 
    try {
       // 1. Tangkap durasi dari tombol yang Mas klik tadi
-      const targetDuration = localStorage.getItem('shortsDuration') || '45';
+      // 1. Tangkap durasi dari tombol yang Mas klik tadi
+const targetDuration = localStorage.getItem('shortsDuration') || '45';
+const userAiKey = localStorage.getItem("user_ai_key") || ""; // AMBIL KUNCI BROWSER
 
-      const res = await fetch('/api/ai/viral-factory', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          niche: directorNiche, 
-          topic: selectedAngle ? `FOKUS UTAMA NASKAH HARUS MEMBAHAS JUDUL INI: "${selectedAngle.title}"` : directorTopic,
-          language: directorLanguage,
-          duration: targetDuration // 2. Kirim durasinya ke Backend!
-        })
-      });
+const res = await fetch('/api/ai/viral-factory', {
+  method: 'POST',
+  headers: { 
+    'Content-Type': 'application/json',
+    'x-user-ai-key': userAiKey // <--- KUNCI DISEMATKAN DISINI
+  },
+  body: JSON.stringify({ 
+    niche: directorNiche, 
+    topic: selectedAngle ? `FOKUS UTAMA NASKAH HARUS MEMBAHAS JUDUL INI: "${selectedAngle.title}"` : directorTopic,
+    language: directorLanguage,
+    duration: targetDuration // 2. Kirim durasinya ke Backend!
+  })
+});
       const data = await res.json();
       if (data.success) {
         setViralLoadingStep(4); // Selesai
@@ -1118,10 +1128,15 @@ const handleAnalyzeAngles = async () => {
     setSelectedVideo(video); 
     setOptimizer({ loading: true, error: "", data: null });
     try {
-      const originalTitle = video?.snippet?.title || video?.title || "";
+   const originalTitle = video?.snippet?.title || video?.title || "";
+      const userAiKey = localStorage.getItem("user_ai_key") || ""; // AMBIL KUNCI BROWSER
+
       const data = await fetchJson("/api/ai/optimize-video", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "x-user-ai-key": userAiKey // <--- KUNCI DISEMATKAN DISINI
+        },
        body: JSON.stringify({
             video,
             videoFormat: "General YouTube Video",
@@ -1616,10 +1631,15 @@ async function fetchCompetitionScore(keyword: string) {
     setOpportunityLoading(true);
 
     try {
-      // TAHAP 1: Minta AI Meracik Ide
+    // TAHAP 1: Minta AI Meracik Ide
+      const userAiKey = localStorage.getItem("user_ai_key") || ""; // AMBIL KUNCI BROWSER
+      
       const resAI = await fetch("/api/ai/opportunity-lab", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "x-user-ai-key": userAiKey // <--- KUNCI DISEMATKAN DISINI
+        },
         body: JSON.stringify({
           category: selectedNiche,
           audience: "Worldwide",
@@ -2091,9 +2111,14 @@ async function fetchCompetitionScore(keyword: string) {
               setIsBikinLoading(true);
               setBikinResult(null);
               try {
+               const userAiKey = localStorage.getItem("user_ai_key") || ""; // AMBIL KUNCI BROWSER
+
                 const res = await fetch('/api/bikin-channel', {
                   method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
+                  headers: { 
+                    'Content-Type': 'application/json',
+                    'x-user-ai-key': userAiKey // <--- KUNCI DISEMATKAN DISINI
+                  },
                   body: JSON.stringify({ niche: bikinQuery })
                 });
                 const data = await res.json();
@@ -2653,9 +2678,14 @@ function renderCompetitors() {
                   setIsKonsultanLoading(true);
                   setKonsultanResult(null);
                   try {
+                  const userAiKey = localStorage.getItem("user_ai_key") || ""; // AMBIL KUNCI BROWSER
+
                     const res = await fetch('/api/ai/konsultan', {
                       method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
+                      headers: { 
+                        'Content-Type': 'application/json',
+                        'x-user-ai-key': userAiKey // <--- KUNCI DISEMATKAN DISINI
+                      },
                       body: JSON.stringify({ prompt: konsultanQuery })
                     });
                     const data = await res.json();
