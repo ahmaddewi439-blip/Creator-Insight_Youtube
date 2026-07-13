@@ -59,59 +59,57 @@ const handler = NextAuth({
     })
   ],
   secret: process.env.NEXTAUTH_SECRET,
-  callbacks: {
-    // 🛡️ FITUR BARU: SATPAM PENGECEK LISENSI SUPABASE 🛡️
+callbacks: {
+    // 🛡️ SATPAM PENGECEK LISENSI SUPABASE 🛡️
     async signIn({ user }) {
       const email = user.email;
+      const emailKomandan = "ahmaddewi439@gmail.com";
 
-      // 1. Cek ke brankas Supabase
+      // 🌟 KARTU VIP KOMANDAN: Jika yang login adalah Admin, langsung buka pintu!
+      if (email === emailKomandan) {
+          console.log("Jenderal masuk! Bebaskan akses tanpa cek database!");
+          return true;
+      }
+
+      // 1. Cek ke brankas Supabase untuk klien biasa
       const { data, error } = await supabase
           .from('user_access')
           .select('*')
           .eq('email', email)
           .single();
 
-      // 2. Jika email tidak ada di database Admin, TOLAK!
-      if (error || !data) {
-          console.log("Akses Ditolak: Email tidak terdaftar di database Admin.");
-          return '/?error=not_registered'; 
-      }
+      if (error || !data) return '/?error=not_registered'; 
+      if (data.access_status === 'PENDING') return '/?error=pending_activation';
 
-      // 3. Jika statusnya masih PENDING, TOLAK!
-      if (data.access_status === 'PENDING') {
-          console.log("Akses Ditolak: Status masih PENDING.");
-          return '/?error=pending_activation';
-      }
-
-      // 4. Cek apakah masa berlaku (Expired) sudah habis
       const expiryDate = new Date(data.trial_expires_at);
       const now = new Date();
+      if (expiryDate < now) return '/?error=expired';
 
-      if (expiryDate < now) {
-          console.log("Akses Ditolak: Lisensi kedaluwarsa.");
-          return '/?error=expired';
-      }
-
-      // 5. Lolos semua ujian, IZINKAN MASUK! ✅
       return true;
     },
 
-// FITUR LAMA: PENGATURAN TOKEN & YOUTUBE
+    // FITUR LAMA: PENGATURAN TOKEN & YOUTUBE
     async jwt({ token, account, user }: { token: any; account?: any; user?: any }) {
       if (account && user) {
         token.accessToken = account.access_token;
         token.refreshToken = account.refresh_token; 
         token.accessTokenExpires = account.expires_at * 1000; 
         
-        // --- INSTRUKSI BARU: Bawa tanggal kedaluwarsa dari Supabase ---
-        const { data } = await supabase
-          .from('user_access')
-          .select('trial_expires_at')
-          .eq('email', user.email)
-          .single();
-          
-        token.trial_expires_at = data?.trial_expires_at;
-        // --------------------------------------------------------------
+        const emailKomandan = "ahmaddewi439@gmail.com";
+
+        // 🌟 JALUR VIP BANNER KOMANDAN: Beri lisensi abadi sampai tahun 2099!
+        if (user.email === emailKomandan) {
+             token.trial_expires_at = "2099-12-31T23:59:59.000Z";
+        } else {
+             // Bawa tanggal kedaluwarsa dari Supabase untuk user biasa
+             const { data } = await supabase
+               .from('user_access')
+               .select('trial_expires_at')
+               .eq('email', user.email)
+               .single();
+               
+             token.trial_expires_at = data?.trial_expires_at;
+        }
 
         return token;
       }
@@ -126,11 +124,7 @@ const handler = NextAuth({
     async session({ session, token }: { session: any; token: any }) {
       session.accessToken = token.accessToken;
       session.error = token.error;
-      
-      // --- INSTRUKSI BARU: Serahkan tanggal kedaluwarsa ke web depan ---
       session.trial_expires_at = token.trial_expires_at; 
-      // -----------------------------------------------------------------
-      
       return session;
     }
   },
