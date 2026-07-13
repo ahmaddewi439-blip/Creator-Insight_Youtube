@@ -1,7 +1,7 @@
 'use client';
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase'; // Menyambungkan Banner langsung ke Brankas
+import { supabase } from '../../lib/supabase'; // 👈 Tambahkan satu titik lagi di depan
 
 export default function LicenseBanner() {
     const { data: session, status } = useSession();
