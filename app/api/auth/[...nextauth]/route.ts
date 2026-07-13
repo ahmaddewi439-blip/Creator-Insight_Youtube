@@ -96,12 +96,23 @@ const handler = NextAuth({
       return true;
     },
 
-    // FITUR LAMA: PENGATURAN TOKEN & YOUTUBE
-    async jwt({ token, account }: { token: any; account?: any }) {
-      if (account) {
+// FITUR LAMA: PENGATURAN TOKEN & YOUTUBE
+    async jwt({ token, account, user }: { token: any; account?: any; user?: any }) {
+      if (account && user) {
         token.accessToken = account.access_token;
         token.refreshToken = account.refresh_token; 
         token.accessTokenExpires = account.expires_at * 1000; 
+        
+        // --- INSTRUKSI BARU: Bawa tanggal kedaluwarsa dari Supabase ---
+        const { data } = await supabase
+          .from('user_access')
+          .select('trial_expires_at')
+          .eq('email', user.email)
+          .single();
+          
+        token.trial_expires_at = data?.trial_expires_at;
+        // --------------------------------------------------------------
+
         return token;
       }
 
@@ -115,6 +126,11 @@ const handler = NextAuth({
     async session({ session, token }: { session: any; token: any }) {
       session.accessToken = token.accessToken;
       session.error = token.error;
+      
+      // --- INSTRUKSI BARU: Serahkan tanggal kedaluwarsa ke web depan ---
+      session.trial_expires_at = token.trial_expires_at; 
+      // -----------------------------------------------------------------
+      
       return session;
     }
   },

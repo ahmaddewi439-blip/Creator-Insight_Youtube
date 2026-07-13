@@ -3,7 +3,13 @@ export const revalidate = 0;
 
 // ... (biarkan sisa kode Mas Ahmad di bawahnya seperti biasa)
 import CreatorInsightApp from "./components/CreatorInsightApp";
+import LicenseBanner from "./components/LicenseBanner"; // 👈 INI IMPORT BANNER KITA
 
 export default function Page() {
-  return <CreatorInsightApp />;
+  return (
+    <>
+      <LicenseBanner /> 
+      <CreatorInsightApp />
+    </>
+  );
 }
